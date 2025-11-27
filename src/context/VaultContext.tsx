@@ -1,0 +1,635 @@
+// /**
+//  * ============================================
+//  * PAWPAD VAULT CONTEXT
+//  * ============================================
+//  * 
+//  * Provides vault state management across the app.
+//  * Handles loading, caching, and syncing vault data.
+//  */
+
+// import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+// import vaultStorage, { Vault, toVault } from '../services/VaultStorage';
+// import api from '../services/api';
+
+// // ============================================
+// // TYPES
+// // ============================================
+
+// interface VaultContextType {
+//   // State
+//   vaults: Vault[];
+//   activeVault: Vault | null;
+//   solVault: Vault | null;
+//   zecVault: Vault | null;
+//   isLoading: boolean;
+//   error: string | null;
+  
+//   // Actions
+//   loadVaults: () => Promise<void>;
+//   addVault: (vault: Vault) => Promise<void>;
+//   removeVault: (vaultId: string) => Promise<void>;
+//   setActiveVault: (vaultId: string) => Promise<void>;
+//   refreshBalance: (vaultId?: string) => Promise<void>;
+//   refreshAllBalances: () => Promise<void>;
+//   getVaultForFunding: (chain?: 'SOL' | 'ZEC') => Vault | null;
+//   clearError: () => void;
+// }
+
+// // ============================================
+// // CONTEXT
+// // ============================================
+
+// const VaultContext = createContext<VaultContextType | undefined>(undefined);
+
+// // ============================================
+// // PROVIDER
+// // ============================================
+
+// interface VaultProviderProps {
+//   children: ReactNode;
+// }
+
+// export const VaultProvider: React.FC<VaultProviderProps> = ({ children }) => {
+//   const [vaults, setVaults] = useState<Vault[]>([]);
+//   const [activeVault, setActiveVaultState] = useState<Vault | null>(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // ============================================
+//   // COMPUTED VALUES
+//   // ============================================
+  
+//   // Get SOL vault (first one found)
+//   const solVault = vaults.find(v => v.chain === 'SOL') || null;
+  
+//   // Get ZEC vault (first one found)
+//   const zecVault = vaults.find(v => v.chain === 'ZEC') || null;
+
+//   // ============================================
+//   // LOAD VAULTS ON MOUNT
+//   // ============================================
+
+//   useEffect(() => {
+//     loadVaults();
+//   }, []);
+
+//   // ============================================
+//   // ACTIONS
+//   // ============================================
+
+//   const loadVaults = useCallback(async () => {
+//     try {
+//       setIsLoading(true);
+//       setError(null);
+
+//       const data = await vaultStorage.loadVaults();
+//       setVaults(data.vaults);
+
+//       // Set active vault
+//       if (data.activeVaultId) {
+//         const active = data.vaults.find(v => v.vault_id === data.activeVaultId);
+//         setActiveVaultState(active || data.vaults[0] || null);
+//       } else if (data.vaults.length > 0) {
+//         setActiveVaultState(data.vaults[0]);
+//       }
+
+//     } catch (err: any) {
+//       console.error('Failed to load vaults:', err);
+//       setError(err.message);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   }, []);
+
+//   const addVault = useCallback(async (vaultData: Vault | any) => {
+//     try {
+//       setError(null);
+      
+//       // Convert to proper Vault type
+//       const vault = toVault(vaultData);
+      
+//       // Save to storage
+//       await vaultStorage.addVault(vault);
+      
+//       // Update state
+//       setVaults(prev => {
+//         const existing = prev.findIndex(v => v.vault_id === vault.vault_id);
+//         if (existing >= 0) {
+//           const updated = [...prev];
+//           updated[existing] = vault;
+//           return updated;
+//         }
+//         return [...prev, vault];
+//       });
+
+//       // Set as active if first vault of this chain
+//       const existingForChain = vaults.find(v => v.chain === vault.chain);
+//       if (!existingForChain) {
+//         setActiveVaultState(vault);
+//         await vaultStorage.setActiveVault(vault.vault_id);
+//       }
+
+//     } catch (err: any) {
+//       console.error('Failed to add vault:', err);
+//       setError(err.message);
+//       throw err;
+//     }
+//   }, [vaults]);
+
+//   const removeVault = useCallback(async (vaultId: string) => {
+//     try {
+//       setError(null);
+      
+//       await vaultStorage.removeVault(vaultId);
+      
+//       setVaults(prev => prev.filter(v => v.vault_id !== vaultId));
+      
+//       // Update active vault if needed
+//       if (activeVault?.vault_id === vaultId) {
+//         const remaining = vaults.filter(v => v.vault_id !== vaultId);
+//         setActiveVaultState(remaining[0] || null);
+//       }
+
+//     } catch (err: any) {
+//       console.error('Failed to remove vault:', err);
+//       setError(err.message);
+//       throw err;
+//     }
+//   }, [activeVault, vaults]);
+
+//   const setActiveVault = useCallback(async (vaultId: string) => {
+//     try {
+//       setError(null);
+      
+//       const vault = vaults.find(v => v.vault_id === vaultId);
+//       if (!vault) {
+//         throw new Error('Vault not found');
+//       }
+      
+//       await vaultStorage.setActiveVault(vaultId);
+//       setActiveVaultState(vault);
+
+//     } catch (err: any) {
+//       console.error('Failed to set active vault:', err);
+//       setError(err.message);
+//       throw err;
+//     }
+//   }, [vaults]);
+
+//   const refreshBalance = useCallback(async (vaultId?: string) => {
+//     try {
+//       const targetVaultId = vaultId || activeVault?.vault_id;
+//       if (!targetVaultId) return;
+
+//       const vault = vaults.find(v => v.vault_id === targetVaultId);
+//       if (!vault) return;
+
+//       // Fetch balance from API
+//       let balance = 0;
+      
+//       if (vault.chain === 'SOL') {
+//         const response = await api.getBalance(targetVaultId);
+//         if (response.success) {
+//           balance = response.balance;
+//         }
+//       } else if (vault.chain === 'ZEC') {
+//         const response = await api.getFrostBalance(targetVaultId);
+//         if (response.success) {
+//           balance = response.balance?.confirmed || 0;
+//         }
+//       }
+
+//       // Update storage and state
+//       await vaultStorage.updateVaultBalance(targetVaultId, balance);
+      
+//       setVaults(prev => prev.map(v => 
+//         v.vault_id === targetVaultId 
+//           ? { ...v, balance, lastUpdated: new Date().toISOString() }
+//           : v
+//       ));
+
+//     } catch (err: any) {
+//       console.error('Failed to refresh balance:', err);
+//       // Don't set error for balance refresh failures
+//     }
+//   }, [activeVault, vaults]);
+
+//   const refreshAllBalances = useCallback(async () => {
+//     for (const vault of vaults) {
+//       await refreshBalance(vault.vault_id);
+//     }
+//   }, [vaults, refreshBalance]);
+
+//   /**
+//    * Get vault for funding - used by FundMe screen
+//    * Returns the active vault or first vault of specified chain
+//    */
+//   const getVaultForFunding = useCallback((chain?: 'SOL' | 'ZEC'): Vault | null => {
+//     if (chain) {
+//       // Return first vault of specified chain
+//       return vaults.find(v => v.chain === chain) || null;
+//     }
+    
+//     // Return active vault or first available
+//     return activeVault || vaults[0] || null;
+//   }, [activeVault, vaults]);
+
+//   const clearError = useCallback(() => {
+//     setError(null);
+//   }, []);
+
+//   // ============================================
+//   // CONTEXT VALUE
+//   // ============================================
+
+//   const value: VaultContextType = {
+//     vaults,
+//     activeVault,
+//     solVault,
+//     zecVault,
+//     isLoading,
+//     error,
+//     loadVaults,
+//     addVault,
+//     removeVault,
+//     setActiveVault,
+//     refreshBalance,
+//     refreshAllBalances,
+//     getVaultForFunding,
+//     clearError,
+//   };
+
+//   return (
+//     <VaultContext.Provider value={value}>
+//       {children}
+//     </VaultContext.Provider>
+//   );
+// };
+
+// // ============================================
+// // HOOK
+// // ============================================
+
+// export const useVaults = (): VaultContextType => {
+//   const context = useContext(VaultContext);
+//   if (!context) {
+//     throw new Error('useVaults must be used within a VaultProvider');
+//   }
+//   return context;
+// };
+
+// // ============================================
+// // CONVENIENCE HOOKS
+// // ============================================
+
+// /**
+//  * Get the active vault
+//  */
+// export const useActiveVault = (): Vault | null => {
+//   const { activeVault } = useVaults();
+//   return activeVault;
+// };
+
+// /**
+//  * Get SOL vault
+//  */
+// export const useSolVault = (): Vault | null => {
+//   const { solVault } = useVaults();
+//   return solVault;
+// };
+
+// /**
+//  * Get ZEC vault
+//  */
+// export const useZecVault = (): Vault | null => {
+//   const { zecVault } = useVaults();
+//   return zecVault;
+// };
+
+// /**
+//  * Get vault for funding with automatic selection
+//  */
+// export const useVaultForFunding = (chain?: 'SOL' | 'ZEC'): Vault | null => {
+//   const { getVaultForFunding } = useVaults();
+//   return getVaultForFunding(chain);
+// };
+
+// export default VaultContext;
+
+/**
+ * ============================================
+ * PAWPAD VAULT CONTEXT
+ * ============================================
+ * 
+ * Provides vault state management across the app.
+ * Handles loading, caching, and syncing vault data.
+ */
+
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import vaultStorage, { Vault, toVault } from '../services/VaultStorage';
+import api from '../services/api';
+
+// ============================================
+// TYPES
+// ============================================
+
+interface VaultContextType {
+  // State
+  vaults: Vault[];
+  activeVault: Vault | null;
+  solVault: Vault | null;
+  zecVault: Vault | null;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  loadVaults: () => Promise<void>;
+  addVault: (vault: any) => Promise<void>;  // Accept any vault-like object
+  removeVault: (vaultId: string) => Promise<void>;
+  setActiveVault: (vaultId: string) => Promise<void>;
+  refreshBalance: (vaultId?: string) => Promise<void>;
+  refreshAllBalances: () => Promise<void>;
+  getVaultForFunding: (chain?: 'SOL' | 'ZEC') => Vault | null;
+  clearError: () => void;
+}
+
+// ============================================
+// CONTEXT
+// ============================================
+
+const VaultContext = createContext<VaultContextType | undefined>(undefined);
+
+// ============================================
+// PROVIDER
+// ============================================
+
+interface VaultProviderProps {
+  children: ReactNode;
+}
+
+export const VaultProvider: React.FC<VaultProviderProps> = ({ children }) => {
+  const [vaults, setVaults] = useState<Vault[]>([]);
+  const [activeVault, setActiveVaultState] = useState<Vault | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ============================================
+  // COMPUTED VALUES
+  // ============================================
+  
+  // Get SOL vault (first one found)
+  const solVault = vaults.find(v => v.chain === 'SOL') || null;
+  
+  // Get ZEC vault (first one found)
+  const zecVault = vaults.find(v => v.chain === 'ZEC') || null;
+
+  // ============================================
+  // LOAD VAULTS ON MOUNT
+  // ============================================
+
+  useEffect(() => {
+    loadVaults();
+  }, []);
+
+  // ============================================
+  // ACTIONS
+  // ============================================
+
+  const loadVaults = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const data = await vaultStorage.loadVaults();
+      setVaults(data.vaults);
+
+      // Set active vault
+      if (data.activeVaultId) {
+        const active = data.vaults.find(v => v.vault_id === data.activeVaultId);
+        setActiveVaultState(active || data.vaults[0] || null);
+      } else if (data.vaults.length > 0) {
+        setActiveVaultState(data.vaults[0]);
+      }
+
+    } catch (err: any) {
+      console.error('Failed to load vaults:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const addVault = useCallback(async (vaultData: Vault | any) => {
+    try {
+      setError(null);
+      
+      // Convert to proper Vault type
+      const vault = toVault(vaultData);
+      
+      // Save to storage
+      await vaultStorage.addVault(vault);
+      
+      // Update state
+      setVaults(prev => {
+        const existing = prev.findIndex(v => v.vault_id === vault.vault_id);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = vault;
+          return updated;
+        }
+        return [...prev, vault];
+      });
+
+      // Set as active if first vault of this chain
+      const existingForChain = vaults.find(v => v.chain === vault.chain);
+      if (!existingForChain) {
+        setActiveVaultState(vault);
+        await vaultStorage.setActiveVault(vault.vault_id);
+      }
+
+    } catch (err: any) {
+      console.error('Failed to add vault:', err);
+      setError(err.message);
+      throw err;
+    }
+  }, [vaults]);
+
+  const removeVault = useCallback(async (vaultId: string) => {
+    try {
+      setError(null);
+      
+      await vaultStorage.removeVault(vaultId);
+      
+      setVaults(prev => prev.filter(v => v.vault_id !== vaultId));
+      
+      // Update active vault if needed
+      if (activeVault?.vault_id === vaultId) {
+        const remaining = vaults.filter(v => v.vault_id !== vaultId);
+        setActiveVaultState(remaining[0] || null);
+      }
+
+    } catch (err: any) {
+      console.error('Failed to remove vault:', err);
+      setError(err.message);
+      throw err;
+    }
+  }, [activeVault, vaults]);
+
+  const setActiveVault = useCallback(async (vaultId: string) => {
+    try {
+      setError(null);
+      
+      const vault = vaults.find(v => v.vault_id === vaultId);
+      if (!vault) {
+        throw new Error('Vault not found');
+      }
+      
+      await vaultStorage.setActiveVault(vaultId);
+      setActiveVaultState(vault);
+
+    } catch (err: any) {
+      console.error('Failed to set active vault:', err);
+      setError(err.message);
+      throw err;
+    }
+  }, [vaults]);
+
+  const refreshBalance = useCallback(async (vaultId?: string) => {
+    try {
+      const targetVaultId = vaultId || activeVault?.vault_id;
+      if (!targetVaultId) return;
+
+      const vault = vaults.find(v => v.vault_id === targetVaultId);
+      if (!vault) return;
+
+      // Fetch balance from API
+      let balance = 0;
+      
+      if (vault.chain === 'SOL') {
+        const response = await api.getBalance(targetVaultId);
+        if (response.success) {
+          balance = response.balance;
+        }
+      } else if (vault.chain === 'ZEC') {
+        const response = await api.getFrostBalance(targetVaultId);
+        if (response.success) {
+          balance = response.balance?.confirmed || 0;
+        }
+      }
+
+      // Update storage and state
+      await vaultStorage.updateVaultBalance(targetVaultId, balance);
+      
+      setVaults(prev => prev.map(v => 
+        v.vault_id === targetVaultId 
+          ? { ...v, balance, lastUpdated: new Date().toISOString() }
+          : v
+      ));
+
+    } catch (err: any) {
+      console.error('Failed to refresh balance:', err);
+      // Don't set error for balance refresh failures
+    }
+  }, [activeVault, vaults]);
+
+  const refreshAllBalances = useCallback(async () => {
+    for (const vault of vaults) {
+      await refreshBalance(vault.vault_id);
+    }
+  }, [vaults, refreshBalance]);
+
+  /**
+   * Get vault for funding - used by FundMe screen
+   * Returns the active vault or first vault of specified chain
+   */
+  const getVaultForFunding = useCallback((chain?: 'SOL' | 'ZEC'): Vault | null => {
+    if (chain) {
+      // Return first vault of specified chain
+      return vaults.find(v => v.chain === chain) || null;
+    }
+    
+    // Return active vault or first available
+    return activeVault || vaults[0] || null;
+  }, [activeVault, vaults]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // ============================================
+  // CONTEXT VALUE
+  // ============================================
+
+  const value: VaultContextType = {
+    vaults,
+    activeVault,
+    solVault,
+    zecVault,
+    isLoading,
+    error,
+    loadVaults,
+    addVault,
+    removeVault,
+    setActiveVault,
+    refreshBalance,
+    refreshAllBalances,
+    getVaultForFunding,
+    clearError,
+  };
+
+  return (
+    <VaultContext.Provider value={value}>
+      {children}
+    </VaultContext.Provider>
+  );
+};
+
+// ============================================
+// HOOK
+// ============================================
+
+export const useVaults = (): VaultContextType => {
+  const context = useContext(VaultContext);
+  if (!context) {
+    throw new Error('useVaults must be used within a VaultProvider');
+  }
+  return context;
+};
+
+// ============================================
+// CONVENIENCE HOOKS
+// ============================================
+
+/**
+ * Get the active vault
+ */
+export const useActiveVault = (): Vault | null => {
+  const { activeVault } = useVaults();
+  return activeVault;
+};
+
+/**
+ * Get SOL vault
+ */
+export const useSolVault = (): Vault | null => {
+  const { solVault } = useVaults();
+  return solVault;
+};
+
+/**
+ * Get ZEC vault
+ */
+export const useZecVault = (): Vault | null => {
+  const { zecVault } = useVaults();
+  return zecVault;
+};
+
+/**
+ * Get vault for funding with automatic selection
+ */
+export const useVaultForFunding = (chain?: 'SOL' | 'ZEC'): Vault | null => {
+  const { getVaultForFunding } = useVaults();
+  return getVaultForFunding(chain);
+};
+
+export default VaultContext;

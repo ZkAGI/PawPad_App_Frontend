@@ -1,45 +1,166 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// import React from 'react';
+// import { NavigationContainer } from '@react-navigation/native';
+// import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// import { StatusBar } from 'react-native';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// // Import screens
+// import OnboardingScreen from './src/screens/OnboardingScreen';
+// import HomeScreen from './src/screens/HomeScreen';
+// import SwapScreen from './src/screens/SwapScreen';
+
+// const Stack = createNativeStackNavigator();
+
+// export default function App() {
+//   return (
+//     <>
+//       <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+//       <NavigationContainer>
+//         <Stack.Navigator
+//           initialRouteName="Onboarding"
+//           screenOptions={{
+//             headerStyle: { backgroundColor: '#0a0a0a' },
+//             headerTintColor: '#fff',
+//             headerTitleStyle: { fontWeight: 'bold' },
+//             contentStyle: { backgroundColor: '#0a0a0a' },
+//           }}
+//         >
+//           <Stack.Screen 
+//             name="Onboarding" 
+//             component={OnboardingScreen}
+//             options={{ headerShown: false }}
+//           />
+//           <Stack.Screen 
+//             name="Home" 
+//             component={HomeScreen}
+//             options={{ title: 'PawPad' }}
+//           />
+//           <Stack.Screen 
+//             name="Swap" 
+//             component={SwapScreen}
+//             options={{ title: 'Cross-Chain Swap' }}
+//           />
+//         </Stack.Navigator>
+//       </NavigationContainer>
+//     </>
+//   );
+// }
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StatusBar } from 'react-native';
+import { RootStackParamList } from './src/types/navigation';
+
+// Import screens
+import OnboardingScreen from './src/screens/OnboardingScreen';
+import MXEExplanationScreen from './src/screens/MXEExplanationScreen';
+import QuickSummaryScreen from './src/screens/QuickSummaryScreen';
+import ChainSelectionScreen from './src/screens/ChainSelectionScreen';
+import EmailInputScreen from './src/screens/EmailInputScreen';
+import CreatingVaultScreen from './src/screens/CreatingVaultScreen';
+import VaultSuccessScreen from './src/screens/VaultSuccessScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import SwapScreen from './src/screens/SwapScreen';
+import VaultNameInputScreen from './src/screens/VaultNameInputScreen';
+import AgentPreferencesScreen from './src/screens/AgentPreferencesScreen';
+import AgentCreatingScreen from './src/screens/AgentCreatingScreen';
+import AgentDashboardScreen from './src/screens/AgentDashboardScreen';
+import FundWalletScreen from './src/screens/FundWalletScreen';
+import { VaultProvider } from './src/context/VaultContext';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <VaultProvider>
+    <NavigationContainer>
+      <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+      <Stack.Navigator
+        initialRouteName="Onboarding"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#0a0a0a',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: '600',
+          },
+        }}
+      >
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MXEExplanation"
+          component={MXEExplanationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="QuickSummary"
+          component={QuickSummaryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ChainSelection"
+          component={ChainSelectionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EmailInput"
+          component={EmailInputScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreatingVault"
+          component={CreatingVaultScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VaultSuccess"
+          component={VaultSuccessScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ title: 'PawPad' }}
+        />
+        <Stack.Screen
+          name="VaultNameInput"
+          component={VaultNameInputScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AgentPreferences"
+          component={AgentPreferencesScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AgentCreating"
+          component={AgentCreatingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AgentDashboard"
+          component={AgentDashboardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="FundWallet"
+          component={FundWalletScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Swap"
+          component={SwapScreen}
+          options={{ title: 'Cross-Chain Swap' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+    </VaultProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;
