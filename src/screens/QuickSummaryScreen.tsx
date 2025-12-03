@@ -177,39 +177,56 @@
 // export default QuickSummaryScreen;
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const QuickSummaryScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Quick Summary</Text>
-      <Text style={styles.subtitle}>Your vault is secured with MPC technology</Text>
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>✅ No seed phrases</Text>
-        <Text style={styles.cardText}>Your private keys never exist in one place</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Quick Summary</Text>
+        <Text style={styles.subtitle}>Your vault is secured with MPC technology</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>🔒 Multi-device security</Text>
-        <Text style={styles.cardText}>Each device holds one vault share</Text>
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>✅ No seed phrases</Text>
+          <Text style={styles.cardText}>Your private keys never exist in one place</Text>
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>🔄 Easy recovery</Text>
-        <Text style={styles.cardText}>Recover with 2 of 3 devices</Text>
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🔒 Multi-device security</Text>
+          <Text style={styles.cardText}>Each device holds one vault share</Text>
+        </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('ChainSelection')}
-      >
-        <Text style={styles.buttonText}>Get Started</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🔄 Easy recovery</Text>
+          <Text style={styles.cardText}>Recover with 2 of 3 devices</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('ChainSelection')}
+        >
+          <Text style={styles.buttonText}>Get Started</Text>
+        </TouchableOpacity>
+
+        {/* Recover Wallet Section */}
+        <View style={styles.recoverSection}>
+          <Text style={styles.recoverText}>Already have a wallet?</Text>
+          <TouchableOpacity
+            style={styles.recoverButton}
+            onPress={() => navigation.navigate('Recovery')}
+          >
+            <Text style={styles.recoverButtonText}>🔐 Recover Wallet</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -217,6 +234,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A1628',
+  },
+  content: {
+    flex: 1,
     padding: 24,
     justifyContent: 'center',
   },
@@ -234,7 +254,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#1E293B',
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
@@ -254,13 +274,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#4ECDC4',
     padding: 18,
     borderRadius: 12,
-    marginTop: 40,
+    marginTop: 24,
   },
   buttonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  recoverSection: {
+    alignItems: 'center',
+    marginTop: 32,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
+  },
+  recoverText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 12,
+  },
+  recoverButton: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  recoverButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
   },
 });
 

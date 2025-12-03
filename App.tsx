@@ -67,6 +67,9 @@ import AgentCreatingScreen from './src/screens/AgentCreatingScreen';
 import AgentDashboardScreen from './src/screens/AgentDashboardScreen';
 import FundWalletScreen from './src/screens/FundWalletScreen';
 import { VaultProvider } from './src/context/VaultContext';
+import RecoveryScreen from './src/screens/RecoveryScreen';
+import BackupScreen from './src/screens/BackupScreen';
+import SendScreen from './src/screens/SendScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -102,6 +105,7 @@ function App() {
           component={QuickSummaryScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="Send" component={SendScreen} />
         <Stack.Screen
           name="ChainSelection"
           component={ChainSelectionScreen}
@@ -157,6 +161,8 @@ function App() {
           component={SwapScreen}
           options={{ title: 'Cross-Chain Swap' }}
         />
+        <Stack.Screen name="Recovery" component={RecoveryScreen} />
+<Stack.Screen name="Backup" component={BackupScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </VaultProvider>
