@@ -1,124 +1,46 @@
-// export type RootStackParamList = {
-//   Onboarding: undefined;
-//   MXEExplanation: undefined;
-//   QuickSummary: undefined;
-//   ChainSelection: undefined;
-//   EmailInput: {
-//     chain: string;
-//   };
-//   VaultNameInput: {
-//     chain: string;
-//     email: string;
-//   };
-//   CreatingVault: {
-//     chain: string;
-//     email: string;
-//     vaultName: string;
-//   };
-//   VaultSuccess: {
-//     vault: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//   };
-//   Home: {
-//     vault?: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//   };
-//   Swap: undefined;
-//   AgentPreferences: {
-//     vault: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//   };
-//   AgentCreating: {
-//     vault: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//     preferences: {
-//       vault_id: string;
-//       risk_level: string;
-//       auto_rebalance: boolean;
-//       cross_chain_swaps: boolean;
-//       dark_pool_trading: boolean;
-//       max_position_size: number;
-//       trading_pairs: string[];
-//     };
-//   };
-//   AgentDashboard: {
-//     vault: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//     agent: {
-//       agent_id: string;
-//       vault_id: string;
-//       preferences: {
-//         risk_level: string;
-//         auto_rebalance: boolean;
-//         cross_chain_swaps: boolean;
-//         dark_pool_trading: boolean;
-//         max_position_size: number;
-//         trading_pairs: string[];
-//       };
-//       created_at: string;
-//     };
-//   };
-//   FundWallet: {
-//     vault: {
-//       vault_id: string;
-//       vault_name: string;
-//       chain: string;
-//       address: string;
-//       mpc_provider: string;
-//       created_at: string;
-//     };
-//   };
-// };
+// /**
+//  * Navigation Types - Complete Version
+//  * 
+//  * REPLACE your entire src/types/navigation.ts with this file
+//  */
 
-// declare global {
-//   namespace ReactNavigation {
-//     interface RootParamList extends RootStackParamList {}
-//   }
-// }
+// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// import { RouteProp } from '@react-navigation/native';
 
-// types/navigation.ts
+// // ============================================================================
+// // VAULT DATA TYPE (with unified vault support)
+// // ============================================================================
 
-// Vault type shared across screens
 // export interface VaultData {
 //   vault_id: string;
 //   vault_name: string;
-//   chain: string;
-//   address: string;
-//   mpc_provider: string;
-//   created_at: string;
+//   vault_type?: 'unified' | 'personal' | 'shared' | 'sol' | 'zec';
 //   email?: string;
-//   // FROST-specific fields (ZEC vaults)
-//   vault_type?: 'personal' | 'shared';
+//   created_at?: string;
+
+//   // Unified vault components (SOL + ZEC together)
+//   sol?: {
+//     address: string;
+//     mpc_provider?: string;
+//     mxe_cluster_id?: string;
+//     vault_id?: string;
+//   };
+
+//   zec?: {
+//     address: string;
+//     viewing_key?: string;
+//     wallet_id?: string;
+//     provider?: string;
+//   };
+
+//   // Legacy fields (backwards compatibility)
+//   chain?: string;
+//   address?: string;
+//   mpc_provider?: string;
+//   balance?: number;
+//   lastUpdated?: string;
+
+//   // FROST-specific fields (for shared ZEC vaults)
 //   threshold?: number;
 //   totalParticipants?: number;
 //   participants?: Array<{
@@ -129,143 +51,235 @@
 //   groupPublicKey?: string;
 // }
 
-// // Agent preferences
-// export interface AgentPreferences {
-//   vault_id: string;
-//   risk_level: string;
-//   auto_rebalance: boolean;
-//   cross_chain_swaps: boolean;
-//   dark_pool_trading: boolean;
-//   max_position_size: number;
-//   trading_pairs: string[];
+// // ============================================================================
+// // HELPER FUNCTIONS
+// // ============================================================================
+
+// export function isUnifiedVault(vault: VaultData | null | undefined): boolean {
+//   if (!vault) return false;
+//   return vault.vault_type === 'unified' && !!vault.sol && !!vault.zec;
 // }
 
-// // Agent data
+// export function getSolAddress(vault: VaultData | null | undefined): string | null {
+//   if (!vault) return null;
+//   if (vault.sol?.address) return vault.sol.address;
+//   if (vault.chain === 'SOL' && vault.address) return vault.address;
+//   return null;
+// }
+
+// export function getZecAddress(vault: VaultData | null | undefined): string | null {
+//   if (!vault) return null;
+//   if (vault.zec?.address) return vault.zec.address;
+//   if (vault.chain === 'ZEC' && vault.address) return vault.address;
+//   return null;
+// }
+
+// // ============================================================================
+// // AGENT DATA TYPE
+// // ============================================================================
+
 // export interface AgentData {
 //   agent_id: string;
-//   vault_id: string;
-//   preferences: AgentPreferences;
-//   created_at: string;
+//   name: string;
+//   status: 'active' | 'paused' | 'stopped';
+//   preferences: {
+//     riskLevel: string;
+//     investmentStyle: string;
+//     favoriteTokens: string[];
+//     maxTradeSize: number;
+//   };
+//   performance?: {
+//     totalTrades: number;
+//     successRate: number;
+//     totalProfit: number;
+//   };
 // }
 
-// // Participant for shared vaults
-// export interface Participant {
-//   id: string;
-//   name: string;
-// }
+// // ============================================================================
+// // ROOT STACK PARAM LIST - ALL YOUR SCREENS
+// // ============================================================================
 
 // export type RootStackParamList = {
-//   // Onboarding flow
+//   // ═══════════════════════════════════════════════════════════════
+//   // Onboarding Flow
+//   // ═══════════════════════════════════════════════════════════════
 //   Onboarding: undefined;
 //   MXEExplanation: undefined;
 //   QuickSummary: undefined;
-//   Recovery: undefined;
-//   Backup: undefined;
-  
-//   // Vault creation flow
 //   ChainSelection: undefined;
   
-//   EmailInput: {
-//     chain: string;
-//     walletType?: 'seed' | 'seedless';
+//   // ═══════════════════════════════════════════════════════════════
+//   // Vault Creation Flow
+//   // ═══════════════════════════════════════════════════════════════
+//   EmailInput: { 
+//     chain?: string;
 //   };
-  
-//   VaultNameInput: {
-//     chain: string;
-//     email: string;
+//   VaultNameInput: { 
+//     chain?: string; 
+//     email?: string;
 //   };
-  
-//   // NEW: Vault type selection (for ZEC)
-//   VaultTypeSelection: {
-//     chain: string;
-//     email: string;
+//   CreateVault: { 
+//     chain?: string;
+//   };
+//   VaultSetup: { 
+//     chain?: string; 
+//     email?: string;
+//   };
+//   CreatingVault: { 
+//     chain?: string; 
+//     email?: string;  // Made optional to fix type errors
 //     vaultName: string;
-//   };
-  
-//   // NEW: Shared vault setup (participants)
-//   SharedVaultSetup: {
-//     chain: string;
-//     email: string;
-//     vaultName: string;
-//   };
-  
-//   CreatingVault: {
-//     chain: string;
-//     email: string;
-//     vaultName: string;
-//     // NEW: FROST-specific params
-//     vaultType?: 'personal' | 'shared';
+//     vaultType?: 'personal' | 'shared' | 'unified';
 //     threshold?: number;
-//     participants?: Participant[];
+//     participants?: Array<{ id: string; name: string }>;
 //   };
-  
-//   VaultSuccess: {
+//   VaultSuccess: { 
 //     vault: VaultData;
 //   };
   
-//   // Main screens
-//   Home: {
+//   // ═══════════════════════════════════════════════════════════════
+//   // Main Screens
+//   // ═══════════════════════════════════════════════════════════════
+//   Home: { 
 //     vault?: VaultData;
+//   } | undefined;
+//   VaultDetails: { 
+//     vault: VaultData;
+//   };
+//   Settings: undefined;
+  
+//   // ═══════════════════════════════════════════════════════════════
+//   // Send/Receive
+//   // ═══════════════════════════════════════════════════════════════
+//   Send: { 
+//     vault: VaultData; 
+//     chain?: 'SOL' | 'ZEC';
+//   };
+//   Receive: { 
+//     vault: VaultData; 
+//     chain?: 'SOL' | 'ZEC';
+//   };
+//   SendConfirm: { 
+//     vault: VaultData; 
+//     to: string; 
+//     amount: number; 
+//     chain: 'SOL' | 'ZEC';
+//     memo?: string;
 //   };
   
-//   Swap: undefined;
+//   // ═══════════════════════════════════════════════════════════════
+//   // Swap
+//   // ═══════════════════════════════════════════════════════════════
+//   Swap: { 
+//     vault?: VaultData;
+//   } | undefined;
+//   SwapConfirm: {
+//     vault: VaultData;
+//     direction: 'sol_to_zec' | 'zec_to_sol';
+//     amount: number;
+//     quote: object;
+//   };
   
-//   // Fund wallet with cross-chain support
-//   FundWallet: {
+//   // ═══════════════════════════════════════════════════════════════
+//   // Fund Wallet
+//   // ═══════════════════════════════════════════════════════════════
+//   FundWallet: { 
+//     vault?: VaultData;
+//   } | undefined;
+//   FundConfirm: { 
+//     vault: VaultData; 
+//     sourceChain: string; 
+//     amount: number;
+//     quote: object;
+//   };
+  
+//   // ═══════════════════════════════════════════════════════════════
+//   // Recovery & Backup
+//   // ═══════════════════════════════════════════════════════════════
+//   Recovery: undefined;
+//   RecoveryVerify: { 
+//     email: string;
+//   };
+//   RecoverySuccess: { 
+//     vaults: VaultData[];
+//   };
+//   Backup: { 
+//     vault?: VaultData;
+//   } | undefined;
+//   BackupExport: { 
 //     vault: VaultData;
 //   };
   
-//   // NEW: Funding status tracking
-//   FundingStatus: {
-//     fundingId: string;
+//   // ═══════════════════════════════════════════════════════════════
+//   // Agent Screens
+//   // ═══════════════════════════════════════════════════════════════
+//   AgentSetup: { 
 //     vault: VaultData;
 //   };
-  
-//   // Agent flow
-//   AgentPreferences: {
-//     vault: VaultData;
-//   };
-  
-//   AgentCreating: {
-//     vault: VaultData;
-//     preferences: AgentPreferences;
-//   };
-  
-//   AgentDashboard: {
-//     vault: VaultData;
+//   AgentPreferences: { 
+//     vault?: VaultData;
+//   } | undefined;
+//   AgentCreating: { 
+//     vault?: VaultData; 
+//     preferences?: object;
+//   } | undefined;
+//   AgentDashboard: { 
+//     agent?: AgentData; 
+//     vault?: VaultData;
+//   } | undefined;
+//   AgentChat: { 
 //     agent: AgentData;
 //   };
   
-//   // NEW: Transaction signing (for shared vaults)
-//   SignTransaction: {
+//   // ═══════════════════════════════════════════════════════════════
+//   // Transaction History
+//   // ═══════════════════════════════════════════════════════════════
+//   Transactions: { 
 //     vault: VaultData;
-//     transaction: {
-//       to: string;
-//       amount: number;
-//       memo?: string;
-//     };
 //   };
-  
-//   // NEW: Vault details/management
-//   VaultDetails: {
+//   TransactionDetails: { 
+//     txId: string; 
 //     vault: VaultData;
 //   };
   
-//   // NEW: Vault list
-//   VaultList: undefined;
+//   // ═══════════════════════════════════════════════════════════════
+//   // Additional screens
+//   // ═══════════════════════════════════════════════════════════════
+//   QRScanner: { 
+//     onScan?: (data: string) => void;
+//   };
+//   AddressBook: undefined;
+//   Security: undefined;
+//   About: undefined;
 // };
 
-// declare global {
-//   namespace ReactNavigation {
-//     interface RootParamList extends RootStackParamList {}
-//   }
-// }
+// // ============================================================================
+// // NAVIGATION PROP TYPES
+// // ============================================================================
 
-/**
- * Navigation Types - Complete Version
- * 
- * REPLACE your entire src/types/navigation.ts with this file
- */
+// export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// // Screen-specific navigation props
+// export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+// export type VaultSuccessScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultSuccess'>;
+// export type CreatingVaultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
+// export type SendScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Send'>;
+// export type SwapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Swap'>;
+// export type ChainSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ChainSelection'>;
+// export type QuickSummaryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'QuickSummary'>;
+
+// // ============================================================================
+// // ROUTE PROP TYPES
+// // ============================================================================
+
+// export type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
+// export type VaultSuccessScreenRouteProp = RouteProp<RootStackParamList, 'VaultSuccess'>;
+// export type CreatingVaultScreenRouteProp = RouteProp<RootStackParamList, 'CreatingVault'>;
+// export type SendScreenRouteProp = RouteProp<RootStackParamList, 'Send'>;
+// export type SwapScreenRouteProp = RouteProp<RootStackParamList, 'Swap'>;
+// export type EmailInputScreenRouteProp = RouteProp<RootStackParamList, 'EmailInput'>;
+// export type ChainSelectionScreenRouteProp = RouteProp<RootStackParamList, 'ChainSelection'>;
+
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -359,6 +373,20 @@ export interface AgentData {
 }
 
 // ============================================================================
+// AGENT PREFERENCES TYPE (for AgentCreating screen)
+// ============================================================================
+
+export interface AgentPreferences {
+  risk_level: 'Conservative' | 'Moderate' | 'Aggressive';
+  trading_pairs: string[];
+  cross_chain_swaps: boolean;
+  dark_pool_trading: boolean;
+  max_position_size: number;
+  auto_rebalancing: boolean;
+  enable_lending?: boolean;
+}
+
+// ============================================================================
 // ROOT STACK PARAM LIST - ALL YOUR SCREENS
 // ============================================================================
 
@@ -390,7 +418,7 @@ export type RootStackParamList = {
   };
   CreatingVault: { 
     chain?: string; 
-    email?: string;  // Made optional to fix type errors
+    email?: string;
     vaultName: string;
     vaultType?: 'personal' | 'shared' | 'unified';
     threshold?: number;
@@ -478,20 +506,33 @@ export type RootStackParamList = {
   // ═══════════════════════════════════════════════════════════════
   AgentSetup: { 
     vault: VaultData;
+    agent?: AgentData;  // For editing existing agent
   };
   AgentPreferences: { 
     vault?: VaultData;
   } | undefined;
   AgentCreating: { 
-    vault?: VaultData; 
-    preferences?: object;
-  } | undefined;
+    vault: VaultData; 
+    preferences: AgentPreferences;
+  };
   AgentDashboard: { 
-    agent?: AgentData; 
-    vault?: VaultData;
-  } | undefined;
+    vault: VaultData;
+    agent?: AgentData;
+  };
   AgentChat: { 
     agent: AgentData;
+  };
+  
+  // ═══════════════════════════════════════════════════════════════
+  // NEW: Privacy Features (Arcium)
+  // ═══════════════════════════════════════════════════════════════
+  Lending: {
+    vault_id: string;
+    vault?: VaultData;
+  };
+  DarkPool: {
+    vault_id: string;
+    vault?: VaultData;
   };
   
   // ═══════════════════════════════════════════════════════════════
@@ -531,6 +572,11 @@ export type SwapScreenNavigationProp = NativeStackNavigationProp<RootStackParamL
 export type ChainSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ChainSelection'>;
 export type QuickSummaryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'QuickSummary'>;
 
+// NEW: Privacy feature navigation props
+export type LendingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Lending'>;
+export type DarkPoolScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DarkPool'>;
+export type AgentDashboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AgentDashboard'>;
+
 // ============================================================================
 // ROUTE PROP TYPES
 // ============================================================================
@@ -542,3 +588,9 @@ export type SendScreenRouteProp = RouteProp<RootStackParamList, 'Send'>;
 export type SwapScreenRouteProp = RouteProp<RootStackParamList, 'Swap'>;
 export type EmailInputScreenRouteProp = RouteProp<RootStackParamList, 'EmailInput'>;
 export type ChainSelectionScreenRouteProp = RouteProp<RootStackParamList, 'ChainSelection'>;
+
+// NEW: Privacy feature route props
+export type LendingScreenRouteProp = RouteProp<RootStackParamList, 'Lending'>;
+export type DarkPoolScreenRouteProp = RouteProp<RootStackParamList, 'DarkPool'>;
+export type AgentDashboardScreenRouteProp = RouteProp<RootStackParamList, 'AgentDashboard'>;
+export type AgentCreatingScreenRouteProp = RouteProp<RootStackParamList, 'AgentCreating'>;

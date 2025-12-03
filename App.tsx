@@ -70,6 +70,9 @@ import { VaultProvider } from './src/context/VaultContext';
 import RecoveryScreen from './src/screens/RecoveryScreen';
 import BackupScreen from './src/screens/BackupScreen';
 import SendScreen from './src/screens/SendScreen';
+import LendingScreen from './src/screens/LendingScreen';
+import DarkPoolScreen from './src/screens/DarkPoolScreen';
+import AgentSetupScreen from './src/screens/AgentSetupScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -106,6 +109,9 @@ function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Send" component={SendScreen} />
+        <Stack.Screen name="Lending" component={LendingScreen} />
+<Stack.Screen name="DarkPool" component={DarkPoolScreen} />
+<Stack.Screen name="AgentDashboard" component={AgentDashboardScreen} />
         <Stack.Screen
           name="ChainSelection"
           component={ChainSelectionScreen}
@@ -147,11 +153,6 @@ function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="AgentDashboard"
-          component={AgentDashboardScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
           name="FundWallet"
           component={FundWalletScreen}
           options={{ headerShown: false }}
@@ -161,6 +162,11 @@ function App() {
           component={SwapScreen}
           options={{ title: 'Cross-Chain Swap' }}
         />
+        <Stack.Screen
+  name="AgentSetup"
+  component={AgentSetupScreen}
+  options={{ headerShown: false }}
+/>
         <Stack.Screen name="Recovery" component={RecoveryScreen} />
 <Stack.Screen name="Backup" component={BackupScreen} />
       </Stack.Navigator>

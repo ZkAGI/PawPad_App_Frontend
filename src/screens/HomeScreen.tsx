@@ -1556,33 +1556,59 @@ const HomeScreen = () => {
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          {/* AI Agent Card */}
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('AgentPreferences', { vault: vault || undefined })}
-          >
-            <Text style={styles.quickActionEmoji}>🤖</Text>
-            <View style={styles.quickActionInfo}>
-              <Text style={styles.quickActionTitle}>AI Trading Agent</Text>
-              <Text style={styles.quickActionDesc}>Automate your trades</Text>
-            </View>
-            <Text style={styles.quickActionArrow}>→</Text>
-          </TouchableOpacity>
+        {vault && (
+  <>
+    {/* Feature Cards - Vertical Stack */}
+    <TouchableOpacity
+      style={styles.quickActionCard}
+      onPress={() => navigation.navigate('DarkPool', { vault_id: vault.vault_id, vault })}
+    >
+      <Text style={styles.quickActionEmoji}>🏊</Text>
+      <View style={styles.quickActionInfo}>
+        <Text style={styles.quickActionTitle}>Dark Pool Trading</Text>
+        <Text style={styles.quickActionDesc}>MEV-protected encrypted orders</Text>
+      </View>
+      <Text style={styles.quickActionArrow}>→</Text>
+    </TouchableOpacity>
 
-          {/* Backup Card */}
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('Backup', { vault: vault || undefined })}
-          >
-            <Text style={styles.quickActionEmoji}>🔐</Text>
-            <View style={styles.quickActionInfo}>
-              <Text style={styles.quickActionTitle}>Backup & Recovery</Text>
-              <Text style={styles.quickActionDesc}>Secure your wallet</Text>
-            </View>
-            <Text style={styles.quickActionArrow}>→</Text>
-          </TouchableOpacity>
-        </View>
+    <TouchableOpacity
+      style={styles.quickActionCard}
+      onPress={() => navigation.navigate('Lending', { vault_id: vault.vault_id, vault })}
+    >
+      <Text style={styles.quickActionEmoji}>🏦</Text>
+      <View style={styles.quickActionInfo}>
+        <Text style={styles.quickActionTitle}>Private Lending</Text>
+        <Text style={styles.quickActionDesc}>Borrow with Arcium privacy</Text>
+      </View>
+      <Text style={styles.quickActionArrow}>→</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.quickActionCard}
+      onPress={() => navigation.navigate('AgentDashboard', { vault })}
+    >
+      <Text style={styles.quickActionEmoji}>🤖</Text>
+      <View style={styles.quickActionInfo}>
+        <Text style={styles.quickActionTitle}>AI Trading Agent</Text>
+        <Text style={styles.quickActionDesc}>Auto-trade with Zynapse signals</Text>
+      </View>
+      <Text style={styles.quickActionArrow}>→</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.quickActionCard}
+      onPress={() => navigation.navigate('Backup', { vault })}
+    >
+      <Text style={styles.quickActionEmoji}>🔐</Text>
+      <View style={styles.quickActionInfo}>
+        <Text style={styles.quickActionTitle}>Backup & Recovery</Text>
+        <Text style={styles.quickActionDesc}>Secure your wallet</Text>
+      </View>
+      <Text style={styles.quickActionArrow}>→</Text>
+    </TouchableOpacity>
+  </>
+)}
+
 
         {/* Security Footer */}
         <View style={styles.securityFooter}>
@@ -1791,34 +1817,37 @@ const styles = StyleSheet.create({
     marginTop: 24,
     gap: 12,
   },
-  quickActionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 16,
-  },
-  quickActionEmoji: {
-    fontSize: 28,
-    marginRight: 12,
-  },
-  quickActionInfo: {
-    flex: 1,
-  },
-  quickActionTitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  quickActionDesc: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  quickActionArrow: {
-    fontSize: 18,
-    color: '#6B7280',
-  },
+ quickActionCard: {
+  backgroundColor: '#1E293B',
+  marginHorizontal: 16,
+  // marginBottom: 12,
+  marginTop: 12,
+  padding: 16,
+  borderRadius: 12,
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+quickActionEmoji: {
+  fontSize: 28,
+  marginRight: 12,
+},
+quickActionInfo: {
+  flex: 1,
+},
+quickActionTitle: {
+  color: '#FFFFFF',
+  fontSize: 16,
+  fontWeight: '600',
+},
+quickActionDesc: {
+  color: '#6B7280',
+  fontSize: 12,
+  marginTop: 2,
+},
+quickActionArrow: {
+  color: '#4ECDC4',
+  fontSize: 20,
+},
 
   // Security Footer
   securityFooter: {
@@ -1849,6 +1878,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 8,
   },
+  featureButton: {
+  backgroundColor: '#1E293B',
+  padding: 16,
+  borderRadius: 12,
+  alignItems: 'center',
+  flex: 1,
+  marginHorizontal: 4,
+},
+featureIcon: {
+  fontSize: 28,
+  marginBottom: 8,
+},
+featureTitle: {
+  color: '#FFFFFF',
+  fontSize: 12,
+  fontWeight: '600',
+},
   emptyText: {
     fontSize: 16,
     color: '#9CA3AF',
