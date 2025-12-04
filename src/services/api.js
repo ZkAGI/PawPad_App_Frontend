@@ -863,6 +863,50 @@ class PawPadAPI {
   }
 
   // ============================================================================
+// 🆕 SEED PHRASE RECOVERY - ADD THIS SECTION!
+// ============================================================================
+
+/**
+ * Restore wallet from 12-word seed phrase
+ */
+async restoreFromSeedPhrase(seedPhrase, name = 'Restored Wallet', email = '') {
+  try {
+    console.log('[Restore] Restoring from seed phrase...');
+    
+    const response = await axios.post(`${this.baseUrl}/wallet/restore`, {
+      seed_phrase: seedPhrase.trim(),
+      name: name,
+      email: email?.toLowerCase().trim(),
+    });
+    
+    console.log('[Restore] Result:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[Restore] Failed:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.error || error.message 
+    };
+  }
+}
+
+/**
+ * Verify a wallet can be restored (test decryption)
+ */
+async verifyWallet(address) {
+  try {
+    const response = await axios.get(`${this.baseUrl}/verify-wallet/${address}`);
+    return response.data;
+  } catch (error) {
+    console.error('[Verify] Failed:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.error || error.message 
+    };
+  }
+}
+
+  // ============================================================================
   // BALANCE METHODS
   // ============================================================================
 
@@ -1456,6 +1500,34 @@ class PawPadAPI {
     }
   }
 
+  async getAgentStatus(agentId) {
+  try {
+    const response = await axios.get(`${this.baseUrl}/ai/agents/${agentId}/status`);
+    return response.data;
+  } catch (error) {
+    console.error('[Agent] Status failed:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+async runAgentNow(agentId) {
+  try {
+    const response = await axios.post(`${this.baseUrl}/ai/agents/${agentId}/run-now`);
+    return response.data;
+  } catch (error) {
+    console.error('[Agent] Run now failed:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+async getEngineStatus() {
+  try {
+    const response = await axios.get(`${this.baseUrl}/ai/engine/status`);
+    return response.data;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
   // ============================================================================
   // HEALTH CHECK
   // ============================================================================

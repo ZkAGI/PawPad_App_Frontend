@@ -31,7 +31,7 @@ import { useVaults, useActiveVault } from '../context/VaultContext';
 
 const API_BASE = __DEV__ 
   ? 'http://localhost:3001'
-  : 'https://your-api.pawpad.app';
+  : 'https://pawpad-arcium-backend.onrender.com';
 
 const FUNDING_TOKENS = [
   { id: 'ETH', name: 'Ethereum', symbol: 'ETH', icon: '⟠', chain: 'ethereum' },

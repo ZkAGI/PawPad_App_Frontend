@@ -21,7 +21,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 // Update this to your backend URL
 const API_BASE = __DEV__ 
   ? 'http://localhost:3001'  // Development
-  : 'https://your-api.pawpad.app';  // Production
+  : 'https://pawpad-arcium-backend.onrender.com';  // Production
 
 // Supported tokens for funding
 const FUNDING_TOKENS = [

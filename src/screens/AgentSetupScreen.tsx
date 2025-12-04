@@ -22,7 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, AgentPreferences } from './src/types/navigation';
+import { RootStackParamList, AgentPreferences } from '../types/navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AgentSetupRouteProp = RouteProp<RootStackParamList, 'AgentSetup'>;
@@ -33,9 +33,11 @@ const AgentSetupScreen = () => {
   const { vault, agent } = route.params;
 
   // Preferences state
-  const [riskLevel, setRiskLevel] = useState<'Conservative' | 'Moderate' | 'Aggressive'>(
-    (agent?.preferences?.riskLevel as any) || 'Moderate'
-  );
+  // const [riskLevel, setRiskLevel] = useState<'Conservative' | 'Moderate' | 'Aggressive'>(
+  //   (agent?.preferences?.riskLevel as any) || 'Moderate'
+  // );
+  const [riskLevel, setRiskLevel] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
+
   const [tradingPairs, setTradingPairs] = useState<string[]>(
     agent?.preferences?.favoriteTokens || ['SOL/USDC', 'ZEC/USDC']
   );
@@ -100,20 +102,20 @@ const AgentSetupScreen = () => {
           <Text style={styles.sectionDesc}>How aggressive should your agent trade?</Text>
           
           <View style={styles.riskOptions}>
-            {(['Conservative', 'Moderate', 'Aggressive'] as const).map((level) => (
+            {(['conservative', 'moderate', 'aggressive'] as const).map((level) => (
               <TouchableOpacity
                 key={level}
                 style={[
                   styles.riskOption,
                   riskLevel === level && styles.riskOptionActive,
-                  riskLevel === level && level === 'Conservative' && styles.riskConservative,
-                  riskLevel === level && level === 'Moderate' && styles.riskModerate,
-                  riskLevel === level && level === 'Aggressive' && styles.riskAggressive,
+                  riskLevel === level && level === 'conservative' && styles.riskConservative,
+                  riskLevel === level && level === 'moderate' && styles.riskModerate,
+                  riskLevel === level && level === 'aggressive' && styles.riskAggressive,
                 ]}
                 onPress={() => setRiskLevel(level)}
               >
                 <Text style={styles.riskIcon}>
-                  {level === 'Conservative' ? '🐢' : level === 'Moderate' ? '⚖️' : '🚀'}
+                  {level === 'conservative' ? '🐢' : level === 'moderate' ? '⚖️' : '🚀'}
                 </Text>
                 <Text style={[
                   styles.riskLabel,
@@ -122,9 +124,9 @@ const AgentSetupScreen = () => {
                   {level}
                 </Text>
                 <Text style={styles.riskDesc}>
-                  {level === 'Conservative' 
+                  {level === 'conservative' 
                     ? 'Small positions, high confidence only'
-                    : level === 'Moderate'
+                    : level === 'moderate'
                     ? 'Balanced risk/reward'
                     : 'Larger positions, more trades'}
                 </Text>

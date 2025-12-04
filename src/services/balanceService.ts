@@ -1,7 +1,7 @@
 // src/services/balanceService.ts
 // Use backend API for balance fetching to avoid crypto.getRandomValues() issue
 
-const API_BASE = 'http://10.0.2.2:3001';
+const API_BASE = 'https://pawpad-arcium-backend.onrender.com';
 
 interface BalanceResult {
   success: boolean;

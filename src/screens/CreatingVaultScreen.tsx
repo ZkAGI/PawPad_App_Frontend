@@ -1,885 +1,1222 @@
-// import React, { useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   ActivityIndicator,
-// } from 'react-native';
-// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import { RootStackParamList } from '../types/navigation';
-// import api from '../services/api';
+// // import React, { useEffect, useState } from 'react';
+// // import {
+// //   View,
+// //   Text,
+// //   StyleSheet,
+// //   SafeAreaView,
+// //   ActivityIndicator,
+// // } from 'react-native';
+// // import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+// // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// // import { RootStackParamList } from '../types/navigation';
+// // import api from '../services/api';
 
-// type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
-// type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
+// // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
+// // type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
 
-// const CreatingVaultScreen = () => {
-//   const navigation = useNavigation<NavigationProp>();
-//   const route = useRoute<RoutePropType>();
-//   const { chain, email, vaultName } = route.params;  // ADD vaultName HERE
-//   const [status, setStatus] = useState('Initializing MPC protocol...');
-//   const [error, setError] = useState('');
+// // const CreatingVaultScreen = () => {
+// //   const navigation = useNavigation<NavigationProp>();
+// //   const route = useRoute<RoutePropType>();
+// //   const { chain, email, vaultName } = route.params;  // ADD vaultName HERE
+// //   const [status, setStatus] = useState('Initializing MPC protocol...');
+// //   const [error, setError] = useState('');
 
-//   useEffect(() => {
-//     createVault();
-//   }, []);
+// //   useEffect(() => {
+// //     createVault();
+// //   }, []);
 
-//   const createVault = async () => {
-//     try {
-//       setStatus('Creating your MPC vault...');
+// //   const createVault = async () => {
+// //     try {
+// //       setStatus('Creating your MPC vault...');
       
-//       const response = await api.createVault(chain, email, vaultName);
+// //       const response = await api.createVault(chain, email, vaultName);
       
-//       if (response.success) {
-//         setStatus('Vault created successfully!');
+// //       if (response.success) {
+// //         setStatus('Vault created successfully!');
         
-//         const vaultData = {
-//           vault_id: response.vault_id,
-//           vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
-//           chain: response.chain,
-//           address: response.address,
-//           mpc_provider: response.mpc_provider,
-//           created_at: response.created_at,
-//         };
+// //         const vaultData = {
+// //           vault_id: response.vault_id,
+// //           vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
+// //           chain: response.chain,
+// //           address: response.address,
+// //           mpc_provider: response.mpc_provider,
+// //           created_at: response.created_at,
+// //         };
         
-//         setTimeout(() => {
-//           navigation.replace('VaultSuccess', { vault: vaultData });
-//         }, 1500);
-//       } else {
-//         throw new Error(response.error || 'Failed to create vault');
-//       }
-//     } catch (err: any) {
-//       console.error('Vault creation error:', err);
-//       console.error('Error response:', err.response?.data);
+// //         setTimeout(() => {
+// //           navigation.replace('VaultSuccess', { vault: vaultData });
+// //         }, 1500);
+// //       } else {
+// //         throw new Error(response.error || 'Failed to create vault');
+// //       }
+// //     } catch (err: any) {
+// //       console.error('Vault creation error:', err);
+// //       console.error('Error response:', err.response?.data);
       
-//       const errorMsg = err.response?.data?.error || 
-//                        err.response?.data?.message || 
-//                        err.message || 
-//                        'Failed to create vault';
+// //       const errorMsg = err.response?.data?.error || 
+// //                        err.response?.data?.message || 
+// //                        err.message || 
+// //                        'Failed to create vault';
       
-//       setError(errorMsg);
-//       setStatus('Error');
-//     }
-//   };
+// //       setError(errorMsg);
+// //       setStatus('Error');
+// //     }
+// //   };
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <View style={styles.content}>
-//         <View style={styles.animationContainer}>
-//           {error ? (
-//             <Text style={styles.errorEmoji}>❌</Text>
-//           ) : (
-//             <ActivityIndicator size="large" color="#4ECDC4" />
-//           )}
-//         </View>
+// //   return (
+// //     <SafeAreaView style={styles.container}>
+// //       <View style={styles.content}>
+// //         <View style={styles.animationContainer}>
+// //           {error ? (
+// //             <Text style={styles.errorEmoji}>❌</Text>
+// //           ) : (
+// //             <ActivityIndicator size="large" color="#4ECDC4" />
+// //           )}
+// //         </View>
 
-//         <Text style={styles.title}>
-//           {error ? 'Creation Failed' : 'Creating Your Vault'}
-//         </Text>
+// //         <Text style={styles.title}>
+// //           {error ? 'Creation Failed' : 'Creating Your Vault'}
+// //         </Text>
         
-//         <Text style={styles.status}>
-//           {error || status}
-//         </Text>
+// //         <Text style={styles.status}>
+// //           {error || status}
+// //         </Text>
 
-//         <View style={styles.infoCard}>
-//           <Text style={styles.infoText}>Name: {vaultName}</Text>
-//           <Text style={styles.infoText}>Chain: {chain}</Text>
-//           <Text style={styles.infoText}>Email: {email}</Text>
-//           <Text style={styles.infoText}>
-//             MPC: {chain === 'SOL' ? 'Arcium' : 'Lit Protocol'}
-//           </Text>
-//         </View>
-//       </View>
-//     </SafeAreaView>
-//   );
-// };
+// //         <View style={styles.infoCard}>
+// //           <Text style={styles.infoText}>Name: {vaultName}</Text>
+// //           <Text style={styles.infoText}>Chain: {chain}</Text>
+// //           <Text style={styles.infoText}>Email: {email}</Text>
+// //           <Text style={styles.infoText}>
+// //             MPC: {chain === 'SOL' ? 'Arcium' : 'Lit Protocol'}
+// //           </Text>
+// //         </View>
+// //       </View>
+// //     </SafeAreaView>
+// //   );
+// // };
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#0A1628',
-//   },
-//   content: {
-//     flex: 1,
-//     paddingHorizontal: 24,
-//     justifyContent: 'center',
-//   },
-//   animationContainer: {
-//     alignItems: 'center',
-//     marginBottom: 40,
-//   },
-//   errorEmoji: {
-//     fontSize: 64,
-//   },
-//   title: {
-//     fontSize: 24,
-//     color: '#FFFFFF',
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     marginBottom: 16,
-//   },
-//   status: {
-//     fontSize: 16,
-//     color: '#9CA3AF',
-//     textAlign: 'center',
-//     marginBottom: 40,
-//   },
-//   infoCard: {
-//     backgroundColor: '#1E293B',
-//     borderRadius: 12,
-//     padding: 20,
-//   },
-//   infoText: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//     marginBottom: 8,
-//   },
-// });
+// // const styles = StyleSheet.create({
+// //   container: {
+// //     flex: 1,
+// //     backgroundColor: '#0A1628',
+// //   },
+// //   content: {
+// //     flex: 1,
+// //     paddingHorizontal: 24,
+// //     justifyContent: 'center',
+// //   },
+// //   animationContainer: {
+// //     alignItems: 'center',
+// //     marginBottom: 40,
+// //   },
+// //   errorEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   title: {
+// //     fontSize: 24,
+// //     color: '#FFFFFF',
+// //     fontWeight: 'bold',
+// //     textAlign: 'center',
+// //     marginBottom: 16,
+// //   },
+// //   status: {
+// //     fontSize: 16,
+// //     color: '#9CA3AF',
+// //     textAlign: 'center',
+// //     marginBottom: 40,
+// //   },
+// //   infoCard: {
+// //     backgroundColor: '#1E293B',
+// //     borderRadius: 12,
+// //     padding: 20,
+// //   },
+// //   infoText: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     marginBottom: 8,
+// //   },
+// // });
 
-// export default CreatingVaultScreen;
+// // export default CreatingVaultScreen;
 
-// import React, { useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   ActivityIndicator,
-// } from 'react-native';
-// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import { RootStackParamList, VaultData } from '../types/navigation';
-// import api from '../services/api';
+// // import React, { useEffect, useState } from 'react';
+// // import {
+// //   View,
+// //   Text,
+// //   StyleSheet,
+// //   SafeAreaView,
+// //   ActivityIndicator,
+// // } from 'react-native';
+// // import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+// // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// // import { RootStackParamList, VaultData } from '../types/navigation';
+// // import api from '../services/api';
 
-// type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
-// type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
+// // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
+// // type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
 
-// const CreatingVaultScreen = () => {
-//   const navigation = useNavigation<NavigationProp>();
-//   const route = useRoute<RoutePropType>();
-//   const { chain, email, vaultName, vaultType, threshold, participants } = route.params;
+// // const CreatingVaultScreen = () => {
+// //   const navigation = useNavigation<NavigationProp>();
+// //   const route = useRoute<RoutePropType>();
+// //   const { chain, email, vaultName, vaultType, threshold, participants } = route.params;
   
-//   const [status, setStatus] = useState('Initializing...');
-//   const [subStatus, setSubStatus] = useState('');
-//   const [error, setError] = useState('');
+// //   const [status, setStatus] = useState('Initializing...');
+// //   const [subStatus, setSubStatus] = useState('');
+// //   const [error, setError] = useState('');
 
-//   useEffect(() => {
-//     createVault();
-//   }, []);
+// //   useEffect(() => {
+// //     createVault();
+// //   }, []);
 
-//   const createVault = async () => {
-//     try {
-//       const isZEC = chain === 'ZEC';
+// //   const createVault = async () => {
+// //     try {
+// //       const isZEC = chain === 'ZEC';
       
-//       if (isZEC) {
-//         // === FROST VAULT CREATION ===
-//         if (vaultType === 'shared' && threshold && participants && participants.length > 0) {
-//           // Shared vault (m-of-n)
-//           setStatus('Starting FROST DKG...');
-//           setSubStatus('Generating distributed key shares');
+// //       if (isZEC) {
+// //         // === FROST VAULT CREATION ===
+// //         if (vaultType === 'shared' && threshold && participants && participants.length > 0) {
+// //           // Shared vault (m-of-n)
+// //           setStatus('Starting FROST DKG...');
+// //           setSubStatus('Generating distributed key shares');
           
-//           const response = await api.createFrostSharedVault(
-//             vaultName,
-//             threshold,  // Now guaranteed to be number
-//             participants
-//           );
+// //           const response = await api.createFrostSharedVault(
+// //             vaultName,
+// //             threshold,  // Now guaranteed to be number
+// //             participants
+// //           );
           
-//           if (response.success) {
-//             setStatus('DKG Complete!');
-//             setSubStatus('Key shares distributed to participants');
+// //           if (response.success) {
+// //             setStatus('DKG Complete!');
+// //             setSubStatus('Key shares distributed to participants');
             
-//             const vaultData: VaultData = {
-//               vault_id: response.vault.id,
-//               vault_name: response.vault.name,
-//               chain: 'ZEC',
-//               address: response.vault.address,
-//               mpc_provider: 'FROST',
-//               vault_type: 'shared' as const,  // Fix: explicit type
-//               threshold: response.vault.threshold,
-//               totalParticipants: response.vault.totalParticipants,
-//               participants: response.vault.participants,
-//               created_at: response.vault.createdAt,
-//             };
+// //             const vaultData: VaultData = {
+// //               vault_id: response.vault.id,
+// //               vault_name: response.vault.name,
+// //               chain: 'ZEC',
+// //               address: response.vault.address,
+// //               mpc_provider: 'FROST',
+// //               vault_type: 'shared' as const,  // Fix: explicit type
+// //               threshold: response.vault.threshold,
+// //               totalParticipants: response.vault.totalParticipants,
+// //               participants: response.vault.participants,
+// //               created_at: response.vault.createdAt,
+// //             };
             
-//             setTimeout(() => {
-//               navigation.replace('VaultSuccess', { vault: vaultData });
-//             }, 1500);
-//           } else {
-//             throw new Error(response.error || 'Failed to create shared vault');
-//           }
-//         } else {
-//           // Personal vault (1-of-1)
-//           setStatus('Creating FROST vault...');
-//           setSubStatus('Generating spending key');
+// //             setTimeout(() => {
+// //               navigation.replace('VaultSuccess', { vault: vaultData });
+// //             }, 1500);
+// //           } else {
+// //             throw new Error(response.error || 'Failed to create shared vault');
+// //           }
+// //         } else {
+// //           // Personal vault (1-of-1)
+// //           setStatus('Creating FROST vault...');
+// //           setSubStatus('Generating spending key');
           
-//           const response = await api.createFrostPersonalVault(
-//             vaultName,
-//             email,
-//             vaultName
-//           );
+// //           const response = await api.createFrostPersonalVault(
+// //             vaultName,
+// //             email,
+// //             vaultName
+// //           );
           
-//           if (response.success) {
-//             setStatus('Vault created!');
-//             setSubStatus('Unified address generated');
+// //           if (response.success) {
+// //             setStatus('Vault created!');
+// //             setSubStatus('Unified address generated');
             
-//             const vaultData: VaultData = {
-//               vault_id: response.vault.id,
-//               vault_name: response.vault.name,
-//               chain: 'ZEC',
-//               address: response.vault.address,
-//               mpc_provider: 'FROST',
-//               vault_type: 'personal' as const,  // Fix: explicit type
-//               threshold: 1,
-//               totalParticipants: 1,
-//               created_at: response.vault.createdAt,
-//             };
+// //             const vaultData: VaultData = {
+// //               vault_id: response.vault.id,
+// //               vault_name: response.vault.name,
+// //               chain: 'ZEC',
+// //               address: response.vault.address,
+// //               mpc_provider: 'FROST',
+// //               vault_type: 'personal' as const,  // Fix: explicit type
+// //               threshold: 1,
+// //               totalParticipants: 1,
+// //               created_at: response.vault.createdAt,
+// //             };
             
-//             setTimeout(() => {
-//               navigation.replace('VaultSuccess', { vault: vaultData });
-//             }, 1500);
-//           } else {
-//             throw new Error(response.error || 'Failed to create personal vault');
-//           }
-//         }
-//       } else {
-//         // === EXISTING SOL VAULT CREATION (Arcium) ===
-//         setStatus('Creating your MPC vault...');
-//         setSubStatus('Connecting to Arcium network');
+// //             setTimeout(() => {
+// //               navigation.replace('VaultSuccess', { vault: vaultData });
+// //             }, 1500);
+// //           } else {
+// //             throw new Error(response.error || 'Failed to create personal vault');
+// //           }
+// //         }
+// //       } else {
+// //         // === EXISTING SOL VAULT CREATION (Arcium) ===
+// //         setStatus('Creating your MPC vault...');
+// //         setSubStatus('Connecting to Arcium network');
         
-//         const response = await api.createVault(chain, email, vaultName);
+// //         const response = await api.createVault(chain, email, vaultName);
         
-//         if (response.success) {
-//           setStatus('Vault created successfully!');
-//           setSubStatus('');
+// //         if (response.success) {
+// //           setStatus('Vault created successfully!');
+// //           setSubStatus('');
           
-//           const vaultData: VaultData = {
-//             vault_id: response.vault_id,
-//             vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
-//             chain: response.chain,
-//             address: response.address,
-//             mpc_provider: response.mpc_provider,
-//             vault_type: 'personal' as const,
-//             created_at: response.created_at,
-//           };
+// //           const vaultData: VaultData = {
+// //             vault_id: response.vault_id,
+// //             vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
+// //             chain: response.chain,
+// //             address: response.address,
+// //             mpc_provider: response.mpc_provider,
+// //             vault_type: 'personal' as const,
+// //             created_at: response.created_at,
+// //           };
           
-//           setTimeout(() => {
-//             navigation.replace('VaultSuccess', { vault: vaultData });
-//           }, 1500);
-//         } else {
-//           throw new Error(response.error || 'Failed to create vault');
-//         }
-//       }
-//     } catch (err: any) {
-//       console.error('Vault creation error:', err);
+// //           setTimeout(() => {
+// //             navigation.replace('VaultSuccess', { vault: vaultData });
+// //           }, 1500);
+// //         } else {
+// //           throw new Error(response.error || 'Failed to create vault');
+// //         }
+// //       }
+// //     } catch (err: any) {
+// //       console.error('Vault creation error:', err);
       
-//       const errorMsg = err.response?.data?.error || 
-//                        err.message || 
-//                        'Failed to create vault';
+// //       const errorMsg = err.response?.data?.error || 
+// //                        err.message || 
+// //                        'Failed to create vault';
       
-//       setError(errorMsg);
-//       setStatus('Error');
-//       setSubStatus('');
-//     }
-//   };
+// //       setError(errorMsg);
+// //       setStatus('Error');
+// //       setSubStatus('');
+// //     }
+// //   };
 
-//   const getMPCProvider = () => {
-//     if (chain === 'ZEC') return 'FROST Threshold';
-//     if (chain === 'SOL') return 'Arcium MPC';
-//     return 'MPC';
-//   };
+// //   const getMPCProvider = () => {
+// //     if (chain === 'ZEC') return 'FROST Threshold';
+// //     if (chain === 'SOL') return 'Arcium MPC';
+// //     return 'MPC';
+// //   };
 
-//   const getVaultTypeDisplay = () => {
-//     if (chain === 'ZEC' && vaultType === 'shared' && threshold && participants) {
-//       return `Shared (${threshold}-of-${participants.length})`;
-//     }
-//     return 'Personal (1-of-1)';
-//   };
+// //   const getVaultTypeDisplay = () => {
+// //     if (chain === 'ZEC' && vaultType === 'shared' && threshold && participants) {
+// //       return `Shared (${threshold}-of-${participants.length})`;
+// //     }
+// //     return 'Personal (1-of-1)';
+// //   };
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <View style={styles.content}>
-//         <View style={styles.animationContainer}>
-//           {error ? (
-//             <Text style={styles.errorEmoji}>❌</Text>
-//           ) : status.includes('Complete') || status.includes('success') ? (
-//             <Text style={styles.successEmoji}>✅</Text>
-//           ) : (
-//             <View style={styles.loaderContainer}>
-//               <ActivityIndicator size="large" color="#4ECDC4" />
-//               {chain === 'ZEC' && vaultType === 'shared' && (
-//                 <View style={styles.dkgIndicator}>
-//                   <Text style={styles.dkgText}>🔐 DKG</Text>
-//                 </View>
-//               )}
-//             </View>
-//           )}
-//         </View>
+// //   return (
+// //     <SafeAreaView style={styles.container}>
+// //       <View style={styles.content}>
+// //         <View style={styles.animationContainer}>
+// //           {error ? (
+// //             <Text style={styles.errorEmoji}>❌</Text>
+// //           ) : status.includes('Complete') || status.includes('success') ? (
+// //             <Text style={styles.successEmoji}>✅</Text>
+// //           ) : (
+// //             <View style={styles.loaderContainer}>
+// //               <ActivityIndicator size="large" color="#4ECDC4" />
+// //               {chain === 'ZEC' && vaultType === 'shared' && (
+// //                 <View style={styles.dkgIndicator}>
+// //                   <Text style={styles.dkgText}>🔐 DKG</Text>
+// //                 </View>
+// //               )}
+// //             </View>
+// //           )}
+// //         </View>
 
-//         <Text style={styles.title}>
-//           {error ? 'Creation Failed' : 'Creating Your Vault'}
-//         </Text>
+// //         <Text style={styles.title}>
+// //           {error ? 'Creation Failed' : 'Creating Your Vault'}
+// //         </Text>
         
-//         <Text style={styles.status}>
-//           {error || status}
-//         </Text>
+// //         <Text style={styles.status}>
+// //           {error || status}
+// //         </Text>
         
-//         {subStatus ? (
-//           <Text style={styles.subStatus}>{subStatus}</Text>
-//         ) : null}
+// //         {subStatus ? (
+// //           <Text style={styles.subStatus}>{subStatus}</Text>
+// //         ) : null}
 
-//         <View style={styles.infoCard}>
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Name</Text>
-//             <Text style={styles.infoValue}>{vaultName}</Text>
-//           </View>
+// //         <View style={styles.infoCard}>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Name</Text>
+// //             <Text style={styles.infoValue}>{vaultName}</Text>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Chain</Text>
-//             <View style={styles.chainBadge}>
-//               <Text style={styles.chainText}>{chain}</Text>
-//             </View>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Chain</Text>
+// //             <View style={styles.chainBadge}>
+// //               <Text style={styles.chainText}>{chain}</Text>
+// //             </View>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Type</Text>
-//             <Text style={styles.infoValue}>{getVaultTypeDisplay()}</Text>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Type</Text>
+// //             <Text style={styles.infoValue}>{getVaultTypeDisplay()}</Text>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>MPC Provider</Text>
-//             <Text style={[styles.infoValue, styles.mpcHighlight]}>
-//               {getMPCProvider()}
-//             </Text>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>MPC Provider</Text>
+// //             <Text style={[styles.infoValue, styles.mpcHighlight]}>
+// //               {getMPCProvider()}
+// //             </Text>
+// //           </View>
 
-//           {chain === 'ZEC' && vaultType === 'shared' && participants && participants.length > 0 && (
-//             <View style={styles.participantsSection}>
-//               <Text style={styles.participantsTitle}>Participants</Text>
-//               {participants.map((p, i) => (
-//                 <Text key={i} style={styles.participantItem}>
-//                   • {p.name} ({p.id})
-//                 </Text>
-//               ))}
-//             </View>
-//           )}
-//         </View>
+// //           {chain === 'ZEC' && vaultType === 'shared' && participants && participants.length > 0 && (
+// //             <View style={styles.participantsSection}>
+// //               <Text style={styles.participantsTitle}>Participants</Text>
+// //               {participants.map((p, i) => (
+// //                 <Text key={i} style={styles.participantItem}>
+// //                   • {p.name} ({p.id})
+// //                 </Text>
+// //               ))}
+// //             </View>
+// //           )}
+// //         </View>
 
-//         {chain === 'ZEC' && !error && (
-//           <View style={styles.frostBadge}>
-//             <Text style={styles.frostBadgeText}>
-//               🔐 Powered by FROST Threshold Signatures
-//             </Text>
-//           </View>
-//         )}
-//       </View>
-//     </SafeAreaView>
-//   );
-// };
+// //         {chain === 'ZEC' && !error && (
+// //           <View style={styles.frostBadge}>
+// //             <Text style={styles.frostBadgeText}>
+// //               🔐 Powered by FROST Threshold Signatures
+// //             </Text>
+// //           </View>
+// //         )}
+// //       </View>
+// //     </SafeAreaView>
+// //   );
+// // };
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#0A1628',
-//   },
-//   content: {
-//     flex: 1,
-//     paddingHorizontal: 24,
-//     justifyContent: 'center',
-//   },
-//   animationContainer: {
-//     alignItems: 'center',
-//     marginBottom: 40,
-//   },
-//   loaderContainer: {
-//     alignItems: 'center',
-//   },
-//   dkgIndicator: {
-//     marginTop: 12,
-//     backgroundColor: 'rgba(78, 205, 196, 0.2)',
-//     paddingHorizontal: 12,
-//     paddingVertical: 4,
-//     borderRadius: 12,
-//   },
-//   dkgText: {
-//     color: '#4ECDC4',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   errorEmoji: {
-//     fontSize: 64,
-//   },
-//   successEmoji: {
-//     fontSize: 64,
-//   },
-//   title: {
-//     fontSize: 24,
-//     color: '#FFFFFF',
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     marginBottom: 12,
-//   },
-//   status: {
-//     fontSize: 16,
-//     color: '#FFFFFF',
-//     textAlign: 'center',
-//     marginBottom: 8,
-//   },
-//   subStatus: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//     textAlign: 'center',
-//     marginBottom: 32,
-//   },
-//   infoCard: {
-//     backgroundColor: '#1E293B',
-//     borderRadius: 12,
-//     padding: 20,
-//   },
-//   infoRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 12,
-//   },
-//   infoLabel: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//   },
-//   infoValue: {
-//     fontSize: 14,
-//     color: '#FFFFFF',
-//     fontWeight: '500',
-//   },
-//   chainBadge: {
-//     backgroundColor: '#4ECDC4',
-//     paddingHorizontal: 10,
-//     paddingVertical: 4,
-//     borderRadius: 6,
-//   },
-//   chainText: {
-//     color: '#FFFFFF',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   mpcHighlight: {
-//     color: '#4ECDC4',
-//   },
-//   participantsSection: {
-//     marginTop: 12,
-//     paddingTop: 12,
-//     borderTopWidth: 1,
-//     borderTopColor: '#374151',
-//   },
-//   participantsTitle: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//     marginBottom: 8,
-//   },
-//   participantItem: {
-//     fontSize: 13,
-//     color: '#FFFFFF',
-//     marginBottom: 4,
-//   },
-//   frostBadge: {
-//     marginTop: 24,
-//     alignItems: 'center',
-//   },
-//   frostBadgeText: {
-//     color: '#4ECDC4',
-//     fontSize: 12,
-//     fontWeight: '500',
-//   },
-// });
+// // const styles = StyleSheet.create({
+// //   container: {
+// //     flex: 1,
+// //     backgroundColor: '#0A1628',
+// //   },
+// //   content: {
+// //     flex: 1,
+// //     paddingHorizontal: 24,
+// //     justifyContent: 'center',
+// //   },
+// //   animationContainer: {
+// //     alignItems: 'center',
+// //     marginBottom: 40,
+// //   },
+// //   loaderContainer: {
+// //     alignItems: 'center',
+// //   },
+// //   dkgIndicator: {
+// //     marginTop: 12,
+// //     backgroundColor: 'rgba(78, 205, 196, 0.2)',
+// //     paddingHorizontal: 12,
+// //     paddingVertical: 4,
+// //     borderRadius: 12,
+// //   },
+// //   dkgText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   errorEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   successEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   title: {
+// //     fontSize: 24,
+// //     color: '#FFFFFF',
+// //     fontWeight: 'bold',
+// //     textAlign: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   status: {
+// //     fontSize: 16,
+// //     color: '#FFFFFF',
+// //     textAlign: 'center',
+// //     marginBottom: 8,
+// //   },
+// //   subStatus: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     textAlign: 'center',
+// //     marginBottom: 32,
+// //   },
+// //   infoCard: {
+// //     backgroundColor: '#1E293B',
+// //     borderRadius: 12,
+// //     padding: 20,
+// //   },
+// //   infoRow: {
+// //     flexDirection: 'row',
+// //     justifyContent: 'space-between',
+// //     alignItems: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   infoLabel: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //   },
+// //   infoValue: {
+// //     fontSize: 14,
+// //     color: '#FFFFFF',
+// //     fontWeight: '500',
+// //   },
+// //   chainBadge: {
+// //     backgroundColor: '#4ECDC4',
+// //     paddingHorizontal: 10,
+// //     paddingVertical: 4,
+// //     borderRadius: 6,
+// //   },
+// //   chainText: {
+// //     color: '#FFFFFF',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   mpcHighlight: {
+// //     color: '#4ECDC4',
+// //   },
+// //   participantsSection: {
+// //     marginTop: 12,
+// //     paddingTop: 12,
+// //     borderTopWidth: 1,
+// //     borderTopColor: '#374151',
+// //   },
+// //   participantsTitle: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     marginBottom: 8,
+// //   },
+// //   participantItem: {
+// //     fontSize: 13,
+// //     color: '#FFFFFF',
+// //     marginBottom: 4,
+// //   },
+// //   frostBadge: {
+// //     marginTop: 24,
+// //     alignItems: 'center',
+// //   },
+// //   frostBadgeText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 12,
+// //     fontWeight: '500',
+// //   },
+// // });
 
-// export default CreatingVaultScreen;
+// // export default CreatingVaultScreen;
 
 
-// /**
-//  * ============================================
-//  * CREATING VAULT SCREEN - UPDATED
-//  * ============================================
-//  * 
-//  * Now saves the created vault to VaultContext
-//  * for automatic use in Fund Me and other screens.
-//  */
+// // /**
+// //  * ============================================
+// //  * CREATING VAULT SCREEN - UPDATED
+// //  * ============================================
+// //  * 
+// //  * Now saves the created vault to VaultContext
+// //  * for automatic use in Fund Me and other screens.
+// //  */
 
-// import React, { useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   ActivityIndicator,
-// } from 'react-native';
-// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import { RootStackParamList, VaultData } from '../types/navigation';
-// import { useVaults } from '../context/VaultContext';  // <-- ADD THIS IMPORT
-// import api from '../services/api';
+// // import React, { useEffect, useState } from 'react';
+// // import {
+// //   View,
+// //   Text,
+// //   StyleSheet,
+// //   SafeAreaView,
+// //   ActivityIndicator,
+// // } from 'react-native';
+// // import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+// // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// // import { RootStackParamList, VaultData } from '../types/navigation';
+// // import { useVaults } from '../context/VaultContext';  // <-- ADD THIS IMPORT
+// // import api from '../services/api';
 
-// type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
-// type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
+// // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
+// // type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
 
-// const CreatingVaultScreen = () => {
-//   const navigation = useNavigation<NavigationProp>();
-//   const route = useRoute<RoutePropType>();
-//   const { chain, email, vaultName, vaultType, threshold, participants } = route.params;
+// // const CreatingVaultScreen = () => {
+// //   const navigation = useNavigation<NavigationProp>();
+// //   const route = useRoute<RoutePropType>();
+// //   const { chain, email, vaultName, vaultType, threshold, participants } = route.params;
   
-//   // === ADD THIS: Get addVault from context ===
-//   const { addVault } = useVaults();
+// //   // === ADD THIS: Get addVault from context ===
+// //   const { addVault } = useVaults();
   
-//   const [status, setStatus] = useState('Initializing...');
-//   const [subStatus, setSubStatus] = useState('');
-//   const [error, setError] = useState('');
+// //   const [status, setStatus] = useState('Initializing...');
+// //   const [subStatus, setSubStatus] = useState('');
+// //   const [error, setError] = useState('');
 
-//   useEffect(() => {
-//     createVault();
-//   }, []);
+// //   useEffect(() => {
+// //     createVault();
+// //   }, []);
 
-//   const createVault = async () => {
-//     try {
-//       const isZEC = chain === 'ZEC';
+// //   const createVault = async () => {
+// //     try {
+// //       const isZEC = chain === 'ZEC';
       
-//       if (isZEC) {
-//         // === FROST VAULT CREATION ===
-//         if (vaultType === 'shared' && threshold && participants && participants.length > 0) {
-//           // Shared vault (m-of-n)
-//           setStatus('Starting FROST DKG...');
-//           setSubStatus('Generating distributed key shares');
+// //       if (isZEC) {
+// //         // === FROST VAULT CREATION ===
+// //         if (vaultType === 'shared' && threshold && participants && participants.length > 0) {
+// //           // Shared vault (m-of-n)
+// //           setStatus('Starting FROST DKG...');
+// //           setSubStatus('Generating distributed key shares');
           
-//           const response = await api.createFrostSharedVault(
-//             vaultName,
-//             threshold,
-//             participants
-//           );
+// //           const response = await api.createFrostSharedVault(
+// //             vaultName,
+// //             threshold,
+// //             participants
+// //           );
           
-//           if (response.success) {
-//             setStatus('DKG Complete!');
-//             setSubStatus('Key shares distributed to participants');
-//             console.log('🔍 EMAIL FROM PARAMS:', email);
+// //           if (response.success) {
+// //             setStatus('DKG Complete!');
+// //             setSubStatus('Key shares distributed to participants');
+// //             console.log('🔍 EMAIL FROM PARAMS:', email);
 
             
-//             const vaultData: VaultData = {
-//               vault_id: response.vault.id,
-//               vault_name: response.vault.name,
-//               chain: 'ZEC',
-//               address: response.vault.address,
-//               mpc_provider: 'FROST',
-//               vault_type: 'shared' as const,
-//               threshold: response.vault.threshold,
-//               totalParticipants: response.vault.totalParticipants,
-//               participants: response.vault.participants,
-//               created_at: response.vault.createdAt,
-//               email: email, 
-//             };
+// //             const vaultData: VaultData = {
+// //               vault_id: response.vault.id,
+// //               vault_name: response.vault.name,
+// //               chain: 'ZEC',
+// //               address: response.vault.address,
+// //               mpc_provider: 'FROST',
+// //               vault_type: 'shared' as const,
+// //               threshold: response.vault.threshold,
+// //               totalParticipants: response.vault.totalParticipants,
+// //               participants: response.vault.participants,
+// //               created_at: response.vault.createdAt,
+// //               email: email, 
+// //             };
             
-//             // === Save vault to context/storage ===
-//             await addVault(vaultData);
-//             console.log('✅ Vault saved to storage:', vaultData.vault_id);
-//             console.log('🔍 VAULT DATA:', JSON.stringify(vaultData, null, 2));
+// //             // === Save vault to context/storage ===
+// //             await addVault(vaultData);
+// //             console.log('✅ Vault saved to storage:', vaultData.vault_id);
+// //             console.log('🔍 VAULT DATA:', JSON.stringify(vaultData, null, 2));
             
-//             setTimeout(() => {
-//               navigation.replace('VaultSuccess', { vault: vaultData });
-//             }, 1500);
-//           } else {
-//             throw new Error(response.error || 'Failed to create shared vault');
-//           }
-//         } else {
-//           // Personal vault (1-of-1)
-//           setStatus('Creating FROST vault...');
-//           setSubStatus('Generating spending key');
+// //             setTimeout(() => {
+// //               navigation.replace('VaultSuccess', { vault: vaultData });
+// //             }, 1500);
+// //           } else {
+// //             throw new Error(response.error || 'Failed to create shared vault');
+// //           }
+// //         } else {
+// //           // Personal vault (1-of-1)
+// //           setStatus('Creating FROST vault...');
+// //           setSubStatus('Generating spending key');
           
-//           const response = await api.createFrostPersonalVault(
-//             vaultName,
-//             email,
-//             vaultName
-//           );
+// //           const response = await api.createFrostPersonalVault(
+// //             vaultName,
+// //             email,
+// //             vaultName
+// //           );
           
-//           if (response.success) {
-//             setStatus('Vault created!');
-//             setSubStatus('Unified address generated');
+// //           if (response.success) {
+// //             setStatus('Vault created!');
+// //             setSubStatus('Unified address generated');
             
-//             const vaultData: VaultData = {
-//               vault_id: response.vault.id,
-//               vault_name: response.vault.name,
-//               chain: 'ZEC',
-//               address: response.vault.address,
-//               mpc_provider: 'FROST',
-//               vault_type: 'personal' as const,
-//               threshold: 1,
-//               totalParticipants: 1,
-//               created_at: response.vault.createdAt,
-//               email: email,
-//             };
+// //             const vaultData: VaultData = {
+// //               vault_id: response.vault.id,
+// //               vault_name: response.vault.name,
+// //               chain: 'ZEC',
+// //               address: response.vault.address,
+// //               mpc_provider: 'FROST',
+// //               vault_type: 'personal' as const,
+// //               threshold: 1,
+// //               totalParticipants: 1,
+// //               created_at: response.vault.createdAt,
+// //               email: email,
+// //             };
             
-//             // === Save vault to context/storage ===
-//             await addVault(vaultData);
-//             console.log('✅ Vault saved to storage:', vaultData.vault_id);
+// //             // === Save vault to context/storage ===
+// //             await addVault(vaultData);
+// //             console.log('✅ Vault saved to storage:', vaultData.vault_id);
             
-//             setTimeout(() => {
-//               navigation.replace('VaultSuccess', { vault: vaultData });
-//             }, 1500);
-//           } else {
-//             throw new Error(response.error || 'Failed to create personal vault');
-//           }
-//         }
-//       } else {
-//         // === EXISTING SOL VAULT CREATION (Arcium) ===
-//         setStatus('Creating your MPC vault...');
-//         setSubStatus('Connecting to Arcium network');
+// //             setTimeout(() => {
+// //               navigation.replace('VaultSuccess', { vault: vaultData });
+// //             }, 1500);
+// //           } else {
+// //             throw new Error(response.error || 'Failed to create personal vault');
+// //           }
+// //         }
+// //       } else {
+// //         // === EXISTING SOL VAULT CREATION (Arcium) ===
+// //         setStatus('Creating your MPC vault...');
+// //         setSubStatus('Connecting to Arcium network');
         
-//         const response = await api.createVault(chain, email, vaultName);
+// //         const response = await api.createVault(chain, email, vaultName);
         
-//         if (response.success) {
-//           setStatus('Vault created successfully!');
-//           setSubStatus('');
+// //         if (response.success) {
+// //           setStatus('Vault created successfully!');
+// //           setSubStatus('');
           
-//           const vaultData: VaultData = {
-//             vault_id: response.vault_id,
-//             vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
-//             chain: response.chain,
-//             address: response.address,
-//             mpc_provider: response.mpc_provider,
-//             vault_type: 'personal' as const,
-//             created_at: response.created_at,
-//             email: email,
-//           };
+// //           const vaultData: VaultData = {
+// //             vault_id: response.vault_id,
+// //             vault_name: response.metadata?.vault_name || vaultName || `${chain} Wallet`,
+// //             chain: response.chain,
+// //             address: response.address,
+// //             mpc_provider: response.mpc_provider,
+// //             vault_type: 'personal' as const,
+// //             created_at: response.created_at,
+// //             email: email,
+// //           };
           
-//           // === Save vault to context/storage ===
-//           await addVault(vaultData);
-//           console.log('✅ Vault saved to storage:', vaultData.vault_id);
+// //           // === Save vault to context/storage ===
+// //           await addVault(vaultData);
+// //           console.log('✅ Vault saved to storage:', vaultData.vault_id);
           
-//           setTimeout(() => {
-//             navigation.replace('VaultSuccess', { vault: vaultData });
-//           }, 1500);
-//         } else {
-//           throw new Error(response.error || 'Failed to create vault');
-//         }
-//       }
-//     } catch (err: any) {
-//       console.error('Vault creation error:', err);
+// //           setTimeout(() => {
+// //             navigation.replace('VaultSuccess', { vault: vaultData });
+// //           }, 1500);
+// //         } else {
+// //           throw new Error(response.error || 'Failed to create vault');
+// //         }
+// //       }
+// //     } catch (err: any) {
+// //       console.error('Vault creation error:', err);
       
-//       const errorMsg = err.response?.data?.error || 
-//                        err.message || 
-//                        'Failed to create vault';
+// //       const errorMsg = err.response?.data?.error || 
+// //                        err.message || 
+// //                        'Failed to create vault';
       
-//       setError(errorMsg);
-//       setStatus('Error');
-//       setSubStatus('');
-//     }
-//   };
+// //       setError(errorMsg);
+// //       setStatus('Error');
+// //       setSubStatus('');
+// //     }
+// //   };
 
-//   const getMPCProvider = () => {
-//     if (chain === 'ZEC') return 'FROST Threshold';
-//     if (chain === 'SOL') return 'Arcium MPC';
-//     return 'MPC';
-//   };
+// //   const getMPCProvider = () => {
+// //     if (chain === 'ZEC') return 'FROST Threshold';
+// //     if (chain === 'SOL') return 'Arcium MPC';
+// //     return 'MPC';
+// //   };
 
-//   const getVaultTypeDisplay = () => {
-//     if (chain === 'ZEC' && vaultType === 'shared' && threshold && participants) {
-//       return `Shared (${threshold}-of-${participants.length})`;
-//     }
-//     return 'Personal (1-of-1)';
-//   };
+// //   const getVaultTypeDisplay = () => {
+// //     if (chain === 'ZEC' && vaultType === 'shared' && threshold && participants) {
+// //       return `Shared (${threshold}-of-${participants.length})`;
+// //     }
+// //     return 'Personal (1-of-1)';
+// //   };
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <View style={styles.content}>
-//         <View style={styles.animationContainer}>
-//           {error ? (
-//             <Text style={styles.errorEmoji}>❌</Text>
-//           ) : status.includes('Complete') || status.includes('success') ? (
-//             <Text style={styles.successEmoji}>✅</Text>
-//           ) : (
-//             <View style={styles.loaderContainer}>
-//               <ActivityIndicator size="large" color="#4ECDC4" />
-//               {chain === 'ZEC' && vaultType === 'shared' && (
-//                 <View style={styles.dkgIndicator}>
-//                   <Text style={styles.dkgText}>🔐 DKG</Text>
-//                 </View>
-//               )}
-//             </View>
-//           )}
-//         </View>
+// //   return (
+// //     <SafeAreaView style={styles.container}>
+// //       <View style={styles.content}>
+// //         <View style={styles.animationContainer}>
+// //           {error ? (
+// //             <Text style={styles.errorEmoji}>❌</Text>
+// //           ) : status.includes('Complete') || status.includes('success') ? (
+// //             <Text style={styles.successEmoji}>✅</Text>
+// //           ) : (
+// //             <View style={styles.loaderContainer}>
+// //               <ActivityIndicator size="large" color="#4ECDC4" />
+// //               {chain === 'ZEC' && vaultType === 'shared' && (
+// //                 <View style={styles.dkgIndicator}>
+// //                   <Text style={styles.dkgText}>🔐 DKG</Text>
+// //                 </View>
+// //               )}
+// //             </View>
+// //           )}
+// //         </View>
 
-//         <Text style={styles.title}>
-//           {error ? 'Creation Failed' : 'Creating Your Vault'}
-//         </Text>
+// //         <Text style={styles.title}>
+// //           {error ? 'Creation Failed' : 'Creating Your Vault'}
+// //         </Text>
         
-//         <Text style={styles.status}>
-//           {error || status}
-//         </Text>
+// //         <Text style={styles.status}>
+// //           {error || status}
+// //         </Text>
         
-//         {subStatus ? (
-//           <Text style={styles.subStatus}>{subStatus}</Text>
-//         ) : null}
+// //         {subStatus ? (
+// //           <Text style={styles.subStatus}>{subStatus}</Text>
+// //         ) : null}
 
-//         <View style={styles.infoCard}>
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Name</Text>
-//             <Text style={styles.infoValue}>{vaultName}</Text>
-//           </View>
+// //         <View style={styles.infoCard}>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Name</Text>
+// //             <Text style={styles.infoValue}>{vaultName}</Text>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Chain</Text>
-//             <View style={styles.chainBadge}>
-//               <Text style={styles.chainText}>{chain}</Text>
-//             </View>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Chain</Text>
+// //             <View style={styles.chainBadge}>
+// //               <Text style={styles.chainText}>{chain}</Text>
+// //             </View>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>Type</Text>
-//             <Text style={styles.infoValue}>{getVaultTypeDisplay()}</Text>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Type</Text>
+// //             <Text style={styles.infoValue}>{getVaultTypeDisplay()}</Text>
+// //           </View>
           
-//           <View style={styles.infoRow}>
-//             <Text style={styles.infoLabel}>MPC Provider</Text>
-//             <Text style={[styles.infoValue, styles.mpcHighlight]}>
-//               {getMPCProvider()}
-//             </Text>
-//           </View>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>MPC Provider</Text>
+// //             <Text style={[styles.infoValue, styles.mpcHighlight]}>
+// //               {getMPCProvider()}
+// //             </Text>
+// //           </View>
 
-//           {chain === 'ZEC' && vaultType === 'shared' && participants && participants.length > 0 && (
-//             <View style={styles.participantsSection}>
-//               <Text style={styles.participantsTitle}>Participants</Text>
-//               {participants.map((p, i) => (
-//                 <Text key={i} style={styles.participantItem}>
-//                   • {p.name} ({p.id})
-//                 </Text>
-//               ))}
-//             </View>
-//           )}
-//         </View>
+// //           {chain === 'ZEC' && vaultType === 'shared' && participants && participants.length > 0 && (
+// //             <View style={styles.participantsSection}>
+// //               <Text style={styles.participantsTitle}>Participants</Text>
+// //               {participants.map((p, i) => (
+// //                 <Text key={i} style={styles.participantItem}>
+// //                   • {p.name} ({p.id})
+// //                 </Text>
+// //               ))}
+// //             </View>
+// //           )}
+// //         </View>
 
-//         {chain === 'ZEC' && !error && (
-//           <View style={styles.frostBadge}>
-//             <Text style={styles.frostBadgeText}>
-//               🔐 Powered by FROST Threshold Signatures
-//             </Text>
-//           </View>
-//         )}
-//       </View>
-//     </SafeAreaView>
-//   );
-// };
+// //         {chain === 'ZEC' && !error && (
+// //           <View style={styles.frostBadge}>
+// //             <Text style={styles.frostBadgeText}>
+// //               🔐 Powered by FROST Threshold Signatures
+// //             </Text>
+// //           </View>
+// //         )}
+// //       </View>
+// //     </SafeAreaView>
+// //   );
+// // };
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#0A1628',
-//   },
-//   content: {
-//     flex: 1,
-//     paddingHorizontal: 24,
-//     justifyContent: 'center',
-//   },
-//   animationContainer: {
-//     alignItems: 'center',
-//     marginBottom: 40,
-//   },
-//   loaderContainer: {
-//     alignItems: 'center',
-//   },
-//   dkgIndicator: {
-//     marginTop: 12,
-//     backgroundColor: 'rgba(78, 205, 196, 0.2)',
-//     paddingHorizontal: 12,
-//     paddingVertical: 4,
-//     borderRadius: 12,
-//   },
-//   dkgText: {
-//     color: '#4ECDC4',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   errorEmoji: {
-//     fontSize: 64,
-//   },
-//   successEmoji: {
-//     fontSize: 64,
-//   },
-//   title: {
-//     fontSize: 24,
-//     color: '#FFFFFF',
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     marginBottom: 12,
-//   },
-//   status: {
-//     fontSize: 16,
-//     color: '#FFFFFF',
-//     textAlign: 'center',
-//     marginBottom: 8,
-//   },
-//   subStatus: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//     textAlign: 'center',
-//     marginBottom: 32,
-//   },
-//   infoCard: {
-//     backgroundColor: '#1E293B',
-//     borderRadius: 12,
-//     padding: 20,
-//   },
-//   infoRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 12,
-//   },
-//   infoLabel: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//   },
-//   infoValue: {
-//     fontSize: 14,
-//     color: '#FFFFFF',
-//     fontWeight: '500',
-//   },
-//   chainBadge: {
-//     backgroundColor: '#4ECDC4',
-//     paddingHorizontal: 10,
-//     paddingVertical: 4,
-//     borderRadius: 6,
-//   },
-//   chainText: {
-//     color: '#FFFFFF',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   mpcHighlight: {
-//     color: '#4ECDC4',
-//   },
-//   participantsSection: {
-//     marginTop: 12,
-//     paddingTop: 12,
-//     borderTopWidth: 1,
-//     borderTopColor: '#374151',
-//   },
-//   participantsTitle: {
-//     fontSize: 14,
-//     color: '#9CA3AF',
-//     marginBottom: 8,
-//   },
-//   participantItem: {
-//     fontSize: 13,
-//     color: '#FFFFFF',
-//     marginBottom: 4,
-//   },
-//   frostBadge: {
-//     marginTop: 24,
-//     alignItems: 'center',
-//   },
-//   frostBadgeText: {
-//     color: '#4ECDC4',
-//     fontSize: 12,
-//     fontWeight: '500',
-//   },
-// });
+// // const styles = StyleSheet.create({
+// //   container: {
+// //     flex: 1,
+// //     backgroundColor: '#0A1628',
+// //   },
+// //   content: {
+// //     flex: 1,
+// //     paddingHorizontal: 24,
+// //     justifyContent: 'center',
+// //   },
+// //   animationContainer: {
+// //     alignItems: 'center',
+// //     marginBottom: 40,
+// //   },
+// //   loaderContainer: {
+// //     alignItems: 'center',
+// //   },
+// //   dkgIndicator: {
+// //     marginTop: 12,
+// //     backgroundColor: 'rgba(78, 205, 196, 0.2)',
+// //     paddingHorizontal: 12,
+// //     paddingVertical: 4,
+// //     borderRadius: 12,
+// //   },
+// //   dkgText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   errorEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   successEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   title: {
+// //     fontSize: 24,
+// //     color: '#FFFFFF',
+// //     fontWeight: 'bold',
+// //     textAlign: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   status: {
+// //     fontSize: 16,
+// //     color: '#FFFFFF',
+// //     textAlign: 'center',
+// //     marginBottom: 8,
+// //   },
+// //   subStatus: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     textAlign: 'center',
+// //     marginBottom: 32,
+// //   },
+// //   infoCard: {
+// //     backgroundColor: '#1E293B',
+// //     borderRadius: 12,
+// //     padding: 20,
+// //   },
+// //   infoRow: {
+// //     flexDirection: 'row',
+// //     justifyContent: 'space-between',
+// //     alignItems: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   infoLabel: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //   },
+// //   infoValue: {
+// //     fontSize: 14,
+// //     color: '#FFFFFF',
+// //     fontWeight: '500',
+// //   },
+// //   chainBadge: {
+// //     backgroundColor: '#4ECDC4',
+// //     paddingHorizontal: 10,
+// //     paddingVertical: 4,
+// //     borderRadius: 6,
+// //   },
+// //   chainText: {
+// //     color: '#FFFFFF',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   mpcHighlight: {
+// //     color: '#4ECDC4',
+// //   },
+// //   participantsSection: {
+// //     marginTop: 12,
+// //     paddingTop: 12,
+// //     borderTopWidth: 1,
+// //     borderTopColor: '#374151',
+// //   },
+// //   participantsTitle: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     marginBottom: 8,
+// //   },
+// //   participantItem: {
+// //     fontSize: 13,
+// //     color: '#FFFFFF',
+// //     marginBottom: 4,
+// //   },
+// //   frostBadge: {
+// //     marginTop: 24,
+// //     alignItems: 'center',
+// //   },
+// //   frostBadgeText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 12,
+// //     fontWeight: '500',
+// //   },
+// // });
 
-// export default CreatingVaultScreen;
+// // export default CreatingVaultScreen;
+
+// // import React, { useEffect, useState } from 'react';
+// // import {
+// //   View,
+// //   Text,
+// //   StyleSheet,
+// //   SafeAreaView,
+// //   ActivityIndicator,
+// // } from 'react-native';
+// // import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+// // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// // import { RootStackParamList, VaultData } from '../types/navigation';
+// // import { useVaults } from '../context/VaultContext';
+// // import api from '../services/api';
+
+// // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
+// // type RoutePropType = RouteProp<RootStackParamList, 'CreatingVault'>;
+
+// // const CreatingVaultScreen = () => {
+// //   const navigation = useNavigation<NavigationProp>();
+// //   const route = useRoute<RoutePropType>();
+  
+// //   // Handle optional email
+// //   const chain = route.params?.chain || 'SOL';
+// //   const email = route.params?.email || '';
+// //   const vaultName = route.params?.vaultName || 'My Wallet';
+  
+// //   const { addVault } = useVaults();
+  
+// //   const [status, setStatus] = useState('Initializing...');
+// //   const [subStatus, setSubStatus] = useState('');
+// //   const [error, setError] = useState('');
+// //   const [progress, setProgress] = useState(0);
+
+// //   useEffect(() => {
+// //     createVault();
+// //   }, []);
+
+// //   const createVault = async () => {
+// //     try {
+// //       // ═══════════════════════════════════════════════════════════════
+// //       // CREATE UNIFIED VAULT (SOL + ZEC)
+// //       // ═══════════════════════════════════════════════════════════════
+      
+// //       setStatus('Creating your wallet...');
+// //       setSubStatus('Setting up Arcium MPC (SOL)');
+// //       setProgress(25);
+
+// //       console.log('🏦 Creating unified vault:', { email, vaultName });
+
+// //       // This creates BOTH SOL and ZEC wallets!
+// //       const response = await api.createUnifiedVault(email, vaultName);
+
+// //       if (response.success) {
+// //         setProgress(50);
+// //         setSubStatus('Creating Zcash wallet (ZEC)');
+// //         await new Promise<void>(resolve => setTimeout(resolve, 500));
+
+// //         setProgress(75);
+// //         setSubStatus('Linking wallets...');
+// //         await new Promise<void>(resolve => setTimeout(resolve, 500));
+
+// //         setStatus('Wallet created!');
+// //         setSubStatus('');
+// //         setProgress(100);
+
+// //         // Build vault data
+// //         const vaultData: VaultData = {
+// //           vault_id: response.vault_id,
+// //           vault_name: response.vault_name,
+// //           vault_type: 'unified',
+// //           email: response.email || email,
+// //           created_at: response.created_at,
+
+// //           // SOL component
+// //           sol: {
+// //             address: response.sol.address,
+// //             mpc_provider: response.sol.mpc_provider || 'Arcium',
+// //           },
+
+// //           // ZEC component
+// //           zec: {
+// //             address: response.zec.address,
+// //             viewing_key: response.zec.viewing_key,
+// //             provider: 'ZcashSDK',
+// //           },
+// //         };
+
+// //         console.log('✅ Vault data:', JSON.stringify(vaultData, null, 2));
+
+// //         // Save to storage
+// //         await addVault(vaultData);
+
+// //         // Navigate to success
+// //         setTimeout(() => {
+// //           navigation.replace('VaultSuccess', { vault: vaultData });
+// //         }, 1000);
+
+// //       } else {
+// //         throw new Error(response.error || 'Failed to create vault');
+// //       }
+
+// //     } catch (err: any) {
+// //       console.error('Vault creation error:', err);
+// //       setError(err.response?.data?.error || err.message || 'Failed to create vault');
+// //       setStatus('Error');
+// //       setSubStatus('');
+// //     }
+// //   };
+
+// //   return (
+// //     <SafeAreaView style={styles.container}>
+// //       <View style={styles.content}>
+// //         {/* Status Icon */}
+// //         <View style={styles.iconContainer}>
+// //           {error ? (
+// //             <Text style={styles.errorEmoji}>❌</Text>
+// //           ) : progress === 100 ? (
+// //             <Text style={styles.successEmoji}>✅</Text>
+// //           ) : (
+// //             <View style={styles.loaderContainer}>
+// //               <ActivityIndicator size="large" color="#4ECDC4" />
+// //               <View style={styles.badge}>
+// //                 <Text style={styles.badgeText}>SOL + ZEC</Text>
+// //               </View>
+// //             </View>
+// //           )}
+// //         </View>
+
+// //         {/* Title */}
+// //         <Text style={styles.title}>
+// //           {error ? 'Creation Failed' : 'Creating Your Wallet'}
+// //         </Text>
+        
+// //         {/* Status */}
+// //         <Text style={styles.status}>{error || status}</Text>
+// //         {subStatus ? <Text style={styles.subStatus}>{subStatus}</Text> : null}
+
+// //         {/* Progress Bar */}
+// //         {!error && progress < 100 && (
+// //           <View style={styles.progressContainer}>
+// //             <View style={styles.progressBar}>
+// //               <View style={[styles.progressFill, { width: `${progress}%` }]} />
+// //             </View>
+// //             <Text style={styles.progressText}>{progress}%</Text>
+// //           </View>
+// //         )}
+
+// //         {/* Info Card */}
+// //         <View style={styles.infoCard}>
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Name</Text>
+// //             <Text style={styles.infoValue}>{vaultName}</Text>
+// //           </View>
+          
+// //           <View style={styles.infoRow}>
+// //             <Text style={styles.infoLabel}>Type</Text>
+// //             <View style={styles.typeBadge}>
+// //               <Text style={styles.typeBadgeText}>Unified Wallet</Text>
+// //             </View>
+// //           </View>
+
+// //           <View style={styles.chainsSection}>
+// //             <Text style={styles.chainsSectionTitle}>Creating wallets for:</Text>
+            
+// //             <View style={styles.chainRow}>
+// //               <View style={styles.solBadge}>
+// //                 <Text style={styles.chainBadgeText}>SOL</Text>
+// //               </View>
+// //               <Text style={styles.chainProvider}>Arcium MPC (seedless)</Text>
+// //             </View>
+            
+// //             <View style={styles.chainRow}>
+// //               <View style={styles.zecBadge}>
+// //                 <Text style={styles.chainBadgeText}>ZEC</Text>
+// //               </View>
+// //               <Text style={styles.chainProvider}>Zcash SDK (shielded)</Text>
+// //             </View>
+// //           </View>
+// //         </View>
+// //       </View>
+// //     </SafeAreaView>
+// //   );
+// // };
+
+// // const styles = StyleSheet.create({
+// //   container: {
+// //     flex: 1,
+// //     backgroundColor: '#0A1628',
+// //   },
+// //   content: {
+// //     flex: 1,
+// //     paddingHorizontal: 24,
+// //     justifyContent: 'center',
+// //   },
+// //   iconContainer: {
+// //     alignItems: 'center',
+// //     marginBottom: 40,
+// //   },
+// //   loaderContainer: {
+// //     alignItems: 'center',
+// //   },
+// //   badge: {
+// //     marginTop: 12,
+// //     backgroundColor: 'rgba(78, 205, 196, 0.2)',
+// //     paddingHorizontal: 16,
+// //     paddingVertical: 6,
+// //     borderRadius: 12,
+// //   },
+// //   badgeText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 14,
+// //     fontWeight: '600',
+// //   },
+// //   errorEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   successEmoji: {
+// //     fontSize: 64,
+// //   },
+// //   title: {
+// //     fontSize: 24,
+// //     color: '#FFFFFF',
+// //     fontWeight: 'bold',
+// //     textAlign: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   status: {
+// //     fontSize: 16,
+// //     color: '#FFFFFF',
+// //     textAlign: 'center',
+// //     marginBottom: 8,
+// //   },
+// //   subStatus: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     textAlign: 'center',
+// //     marginBottom: 24,
+// //   },
+// //   progressContainer: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     marginBottom: 24,
+// //     paddingHorizontal: 20,
+// //   },
+// //   progressBar: {
+// //     flex: 1,
+// //     height: 8,
+// //     backgroundColor: '#1E293B',
+// //     borderRadius: 4,
+// //     overflow: 'hidden',
+// //   },
+// //   progressFill: {
+// //     height: '100%',
+// //     backgroundColor: '#4ECDC4',
+// //     borderRadius: 4,
+// //   },
+// //   progressText: {
+// //     marginLeft: 12,
+// //     color: '#4ECDC4',
+// //     fontSize: 14,
+// //     fontWeight: '600',
+// //     width: 40,
+// //   },
+// //   infoCard: {
+// //     backgroundColor: '#1E293B',
+// //     borderRadius: 12,
+// //     padding: 20,
+// //   },
+// //   infoRow: {
+// //     flexDirection: 'row',
+// //     justifyContent: 'space-between',
+// //     alignItems: 'center',
+// //     marginBottom: 12,
+// //   },
+// //   infoLabel: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //   },
+// //   infoValue: {
+// //     fontSize: 14,
+// //     color: '#FFFFFF',
+// //     fontWeight: '500',
+// //   },
+// //   typeBadge: {
+// //     backgroundColor: 'rgba(78, 205, 196, 0.15)',
+// //     paddingHorizontal: 12,
+// //     paddingVertical: 4,
+// //     borderRadius: 6,
+// //   },
+// //   typeBadgeText: {
+// //     color: '#4ECDC4',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   chainsSection: {
+// //     marginTop: 12,
+// //     paddingTop: 12,
+// //     borderTopWidth: 1,
+// //     borderTopColor: '#374151',
+// //   },
+// //   chainsSectionTitle: {
+// //     fontSize: 14,
+// //     color: '#9CA3AF',
+// //     marginBottom: 12,
+// //   },
+// //   chainRow: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     marginBottom: 8,
+// //   },
+// //   solBadge: {
+// //     backgroundColor: '#9945FF',
+// //     paddingHorizontal: 10,
+// //     paddingVertical: 4,
+// //     borderRadius: 6,
+// //     marginRight: 10,
+// //   },
+// //   zecBadge: {
+// //     backgroundColor: '#F4B728',
+// //     paddingHorizontal: 10,
+// //     paddingVertical: 4,
+// //     borderRadius: 6,
+// //     marginRight: 10,
+// //   },
+// //   chainBadgeText: {
+// //     color: '#FFFFFF',
+// //     fontSize: 12,
+// //     fontWeight: '600',
+// //   },
+// //   chainProvider: {
+// //     color: '#9CA3AF',
+// //     fontSize: 12,
+// //   },
+// // });
+
+// // export default CreatingVaultScreen;
 
 // import React, { useEffect, useState } from 'react';
 // import {
@@ -935,38 +1272,57 @@
 
 //       if (response.success) {
 //         setProgress(50);
-//         setSubStatus('Creating Zcash wallet (ZEC)');
+//         setSubStatus('Finalizing wallet...');
 //         await new Promise<void>(resolve => setTimeout(resolve, 500));
 
 //         setProgress(75);
-//         setSubStatus('Linking wallets...');
+//         setSubStatus('Saving wallet data...');
 //         await new Promise<void>(resolve => setTimeout(resolve, 500));
 
 //         setStatus('Wallet created!');
 //         setSubStatus('');
 //         setProgress(100);
 
-//         // Build vault data
-//         const vaultData: VaultData = {
-//           vault_id: response.vault_id,
-//           vault_name: response.vault_name,
-//           vault_type: 'unified',
-//           email: response.email || email,
-//           created_at: response.created_at,
+//         // Build vault data - handle BOTH unified and simple vault responses
+//         let vaultData: VaultData;
 
-//           // SOL component
-//           sol: {
-//             address: response.sol.address,
-//             mpc_provider: response.sol.mpc_provider || 'Arcium',
-//           },
-
-//           // ZEC component
-//           zec: {
-//             address: response.zec.address,
-//             viewing_key: response.zec.viewing_key,
-//             provider: 'ZcashSDK',
-//           },
-//         };
+//         // Check if this is a unified vault response (has sol.address and zec.address)
+//         if (response.sol?.address && response.zec?.address) {
+//           // Unified vault format
+//           vaultData = {
+//             vault_id: response.vault_id,
+//             vault_name: response.vault_name,
+//             vault_type: 'unified',
+//             email: response.email || email,
+//             created_at: response.created_at,
+//             sol: {
+//               address: response.sol.address,
+//               mpc_provider: response.sol.mpc_provider || 'Arcium',
+//             },
+//             zec: {
+//               address: response.zec.address,
+//               viewing_key: response.zec.viewing_key,
+//               provider: 'ZcashSDK',
+//             },
+//           };
+//         } else {
+//           // Simple SOL vault format (from /api/vault/create)
+//           vaultData = {
+//             vault_id: response.vault_id,
+//             vault_name: response.vault_name,
+//             vault_type: 'personal',
+//             chain: response.chain || 'SOL',
+//             address: response.address,
+//             mpc_provider: response.mpc_provider || 'Arcium',
+//             email: response.email || email,
+//             created_at: response.created_at,
+//             // Also add sol object for consistency
+//             sol: {
+//               address: response.address,
+//               mpc_provider: response.mpc_provider || 'Arcium',
+//             },
+//           };
+//         }
 
 //         console.log('✅ Vault data:', JSON.stringify(vaultData, null, 2));
 
@@ -1225,11 +1581,15 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, VaultData } from '../types/navigation';
 import { useVaults } from '../context/VaultContext';
+import Clipboard from '@react-native-clipboard/clipboard';
 import api from '../services/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingVault'>;
@@ -1239,7 +1599,6 @@ const CreatingVaultScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RoutePropType>();
   
-  // Handle optional email
   const chain = route.params?.chain || 'SOL';
   const email = route.params?.email || '';
   const vaultName = route.params?.vaultName || 'My Wallet';
@@ -1250,6 +1609,14 @@ const CreatingVaultScreen = () => {
   const [subStatus, setSubStatus] = useState('');
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
+  
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 SEED PHRASE STATE - NEW FOR SIMPLE ENCRYPTION!
+  // ═══════════════════════════════════════════════════════════════
+  const [seedPhrase, setSeedPhrase] = useState<string | null>(null);
+  const [seedConfirmed, setSeedConfirmed] = useState(false);
+  const [vaultData, setVaultData] = useState<VaultData | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     createVault();
@@ -1257,82 +1624,101 @@ const CreatingVaultScreen = () => {
 
   const createVault = async () => {
     try {
-      // ═══════════════════════════════════════════════════════════════
-      // CREATE UNIFIED VAULT (SOL + ZEC)
-      // ═══════════════════════════════════════════════════════════════
-      
       setStatus('Creating your wallet...');
-      setSubStatus('Setting up Arcium MPC (SOL)');
+      setSubStatus('Generating secure keys');
       setProgress(25);
 
       console.log('🏦 Creating unified vault:', { email, vaultName });
 
-      // This creates BOTH SOL and ZEC wallets!
+      // This now returns seed_phrase!
       const response = await api.createUnifiedVault(email, vaultName);
 
       if (response.success) {
         setProgress(50);
-        setSubStatus('Finalizing wallet...');
+        setSubStatus('Encrypting wallet...');
         await new Promise<void>(resolve => setTimeout(resolve, 500));
 
         setProgress(75);
         setSubStatus('Saving wallet data...');
         await new Promise<void>(resolve => setTimeout(resolve, 500));
 
+        // ═══════════════════════════════════════════════════════════════
+        // 🆕 CAPTURE SEED PHRASE FROM RESPONSE!
+        // ═══════════════════════════════════════════════════════════════
+        if (response.seed_phrase) {
+          setSeedPhrase(response.seed_phrase);
+          console.log('🌱 Seed phrase received (not logging it!)');
+        }
+
         setStatus('Wallet created!');
         setSubStatus('');
         setProgress(100);
 
-        // Build vault data - handle BOTH unified and simple vault responses
-        let vaultData: VaultData;
+        // Build vault data
+        let newVaultData: VaultData;
 
-        // Check if this is a unified vault response (has sol.address and zec.address)
-        if (response.sol?.address && response.zec?.address) {
-          // Unified vault format
-          vaultData = {
+        if (response.sol?.address) {
+          // Unified or simple format with sol object
+          newVaultData = {
             vault_id: response.vault_id,
-            vault_name: response.vault_name,
-            vault_type: 'unified',
+            vault_name: response.vault_name || vaultName,
+            vault_type: response.zec?.address ? 'unified' : 'personal',
             email: response.email || email,
             created_at: response.created_at,
             sol: {
               address: response.sol.address,
-              mpc_provider: response.sol.mpc_provider || 'Arcium',
+              mpc_provider: response.sol.mpc_provider || 'simple-encryption',
             },
-            zec: {
+            zec: response.zec?.address ? {
               address: response.zec.address,
               viewing_key: response.zec.viewing_key,
               provider: 'ZcashSDK',
+            } : undefined,
+          };
+        } else if (response.sol_address) {
+          // Alternative response format
+          newVaultData = {
+            vault_id: response.vault_id,
+            vault_name: response.vault_name || vaultName,
+            vault_type: 'personal',
+            email: response.email || email,
+            created_at: response.created_at,
+            sol: {
+              address: response.sol_address,
+              mpc_provider: 'simple-encryption',
             },
           };
         } else {
-          // Simple SOL vault format (from /api/vault/create)
-          vaultData = {
+          // Legacy format
+          newVaultData = {
             vault_id: response.vault_id,
-            vault_name: response.vault_name,
+            vault_name: response.vault_name || vaultName,
             vault_type: 'personal',
             chain: response.chain || 'SOL',
             address: response.address,
-            mpc_provider: response.mpc_provider || 'Arcium',
+            mpc_provider: 'simple-encryption',
             email: response.email || email,
             created_at: response.created_at,
-            // Also add sol object for consistency
             sol: {
               address: response.address,
-              mpc_provider: response.mpc_provider || 'Arcium',
+              mpc_provider: 'simple-encryption',
             },
           };
         }
 
-        console.log('✅ Vault data:', JSON.stringify(vaultData, null, 2));
+        console.log('✅ Vault data:', JSON.stringify(newVaultData, null, 2));
+        setVaultData(newVaultData);
 
         // Save to storage
-        await addVault(vaultData);
+        await addVault(newVaultData);
 
-        // Navigate to success
-        setTimeout(() => {
-          navigation.replace('VaultSuccess', { vault: vaultData });
-        }, 1000);
+        // If NO seed phrase, go directly to success
+        if (!response.seed_phrase) {
+          setTimeout(() => {
+            navigation.replace('VaultSuccess', { vault: newVaultData });
+          }, 1000);
+        }
+        // Otherwise, wait for user to confirm they saved the seed phrase
 
       } else {
         throw new Error(response.error || 'Failed to create vault');
@@ -1345,6 +1731,114 @@ const CreatingVaultScreen = () => {
       setSubStatus('');
     }
   };
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 SEED PHRASE HANDLERS
+  // ═══════════════════════════════════════════════════════════════
+
+  const copySeedPhrase = () => {
+    if (seedPhrase) {
+      Clipboard.setString(seedPhrase);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const confirmSeedPhrase = () => {
+    Alert.alert(
+      '⚠️ Have you saved your seed phrase?',
+      'You will NOT be able to see it again. If you lose it and lose access to your device, your funds will be LOST FOREVER.',
+      [
+        {
+          text: 'Go Back',
+          style: 'cancel',
+        },
+        {
+          text: "Yes, I've Saved It",
+          style: 'destructive',
+          onPress: () => {
+            setSeedConfirmed(true);
+            if (vaultData) {
+              navigation.replace('VaultSuccess', { vault: vaultData });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 RENDER: SEED PHRASE SCREEN
+  // ═══════════════════════════════════════════════════════════════
+
+  if (seedPhrase && !seedConfirmed) {
+    const words = seedPhrase.split(' ');
+    
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.seedContainer}>
+          {/* Warning Header */}
+          <View style={styles.warningHeader}>
+            <Text style={styles.warningEmoji}>⚠️</Text>
+            <Text style={styles.warningTitle}>Save Your Recovery Phrase</Text>
+            <Text style={styles.warningSubtitle}>
+              Write these 12 words down and store them safely. This is the ONLY way to recover your wallet!
+            </Text>
+          </View>
+
+          {/* Seed Phrase Grid */}
+          <View style={styles.seedGrid}>
+            {words.map((word, index) => (
+              <View key={index} style={styles.seedWord}>
+                <Text style={styles.seedWordNumber}>{index + 1}</Text>
+                <Text style={styles.seedWordText}>{word}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Copy Button */}
+          <TouchableOpacity style={styles.copyButton} onPress={copySeedPhrase}>
+            <Text style={styles.copyButtonText}>
+              {copied ? '✅ Copied!' : '📋 Copy to Clipboard'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Warning Card */}
+          <View style={styles.dangerCard}>
+            <Text style={styles.dangerTitle}>🚨 IMPORTANT</Text>
+            <Text style={styles.dangerText}>• Never share your seed phrase with anyone</Text>
+            <Text style={styles.dangerText}>• Never enter it on any website</Text>
+            <Text style={styles.dangerText}>• Store it offline in a safe place</Text>
+            <Text style={styles.dangerText}>• If you lose it, you lose your funds</Text>
+          </View>
+
+          {/* Wallet Info */}
+          {vaultData && (
+            <View style={styles.walletInfoCard}>
+              <Text style={styles.walletInfoTitle}>Your New Wallet</Text>
+              <Text style={styles.walletInfoName}>{vaultData.vault_name}</Text>
+              <Text style={styles.walletInfoAddress} numberOfLines={1}>
+                {vaultData.sol?.address || vaultData.address}
+              </Text>
+            </View>
+          )}
+
+          {/* Confirm Button */}
+          <TouchableOpacity style={styles.confirmButton} onPress={confirmSeedPhrase}>
+            <Text style={styles.confirmButtonText}>I've Saved My Seed Phrase</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.finalWarning}>
+            You will NOT see this screen again!
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: CREATING SCREEN (Original)
+  // ═══════════════════════════════════════════════════════════════
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1405,7 +1899,7 @@ const CreatingVaultScreen = () => {
               <View style={styles.solBadge}>
                 <Text style={styles.chainBadgeText}>SOL</Text>
               </View>
-              <Text style={styles.chainProvider}>Arcium MPC (seedless)</Text>
+              <Text style={styles.chainProvider}>Simple Encryption (AES-256)</Text>
             </View>
             
             <View style={styles.chainRow}>
@@ -1416,10 +1910,24 @@ const CreatingVaultScreen = () => {
             </View>
           </View>
         </View>
+
+        {/* Error retry button */}
+        {error && (
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.retryButtonText}>← Go Back</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
 };
+
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   container: {
@@ -1431,6 +1939,139 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
   },
+  
+  // ═══════════════════════════════════════
+  // SEED PHRASE STYLES (NEW!)
+  // ═══════════════════════════════════════
+  seedContainer: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  warningHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  warningEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  warningTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  warningSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  seedGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  seedWord: {
+    width: '30%',
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  seedWordNumber: {
+    color: '#4ECDC4',
+    fontSize: 12,
+    fontWeight: '600',
+    width: 20,
+  },
+  seedWordText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  copyButton: {
+    backgroundColor: '#374151',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  copyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dangerCard: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  dangerTitle: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  dangerText: {
+    color: '#FCA5A5',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  walletInfoCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  walletInfoTitle: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  walletInfoName: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  walletInfoAddress: {
+    color: '#4ECDC4',
+    fontSize: 12,
+    fontFamily: 'monospace',
+  },
+  confirmButton: {
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  confirmButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  finalWarning: {
+    color: '#EF4444',
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+
+  // ═══════════════════════════════════════
+  // ORIGINAL STYLES
+  // ═══════════════════════════════════════
   iconContainer: {
     alignItems: 'center',
     marginBottom: 40,
@@ -1569,6 +2210,15 @@ const styles = StyleSheet.create({
   chainProvider: {
     color: '#9CA3AF',
     fontSize: 12,
+  },
+  retryButton: {
+    marginTop: 24,
+    padding: 12,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: '#4ECDC4',
+    fontSize: 16,
   },
 });
 

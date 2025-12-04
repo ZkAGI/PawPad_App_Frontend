@@ -377,7 +377,7 @@ export interface AgentData {
 // ============================================================================
 
 export interface AgentPreferences {
-  risk_level: 'Conservative' | 'Moderate' | 'Aggressive';
+  risk_level: 'conservative' | 'moderate' | 'aggressive'; 
   trading_pairs: string[];
   cross_chain_swaps: boolean;
   dark_pool_trading: boolean;

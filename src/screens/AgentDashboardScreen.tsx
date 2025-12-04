@@ -97,6 +97,27 @@ const AgentDashboardScreen = () => {
 
   const vaultId = vault?.vault_id || vault?.sol?.vault_id || '';
 
+  // Add to state (around line 55)
+const [liveStatus, setLiveStatus] = useState<any>(null);
+
+// Add polling effect (after fetchData useEffect)
+useEffect(() => {
+  if (!agent?.agent_id) return;
+  
+  // Poll status every 30 seconds
+  const pollStatus = async () => {
+    const status = await api.getAgentStatus(agent.agent_id);
+    if (status.success !== false) {
+      setLiveStatus(status);
+      setAutoTradeEnabled(status.running);
+    }
+  };
+  
+  pollStatus();
+  const interval = setInterval(pollStatus, 30000);
+  return () => clearInterval(interval);
+}, [agent?.agent_id]);
+
   // Fetch agent and signals
   const fetchData = useCallback(async () => {
     try {
@@ -139,7 +160,7 @@ const AgentDashboardScreen = () => {
     try {
       let res;
       if (enabled) {
-        res = await api.startAutoTrading(agent.agent_id, 15);
+        res = await api.startAutoTrading(agent.agent_id, 240);
       } else {
         res = await api.stopAutoTrading(agent.agent_id);
       }
@@ -323,6 +344,8 @@ const AgentDashboardScreen = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
+
+        
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -330,6 +353,24 @@ const AgentDashboardScreen = () => {
           </TouchableOpacity>
           <Text style={styles.title}>🤖 AI Agent</Text>
         </View>
+
+        {liveStatus?.insufficientFunds && (
+  <View style={styles.warningBanner}>
+    <Text style={styles.warningIcon}>⚠️</Text>
+    <View style={styles.warningText}>
+      <Text style={styles.warningTitle}>Low Balance</Text>
+      <Text style={styles.warningDesc}>
+        {liveStatus.insufficientFunds.message || 'Add funds to continue trading'}
+      </Text>
+    </View>
+    <TouchableOpacity 
+      style={styles.addFundsButton}
+      onPress={() => vault && navigation.navigate('Receive', { vault })}
+    >
+      <Text style={styles.addFundsText}>Add Funds</Text>
+    </TouchableOpacity>
+  </View>
+)}
 
         {/* Status Card */}
         <View style={styles.statusCard}>
@@ -352,10 +393,12 @@ const AgentDashboardScreen = () => {
             )}
           </View>
           <Text style={styles.statusSubtext}>
-            {autoTradeEnabled
-              ? 'Checking signals every 15 min • Executing via Dark Pool'
-              : 'Toggle on to start auto-trading'}
-          </Text>
+  {liveStatus?.status === 'INSUFFICIENT_FUNDS'
+    ? '⚠️ Paused - Add funds to continue'
+    : autoTradeEnabled
+    ? `Next check: ${liveStatus?.nextCheck ? new Date(liveStatus.nextCheck).toLocaleTimeString() : '~15 min'}`
+    : 'Toggle on to start auto-trading'}
+</Text>
         </View>
 
         {/* Stats */}
@@ -434,7 +477,7 @@ const AgentDashboardScreen = () => {
             <View style={styles.settingRow}>
               <Text style={styles.settingLabel}>Risk Level</Text>
               <Text style={styles.settingValue}>
-                {agent.preferences?.risk_level || agent.preferences?.riskLevel || 'Moderate'}
+                {agent.preferences?.risk_level || agent.preferences?.riskLevel || 'moderate'}
               </Text>
             </View>
             <View style={styles.settingRow}>
@@ -822,6 +865,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  // Add to styles
+warningBanner: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#78350F',
+  marginHorizontal: 16,
+  padding: 12,
+  borderRadius: 12,
+  marginBottom: 16,
+},
+warningIcon: {
+  fontSize: 24,
+  marginRight: 12,
+},
+warningText: {
+  flex: 1,
+},
+warningTitle: {
+  color: '#FCD34D',
+  fontSize: 14,
+  fontWeight: '600',
+},
+warningDesc: {
+  color: '#FDE68A',
+  fontSize: 12,
+},
+addFundsButton: {
+  backgroundColor: '#F59E0B',
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 8,
+},
+addFundsText: {
+  color: '#000',
+  fontWeight: '600',
+  fontSize: 12,
+},
 });
 
 export default AgentDashboardScreen;
