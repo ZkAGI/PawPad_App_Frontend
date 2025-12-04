@@ -13,8 +13,7 @@ Most wallets stop at layer 1. PawPad extends to layer 2, where you set up agents
 
 ## 📱 Download
 
-**Android APK**: [`pawpad-v1.0.0.apk`](./releases/pawpad-v1.0.0.apk)
-
+**Android APK**: [`PawPad-v1.0.0.apk`](https://github.com/ZkAGI/PawPad_App_Frontend/releases/download/v1.0.0/PawPad.apk)
 ---
 
 ## 🏗️ Architecture
