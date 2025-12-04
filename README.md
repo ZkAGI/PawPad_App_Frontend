@@ -1,97 +1,202 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🐾 PawPad
 
-# Getting Started
+### The Privacy-First Multi-Chain Wallet for Autonomous Agents
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+Why This Frontend Is Unique
+PawPad isn't just a wallet UI — it's an agent control center. The frontend is designed around two layers:
 
-## Step 1: Start Metro
+Wallet Layer: Standard Send/Swap/Receive like any wallet
+Agent Layer: Configure autonomous agents, monitor their status, review their transactions
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+Most wallets stop at layer 1. PawPad extends to layer 2, where you set up agents once and they act on your behalf — privately.
+Tech Stack
+PackageVersionPurposeReact Native0.82.1Cross-platform mobile frameworkTypeScript5.8.3Type safety@solana/web3.js1.98.4Solana blockchain interactions@coral-xyz/anchor0.32.1Solana program framework@react-navigation7.xScreen navigationreact-native-keychain10.0.0Secure key storagereact-native-reanimated4.1.5Smooth animationsaxios1.13.2API callsAsyncStorage2.2.0Local data persistence
+---
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 📱 Download
 
-```sh
-# Using npm
-npm start
+**Android APK**: [`pawpad-v1.0.0.apk`](./releases/pawpad-v1.0.0.apk)
 
-# OR using Yarn
-yarn start
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                   PAWPAD                                         │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│                              ┌─────────────────┐                                │
+│                              │      USER       │                                │
+│                              └────────┬────────┘                                │
+│                                       │                                          │
+│                         ┌─────────────┴─────────────┐                           │
+│                         ▼                           ▼                           │
+│              ┌─────────────────────┐    ┌─────────────────────┐                │
+│              │    SEED WALLET      │    │  SEEDLESS WALLET    │                │
+│              │  • BIP39 mnemonic   │    │  • FROST 2-of-2     │                │
+│              │  • SOL + ZEC keys   │    │  • Oasis TEE share  │                │
+│              │    in parallel      │    │  • NEAR Intents     │                │
+│              └──────────┬──────────┘    └──────────┬──────────┘                │
+│                         └────────────┬─────────────┘                            │
+│                                      ▼                                          │
+│              ┌───────────────────────────────────────────────┐                  │
+│              │              UNIFIED VAULT                     │                  │
+│              │   ┌─────────────┐       ┌─────────────┐       │                  │
+│              │   │   Solana    │       │    Zcash    │       │                  │
+│              │   │   • SOL     │       │   • t-addr  │       │                  │
+│              │   │   • SPL     │       │   • z-addr  │       │                  │
+│              │   │             │       │   • u-addr  │       │                  │
+│              │   └─────────────┘       └─────────────┘       │                  │
+│              └───────────────────────┬───────────────────────┘                  │
+│                                      │                                          │
+│    ┌─────────────────────────────────┼─────────────────────────────────┐       │
+│    │              AUTONOMOUS AGENTS  │                                  │       │
+│    ▼                    ▼            ▼            ▼                    ▼       │
+│ ┌────────┐      ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐    │
+│ │ZYNAPSE │      │  DARK POOL  │ │ PHILANTHROPY│ │    SWAP     │ │TRADING │    │
+│ │SIGNALS │─────▶│  (Arcium)   │ │   AGENT     │ │   (NEAR)    │ │ AGENT  │    │
+│ │        │      │             │ │             │ │             │ │        │    │
+│ │ What   │      │ Encrypted   │ │ AI-powered  │ │ SOL ↔ ZEC   │ │ Auto   │    │
+│ │ to buy │      │ order       │ │ ZEC         │ │ atomic      │ │ execute│    │
+│ │ & sell │      │ matching    │ │ donations   │ │ swaps       │ │ trades │    │
+│ └────────┘      └─────────────┘ └─────────────┘ └─────────────┘ └────────┘    │
+│                                                                                  │
+│                          ┌────────────────────┐                                 │
+│                          │   WALLET ACTIONS   │                                 │
+│                          │  Send │ Swap │ Rcv │                                 │
+│                          └────────────────────┘                                 │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Step 2: Build and run your app
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+### 🔮 Coming Soon: Lit Protocol PKPs
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+```
+Future: Lit Protocol Integration
+     ├──► PKPs (Programmable Key Pairs) for threshold signing
+     ├──► TEE-backed key storage
+     ├──► Programmable signing conditions
+     └──► Multi-chain support out of the box
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+Status: In test phase, available soon
 ```
 
-Then, and every time you update your native dependencies, run:
+---
 
-```sh
-bundle exec pod install
+## 🤖 Autonomous Agents
+
+### How Agents Work
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   USER      │     │   AGENT     │     │   STATUS    │     │  AUTONOMOUS │
+│   INPUT     │ ──▶ │  PROCESSES  │ ──▶ │   SHOWS     │ ──▶ │    TX       │
+│             │     │             │     │             │     │             │
+│ • Goals     │     │ • AI infer  │     │ • Pending   │     │ • Signs     │
+│ • Limits    │     │ • Signals   │     │ • Executing │     │ • Broadcasts│
+│ • Schedule  │     │ • Matching  │     │ • Complete  │     │ • Records   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+
+User sets it up once → Agent runs autonomously → User monitors status
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Philanthropy Agent
 
-```sh
-# Using npm
-npm run ios
+| User Sets | Agent Does |
+|-----------|------------|
+| Causes (natural language) | Matches to verified foundations |
+| Budget (ZEC/month) | Calculates allocation % |
+| Source (SOL or ZEC) | Converts via NEAR Intents if needed |
+| Auto-pay on/off | Executes & logs transactions |
 
-# OR using Yarn
-yarn ios
+### Trading Agent
+
+| User Sets | Agent Does |
+|-----------|------------|
+| Risk level | Listens to Zynapse signals (by ZkAGI) |
+| Max position | Evaluates against limits |
+| Auto-execute | Places dark pool orders |
+| Pairs to trade | Manages positions, reports PnL |
+
+---
+
+## 📱 Frontend
+
+### Why This Frontend Is Unique
+
+PawPad isn't just a wallet UI — it's an **agent control center**:
+
+- **Wallet Layer**: Standard Send/Swap/Receive like any wallet
+- **Agent Layer**: Configure autonomous agents, monitor status, review transactions
+
+Most wallets stop at layer 1. PawPad extends to layer 2.
+
+### Tech Stack
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| React Native | 0.82.1 | Cross-platform mobile |
+| TypeScript | 5.8.3 | Type safety |
+| @solana/web3.js | 1.98.4 | Solana interactions |
+| @coral-xyz/anchor | 0.32.1 | Solana programs |
+| @react-navigation | 7.x | Screen navigation |
+| react-native-keychain | 10.0.0 | Secure key storage |
+| react-native-reanimated | 4.1.5 | Smooth animations |
+| axios | 1.13.2 | API calls |
+| AsyncStorage | 2.2.0 | Local persistence |
+
+
+### Note on Expo
+
+> We initially planned Expo SDK but it caused compatibility issues with native crypto modules (`react-native-keychain`, `@solana/web3.js` polyfills). Had to go bare React Native. May revisit when Expo crypto support improves.
+
+### Project Structure
+
+```
+mobile/
+├── src/
+│   ├── screens/
+│   │   ├── onboarding/          # ChainSelect, WalletType, VaultSetup, Creating, Success
+│   │   ├── wallet/              # Home, Send, Receive, Swap, History
+│   │   ├── agents/              # PhilanthropyAgent, TradingAgent, AgentDashboard
+│   │   └── settings/            # Backup, Security
+│   ├── components/
+│   │   ├── common/              # Button, Card, Input, Modal
+│   │   ├── wallet/              # BalanceCard, TokenRow, AddressDisplay
+│   │   └── agents/              # StatusBadge, ActivityFeed, SignalCard
+│   ├── context/                 # VaultContext, AgentContext
+│   └── services/                # api, helius, arcium, nearIntents, secureStorage
+├── App.tsx
+└── package.json
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Screen Flow
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+ONBOARDING
+Chain Select ──► Wallet Type ──► Vault Setup ──► Creating ──► Success ──► Home
 
-## Step 3: Modify your app
+MAIN APP
+                         HOME
+                          │
+        ┌─────────────────┼─────────────────┐
+        ▼                 ▼                 ▼
+      Send              Swap             Agents
+   (manual)          (SOL↔ZEC)      (autonomous)
+```
 
-Now that you have successfully run the app, let's make changes!
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+---
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 🚀 Running
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Mobile (Android)
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```bash
+cd mobile
+npm install
+npx react-native run-android
+```

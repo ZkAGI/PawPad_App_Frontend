@@ -303,12 +303,21 @@ export interface VaultData {
     vault_id?: string;
   };
 
+  // zec?: {
+  //   address: string;
+  //   viewing_key?: string;
+  //   wallet_id?: string;
+  //   provider?: string;
+  // };
+
   zec?: {
-    address: string;
-    viewing_key?: string;
-    wallet_id?: string;
-    provider?: string;
-  };
+  address?: string;
+  transparent_address?: string;  // NEW
+  unified_address?: string;      // NEW
+  sapling_address?: string;      // NEW
+  viewing_key?: string | null;
+  provider?: string;
+};
 
   // Legacy fields (backwards compatibility)
   chain?: string;

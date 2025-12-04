@@ -882,7 +882,7 @@ const VaultSuccessScreen = () => {
             )}
 
             {/* ZEC Address - FIX: Use optional chaining throughout */}
-            {vault?.zec?.address && (
+            {/* {vault?.zec?.address && (
               <View style={styles.addressSection}>
                 <View style={styles.addressHeader}>
                   <View style={styles.zecBadge}><Text style={styles.badgeTextDark}>ZEC</Text></View>
@@ -898,7 +898,26 @@ const VaultSuccessScreen = () => {
                 </TouchableOpacity>
                 <Text style={styles.provider}>Private transactions enabled</Text>
               </View>
-            )}
+            )} */}
+            {(vault?.zec?.address || vault?.zec?.unified_address) && (
+  <View style={styles.addressSection}>
+    <View style={styles.addressHeader}>
+      <View style={styles.zecBadge}><Text style={styles.badgeTextDark}>ZEC</Text></View>
+      <Text style={styles.addressLabel}>Zcash Address</Text>
+      <View style={styles.shieldedBadge}><Text style={styles.shieldedText}>🔒 Shielded</Text></View>
+    </View>
+    <TouchableOpacity 
+      style={styles.addressBox} 
+      onPress={() => copyAddress(vault.zec?.unified_address || vault.zec?.address, 'zec')}
+    >
+      <Text style={styles.addressText} numberOfLines={1}>
+        {vault.zec?.unified_address || vault.zec?.address}
+      </Text>
+      <Text style={styles.copyIcon}>{copiedZec ? '✓' : '📋'}</Text>
+    </TouchableOpacity>
+    <Text style={styles.provider}>Private transactions enabled</Text>
+  </View>
+)}
           </View>
 
           {/* Features */}

@@ -1286,7 +1286,8 @@ const HomeScreen = () => {
   
   // Determine wallet type
   const hasSol = vault?.chain === 'SOL' || vault?.sol?.address || unified;
-  const hasZec = vault?.chain === 'ZEC' || vault?.zec?.address || unified;
+  // const hasZec = vault?.chain === 'ZEC' || vault?.zec?.address || unified;
+  const hasZec = vault?.chain === 'ZEC' || vault?.zec?.address || vault?.zec?.unified_address || vault?.zec?.transparent_address || unified;
 
   // Load balances callback
   const loadBalances = useCallback(async () => {
@@ -1318,9 +1319,12 @@ const HomeScreen = () => {
       }
       
       // Load ZEC balance if wallet has ZEC
-      if (hasZec && vault.zec?.address) {
+      // if (hasZec && vault.zec?.address) {
+      if (hasZec && (vault.zec?.address || vault.zec?.unified_address)) {
+  const zecAddress = vault.zec?.unified_address || vault.zec?.address;
         try {
-          const response = await api.getZecBalance(vault.zec.address);
+          //const response = await api.getZecBalance(vault.zec.address);
+          const response = await api.getZecBalance(zecAddress!);
           const bal = response.shielded_balance || response.balance || response.total_zec || 0;
           const usd = response.usd || bal * 40;
           setZecBalance(bal);
@@ -1527,7 +1531,8 @@ const HomeScreen = () => {
           )}
 
           {/* ZEC Token Row - Only show if wallet has ZEC */}
-          {hasZec && vault?.zec?.address && (
+          {/* {hasZec && vault?.zec?.address && ( */}
+          {hasZec && (vault?.zec?.address || vault?.zec?.unified_address) && (
             <TouchableOpacity style={styles.tokenRow}>
               <View style={styles.tokenIcon}>
                 <View style={styles.zecIcon}>

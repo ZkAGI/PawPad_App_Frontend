@@ -1657,25 +1657,51 @@ const CreatingVaultScreen = () => {
         // Build vault data
         let newVaultData: VaultData;
 
+        // if (response.sol?.address) {
+        //   // Unified or simple format with sol object
+        //   newVaultData = {
+        //     vault_id: response.vault_id,
+        //     vault_name: response.vault_name || vaultName,
+        //     vault_type: response.zec?.address ? 'unified' : 'personal',
+        //     email: response.email || email,
+        //     created_at: response.created_at,
+        //     sol: {
+        //       address: response.sol.address,
+        //       mpc_provider: response.sol.mpc_provider || 'simple-encryption',
+        //     },
+        //     zec: response.zec?.address ? {
+        //       address: response.zec.address,
+        //       viewing_key: response.zec.viewing_key,
+        //       provider: 'ZcashSDK',
+        //     } : undefined,
+        //   };
+        // } 
         if (response.sol?.address) {
-          // Unified or simple format with sol object
-          newVaultData = {
-            vault_id: response.vault_id,
-            vault_name: response.vault_name || vaultName,
-            vault_type: response.zec?.address ? 'unified' : 'personal',
-            email: response.email || email,
-            created_at: response.created_at,
-            sol: {
-              address: response.sol.address,
-              mpc_provider: response.sol.mpc_provider || 'simple-encryption',
-            },
-            zec: response.zec?.address ? {
-              address: response.zec.address,
-              viewing_key: response.zec.viewing_key,
-              provider: 'ZcashSDK',
-            } : undefined,
-          };
-        } else if (response.sol_address) {
+  // Check for ZEC with NEW dual-address format OR old format
+  const hasZec = response.zec?.unified_address || response.zec?.transparent_address || response.zec?.address;
+  
+  newVaultData = {
+    vault_id: response.vault_id,
+    vault_name: response.vault_name || vaultName,
+    vault_type: hasZec ? 'unified' : 'personal',
+    email: response.email || email,
+    created_at: response.created_at,
+    sol: {
+      address: response.sol.address,
+      mpc_provider: response.sol.mpc_provider || 'simple-encryption',
+    },
+    zec: hasZec ? {
+      // Use unified_address for display, keep all addresses
+      address: response.zec.unified_address || response.zec.address,
+      transparent_address: response.zec.transparent_address,
+      unified_address: response.zec.unified_address,
+      sapling_address: response.zec.sapling_address,
+      viewing_key: response.zec.viewing_key,
+      provider: 'ZcashSDK',
+    } : undefined,
+  };
+}
+        else if (response.sol_address) {
           // Alternative response format
           newVaultData = {
             vault_id: response.vault_id,
