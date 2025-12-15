@@ -1,83 +1,54 @@
-// import React, { useState } from 'react';
-// import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+// import React from 'react';
+// import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 // import { useNavigation } from '@react-navigation/native';
+// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// import { RootStackParamList } from '../types/navigation';
+
+// type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // const QuickSummaryScreen = () => {
-//   const [accepted, setAccepted] = useState(false);
-//   const navigation = useNavigation();
-
-//   const summaryPoints = [
-//     {
-//       icon: '☁️',
-//       title: 'Back-up each vault separately',
-//       description: 'Keep your shares safe across devices',
-//     },
-//     {
-//       icon: '📍',
-//       title: 'Keep vault shares in different locations',
-//       description: 'Distribute shares for maximum security',
-//     },
-//     {
-//       icon: '🔐',
-//       title: 'All vault shares ensure secure access to your funds',
-//       description: 'Need threshold of shares to recover',
-//     },
-//     {
-//       icon: '⚠️',
-//       title: 'Do not store your vault share on the device itself for an extended time, in case of loss or damage',
-//       warning: true,
-//     },
-//   ];
+//   const navigation = useNavigation<NavigationProp>();
 
 //   return (
-//     <View style={styles.container}>
-//       <ScrollView showsVerticalScrollIndicator={false}>
-//         <Text style={styles.header}>Vault Shares</Text>
-//         <Text style={styles.title}>Quick summary</Text>
+//     <SafeAreaView style={styles.container}>
+//       <View style={styles.content}>
+//         <Text style={styles.title}>Quick Summary</Text>
+//         <Text style={styles.subtitle}>Your vault is secured with MPC technology</Text>
 
-//         <View style={styles.pointsContainer}>
-//           {summaryPoints.map((point, index) => (
-//             <View
-//               key={index}
-//               style={[
-//                 styles.point,
-//                 point.warning && styles.warningPoint,
-//               ]}
-//             >
-//               <Text style={styles.icon}>{point.icon}</Text>
-//               <View style={styles.pointContent}>
-//                 <Text style={styles.pointTitle}>{point.title}</Text>
-//                 {point.description && (
-//                   <Text style={styles.pointDescription}>
-//                     {point.description}
-//                   </Text>
-//                 )}
-//               </View>
-//             </View>
-//           ))}
+//         <View style={styles.card}>
+//           <Text style={styles.cardTitle}>✅ No seed phrases</Text>
+//           <Text style={styles.cardText}>Your private keys never exist in one place</Text>
+//         </View>
+
+//         <View style={styles.card}>
+//           <Text style={styles.cardTitle}>🔒 Multi-device security</Text>
+//           <Text style={styles.cardText}>Each device holds one vault share</Text>
+//         </View>
+
+//         <View style={styles.card}>
+//           <Text style={styles.cardTitle}>🔄 Easy recovery</Text>
+//           <Text style={styles.cardText}>Recover with 2 of 3 devices</Text>
 //         </View>
 
 //         <TouchableOpacity
-//           style={styles.checkbox}
-//           onPress={() => setAccepted(!accepted)}
+//           style={styles.button}
+//           onPress={() => navigation.navigate('ChainSelection')}
 //         >
-//           <View style={[styles.checkboxCircle, accepted && styles.checked]}>
-//             {accepted && <Text style={styles.checkmark}>✓</Text>}
-//           </View>
-//           <Text style={styles.checkboxText}>
-//             I have read and understand what to do
-//           </Text>
+//           <Text style={styles.buttonText}>Get Started</Text>
 //         </TouchableOpacity>
-//       </ScrollView>
 
-//       <TouchableOpacity
-//         style={[styles.button, !accepted && styles.buttonDisabled]}
-//         disabled={!accepted}
-//         onPress={() => navigation.navigate('VaultSetup')}
-//       >
-//         <Text style={styles.buttonText}>Start using your Vault</Text>
-//       </TouchableOpacity>
-//     </View>
+//         {/* Recover Wallet Section */}
+//         <View style={styles.recoverSection}>
+//           <Text style={styles.recoverText}>Already have a wallet?</Text>
+//           <TouchableOpacity
+//             style={styles.recoverButton}
+//             onPress={() => navigation.navigate('Recovery')}
+//           >
+//             <Text style={styles.recoverButtonText}>🔐 Recover Wallet</Text>
+//           </TouchableOpacity>
+//         </View>
+//       </View>
+//     </SafeAreaView>
 //   );
 // };
 
@@ -85,89 +56,75 @@
 //   container: {
 //     flex: 1,
 //     backgroundColor: '#0A1628',
-//     paddingHorizontal: 24,
-//     paddingTop: 60,
-//     paddingBottom: 40,
 //   },
-//   header: {
-//     color: '#6B7280',
-//     fontSize: 14,
-//     marginBottom: 8,
+//   content: {
+//     flex: 1,
+//     padding: 24,
+//     justifyContent: 'center',
 //   },
 //   title: {
-//     color: '#FFFFFF',
 //     fontSize: 32,
-//     fontWeight: '600',
-//     marginBottom: 32,
-//   },
-//   pointsContainer: {
-//     gap: 16,
-//     marginBottom: 40,
-//   },
-//   point: {
-//     backgroundColor: '#1E293B',
-//     borderRadius: 12,
-//     padding: 16,
-//     flexDirection: 'row',
-//     gap: 12,
-//   },
-//   warningPoint: {
-//     backgroundColor: 'rgba(234, 179, 8, 0.1)',
-//     borderWidth: 1,
-//     borderColor: '#EAB308',
-//   },
-//   icon: {
-//     fontSize: 24,
-//   },
-//   pointContent: {
-//     flex: 1,
-//   },
-//   pointTitle: {
 //     color: '#FFFFFF',
-//     fontSize: 14,
-//     fontWeight: '500',
-//     marginBottom: 4,
+//     fontWeight: 'bold',
+//     marginBottom: 8,
+//     textAlign: 'center',
 //   },
-//   pointDescription: {
-//     color: '#9CA3AF',
-//     fontSize: 12,
-//   },
-//   checkbox: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 12,
-//     marginBottom: 20,
-//   },
-//   checkboxCircle: {
-//     width: 24,
-//     height: 24,
-//     borderRadius: 12,
-//     borderWidth: 2,
-//     borderColor: '#4F7FFF',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   checked: {
-//     backgroundColor: '#4F7FFF',
-//   },
-//   checkmark: {
-//     color: '#FFFFFF',
+//   subtitle: {
 //     fontSize: 16,
-//   },
-//   checkboxText: {
 //     color: '#9CA3AF',
+//     marginBottom: 40,
+//     textAlign: 'center',
+//   },
+//   card: {
+//     backgroundColor: '#1E293B',
+//     padding: 20,
+//     borderRadius: 16,
+//     marginBottom: 16,
+//   },
+//   cardTitle: {
+//     fontSize: 18,
+//     color: '#4ECDC4',
+//     fontWeight: '600',
+//     marginBottom: 8,
+//   },
+//   cardText: {
 //     fontSize: 14,
+//     color: '#9CA3AF',
+//     lineHeight: 20,
 //   },
 //   button: {
-//     backgroundColor: '#4F7FFF',
+//     backgroundColor: '#4ECDC4',
+//     padding: 18,
 //     borderRadius: 12,
-//     paddingVertical: 18,
-//     alignItems: 'center',
-//   },
-//   buttonDisabled: {
-//     backgroundColor: '#374151',
+//     marginTop: 24,
 //   },
 //   buttonText: {
+//     color: '#000000',
+//     fontSize: 18,
+//     fontWeight: '700',
+//     textAlign: 'center',
+//   },
+//   recoverSection: {
+//     alignItems: 'center',
+//     marginTop: 32,
+//     paddingTop: 24,
+//     borderTopWidth: 1,
+//     borderTopColor: '#1E293B',
+//   },
+//   recoverText: {
+//     fontSize: 14,
+//     color: '#6B7280',
+//     marginBottom: 12,
+//   },
+//   recoverButton: {
+//     backgroundColor: '#1E293B',
+//     paddingHorizontal: 24,
+//     paddingVertical: 14,
+//     borderRadius: 12,
+//     borderWidth: 1,
+//     borderColor: '#374151',
+//   },
+//   recoverButtonText: {
 //     color: '#FFFFFF',
 //     fontSize: 16,
 //     fontWeight: '600',
@@ -176,8 +133,9 @@
 
 // export default QuickSummaryScreen;
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
@@ -186,6 +144,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const QuickSummaryScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -208,9 +167,10 @@ const QuickSummaryScreen = () => {
           <Text style={styles.cardText}>Recover with 2 of 3 devices</Text>
         </View>
 
+        {/* Go to ChainSelection (handles seed vs seedless choice) */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('ChainSelection')}
+          onPress={() => navigation.navigate('ChainSelection' as any)}
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
@@ -220,12 +180,92 @@ const QuickSummaryScreen = () => {
           <Text style={styles.recoverText}>Already have a wallet?</Text>
           <TouchableOpacity
             style={styles.recoverButton}
-            onPress={() => navigation.navigate('Recovery')}
+            onPress={() => setShowRecoveryModal(true)}
           >
             <Text style={styles.recoverButtonText}>🔐 Recover Wallet</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* RECOVERY TYPE MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={showRecoveryModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRecoveryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>How do you want to recover?</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose based on how you created your wallet
+            </Text>
+
+            {/* Seed Phrase Recovery */}
+            <TouchableOpacity
+              style={styles.recoveryOption}
+              onPress={() => {
+                setShowRecoveryModal(false);
+                navigation.navigate('Recovery');
+              }}
+            >
+              <Text style={styles.optionEmoji}>📝</Text>
+              <View style={styles.optionInfo}>
+                <Text style={styles.optionTitle}>Seed Phrase</Text>
+                <Text style={styles.optionDesc}>I have a 12-word recovery phrase</Text>
+              </View>
+              <Text style={styles.optionArrow}>→</Text>
+            </TouchableOpacity>
+
+            {/* Seedless Recovery */}
+            <TouchableOpacity
+              style={[styles.recoveryOption, styles.seedlessOption]}
+              onPress={() => {
+                setShowRecoveryModal(false);
+                navigation.navigate('RecoverSeedlessVault');
+              }}
+            >
+              <Text style={styles.optionEmoji}>🔐</Text>
+              <View style={styles.optionInfo}>
+                <View style={styles.optionTitleRow}>
+                  <Text style={styles.optionTitle}>Seedless (Google Auth)</Text>
+                  <View style={styles.newBadge}>
+                    <Text style={styles.newBadgeText}>NEW</Text>
+                  </View>
+                </View>
+                <Text style={styles.optionDesc}>I have backup file + Google Authenticator</Text>
+              </View>
+              <Text style={styles.optionArrow}>→</Text>
+            </TouchableOpacity>
+
+            {/* Backup File Recovery */}
+            <TouchableOpacity
+              style={styles.recoveryOption}
+              onPress={() => {
+                setShowRecoveryModal(false);
+                navigation.navigate('Backup');
+              }}
+            >
+              <Text style={styles.optionEmoji}>📁</Text>
+              <View style={styles.optionInfo}>
+                <Text style={styles.optionTitle}>Backup File</Text>
+                <Text style={styles.optionDesc}>I have a PawPad backup JSON file</Text>
+              </View>
+              <Text style={styles.optionArrow}>→</Text>
+            </TouchableOpacity>
+
+            {/* Cancel */}
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowRecoveryModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -306,6 +346,95 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  // ═══════════════════════════════════════
+  // MODAL STYLES
+  // ═══════════════════════════════════════
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  recoveryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  seedlessOption: {
+    borderColor: '#A855F7',
+    backgroundColor: 'rgba(168, 85, 247, 0.08)',
+  },
+  optionEmoji: {
+    fontSize: 28,
+    marginRight: 14,
+  },
+  optionInfo: {
+    flex: 1,
+  },
+  optionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  optionTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  optionDesc: {
+    color: '#9CA3AF',
+    fontSize: 12,
+  },
+  optionArrow: {
+    color: '#4ECDC4',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  newBadge: {
+    backgroundColor: '#A855F7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  newBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    marginTop: 8,
+    padding: 14,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#9CA3AF',
+    fontSize: 16,
   },
 });
 

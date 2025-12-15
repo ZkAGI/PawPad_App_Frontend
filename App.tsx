@@ -73,6 +73,8 @@ import SendScreen from './src/screens/SendScreen';
 import LendingScreen from './src/screens/LendingScreen';
 import DarkPoolScreen from './src/screens/DarkPoolScreen';
 import AgentSetupScreen from './src/screens/AgentSetupScreen';
+import CreatingSeedlessVaultScreen from './src/screens/CreatingSeedlessVaultScreen';
+import RecoverSeedlessVaultScreen from './src/screens/RecoverSeedlessVaultScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -163,12 +165,22 @@ function App() {
           options={{ title: 'Cross-Chain Swap' }}
         />
         <Stack.Screen
-  name="AgentSetup"
-  component={AgentSetupScreen}
-  options={{ headerShown: false }}
-/>
+          name="CreatingSeedlessVault"
+          component={CreatingSeedlessVaultScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="RecoverSeedlessVault"
+          component={RecoverSeedlessVaultScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AgentSetup"
+          component={AgentSetupScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="Recovery" component={RecoveryScreen} />
-<Stack.Screen name="Backup" component={BackupScreen} />
+        <Stack.Screen name="Backup" component={BackupScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </VaultProvider>

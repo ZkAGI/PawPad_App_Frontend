@@ -1520,6 +1520,66 @@ async runAgentNow(agentId) {
   }
 }
 
+// ============================================================================
+  // SEEDLESS WALLET METHODS (TOTP + Oasis TEE)
+  // ============================================================================
+
+  async createSeedlessVault(userId, email = '') {
+    try {
+      console.log('[Seedless] Creating vault for:', userId);
+      const response = await axios.post(`${this.baseUrl}/seedless/create`, {
+        userId,
+        email
+      });
+      console.log('[Seedless] Created:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[Seedless] Create failed:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async verifySeedlessTOTP(totpSecret, code) {
+    try {
+      const response = await axios.post(`${this.baseUrl}/seedless/verify-totp`, {
+        totpSecret,
+        code,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[Seedless] TOTP verify failed:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async recoverSeedlessVault(backupFile, totpSecret, restoreToTEE = true) {
+    try {
+      console.log('[Seedless] Recovering vault...');
+      const response = await axios.post(`${this.baseUrl}/seedless/recover`, {
+        backupFile,
+        totpSecret,
+        restoreToTEE,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[Seedless] Recovery failed:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async decryptSeedlessBackup(backupFile, totpSecret) {
+    try {
+      const response = await axios.post(`${this.baseUrl}/seedless/decrypt-backup`, {
+        backupFile,
+        totpSecret,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[Seedless] Decrypt failed:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
 async getEngineStatus() {
   try {
     const response = await axios.get(`${this.baseUrl}/ai/engine/status`);

@@ -295,6 +295,10 @@ export interface VaultData {
   email?: string;
   created_at?: string;
 
+  wallet_type?: 'seed' | 'seedless';
+  device_share?: string;
+  publicKey?: string; 
+
   // Unified vault components (SOL + ZEC together)
   sol?: {
     address: string;
@@ -311,14 +315,20 @@ export interface VaultData {
   // };
 
   zec?: {
-  address?: string;
-  transparent_address?: string;  // NEW
-  unified_address?: string;      // NEW
-  sapling_address?: string;      // NEW
-  viewing_key?: string | null;
-  provider?: string;
-};
+    address?: string;
+    transparent_address?: string;  // NEW
+    unified_address?: string;      // NEW
+    sapling_address?: string;      // NEW
+    viewing_key?: string | null;
+    provider?: string;
+    mpc_provider?: string;
+  };
 
+  oasis?: {
+      txHash?: string;
+      walletIdHash?: string;
+      stored?: boolean;
+  };
   // Legacy fields (backwards compatibility)
   chain?: string;
   address?: string;
@@ -406,17 +416,23 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MXEExplanation: undefined;
   QuickSummary: undefined;
-  ChainSelection: undefined;
+  // ChainSelection: undefined;
+  ChainSelection: {
+  walletType?: 'seed' | 'seedless';
+};
+
   
   // ═══════════════════════════════════════════════════════════════
   // Vault Creation Flow
   // ═══════════════════════════════════════════════════════════════
   EmailInput: { 
     chain?: string;
+    walletType?: 'seed' | 'seedless';
   };
   VaultNameInput: { 
     chain?: string; 
     email?: string;
+    walletType?: 'seed' | 'seedless';
   };
   CreateVault: { 
     chain?: string;
@@ -435,6 +451,7 @@ export type RootStackParamList = {
   };
   VaultSuccess: { 
     vault: VaultData;
+    walletType?: 'seed' | 'seedless';
   };
   
   // ═══════════════════════════════════════════════════════════════
@@ -564,6 +581,13 @@ export type RootStackParamList = {
   AddressBook: undefined;
   Security: undefined;
   About: undefined;
+
+  CreatingSeedlessVault: {
+    email?: string;
+    vaultName?: string;
+  };
+  
+  RecoverSeedlessVault: undefined;
 };
 
 // ============================================================================
@@ -603,3 +627,8 @@ export type LendingScreenRouteProp = RouteProp<RootStackParamList, 'Lending'>;
 export type DarkPoolScreenRouteProp = RouteProp<RootStackParamList, 'DarkPool'>;
 export type AgentDashboardScreenRouteProp = RouteProp<RootStackParamList, 'AgentDashboard'>;
 export type AgentCreatingScreenRouteProp = RouteProp<RootStackParamList, 'AgentCreating'>;
+
+// Seedless wallet navigation props
+export type CreatingSeedlessVaultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatingSeedlessVault'>;
+export type CreatingSeedlessVaultScreenRouteProp = RouteProp<RootStackParamList, 'CreatingSeedlessVault'>;
+export type RecoverSeedlessVaultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RecoverSeedlessVault'>;
