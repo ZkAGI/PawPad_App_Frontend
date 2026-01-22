@@ -1014,6 +1014,355 @@
 
 // export default VaultSuccessScreen;
 
+// import React, { useEffect, useState } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Animated,
+//   Platform,
+//   Share,
+// } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+// import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// import { RootStackParamList } from '../types/navigation';
+// import { useVaults } from '../context/VaultContext';
+// import RNFS from 'react-native-fs';
+
+// type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultSuccess'>;
+// type RouteType = RouteProp<RootStackParamList, 'VaultSuccess'>;
+
+// const VaultSuccessScreen = () => {
+//   const navigation = useNavigation<NavigationProp>();
+//   const route = useRoute<RouteType>();
+//   const { addVault, setActiveVault } = useVaults();
+  
+//   const vault = route.params?.vault;
+//   const walletType = route.params?.walletType || 'seed';
+  
+//   // Determine if this is a seedless wallet
+//   const isSeedless = walletType === 'seedless' || vault?.wallet_type === 'seedless';
+  
+//   // For seedless wallets, the chain is ZEC
+//   const chain = isSeedless ? 'ZEC' : (vault?.chain || 'SOL');
+  
+//   const [scaleAnim] = useState(new Animated.Value(0));
+//   const [fadeAnim] = useState(new Animated.Value(0));
+
+//   useEffect(() => {
+//     Animated.sequence([
+//       Animated.spring(scaleAnim, {
+//         toValue: 1,
+//         tension: 50,
+//         friction: 7,
+//         useNativeDriver: true,
+//       }),
+//       Animated.timing(fadeAnim, {
+//         toValue: 1,
+//         duration: 300,
+//         useNativeDriver: true,
+//       }),
+//     ]).start();
+
+//     // Save vault to context
+//     if (vault) {
+//       addVault(vault);
+//       setActiveVault(vault.vault_id);
+//     }
+//   }, []);
+
+//   const handleGoHome = () => {
+//     navigation.reset({
+//       index: 0,
+//       routes: [{ name: 'Home', params: { vault } }],
+//     });
+//   };
+
+//   const handleSaveBackup = async () => {
+//     // For seedless wallets, skip - backup was already handled
+//     if (isSeedless) {
+//       handleGoHome();
+//       return;
+//     }
+    
+//     navigation.navigate('Backup', { vault });
+//   };
+
+//   // Get display address based on wallet type
+//   const getDisplayAddress = () => {
+//     if (isSeedless) {
+//       return vault?.zec?.address || vault?.publicKey || vault?.address;
+//     }
+//     return vault?.sol?.address || vault?.address;
+//   };
+
+//   const formatAddress = (addr: string | undefined) => {
+//     if (!addr) return '';
+//     return `${addr.slice(0, 8)}...${addr.slice(-8)}`;
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <View style={styles.content}>
+//         {/* Success Animation */}
+//         <Animated.View style={[styles.iconContainer, { transform: [{ scale: scaleAnim }] }]}>
+//           <Text style={styles.successIcon}>🎉</Text>
+//         </Animated.View>
+
+//         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
+//           <Text style={styles.title}>Wallet Created!</Text>
+//           <Text style={styles.subtitle}>Your wallet is ready</Text>
+
+//           {/* Wallet Card */}
+//           <View style={styles.walletCard}>
+//             <Text style={styles.walletName}>{vault?.vault_name || 'My Wallet'}</Text>
+            
+//             {/* Chain Badge - Show correct chain */}
+//             <View style={styles.chainRow}>
+//               <View style={[
+//                 styles.chainBadge,
+//                 { backgroundColor: isSeedless ? '#F4B728' : '#9945FF' }
+//               ]}>
+//                 <Text style={[
+//                   styles.chainBadgeText,
+//                   { color: isSeedless ? '#000000' : '#FFFFFF' }
+//                 ]}>
+//                   {isSeedless ? 'ZEC' : 'SOL'}
+//                 </Text>
+//               </View>
+//               <Text style={styles.chainLabel}>
+//                 {isSeedless ? 'Zcash Address' : 'Solana Address'}
+//               </Text>
+//             </View>
+
+//             <View style={styles.addressBox}>
+//               <Text style={styles.addressText}>
+//                 {formatAddress(getDisplayAddress())}
+//               </Text>
+//             </View>
+
+//             {/* Security info */}
+//             <Text style={styles.securityText}>
+//               {isSeedless 
+//                 ? 'Secured by Oasis TEE + Google Authenticator' 
+//                 : 'Secured by Arcium MPC'}
+//             </Text>
+//           </View>
+
+//           {/* Backup Section - Different for seedless vs seed */}
+//           {!isSeedless && (
+//             <View style={styles.backupCard}>
+//               <Text style={styles.backupIcon}>⚠️</Text>
+//               <Text style={styles.backupTitle}>Save Your Backup</Text>
+//               <Text style={styles.backupText}>
+//                 Save this backup for wallet recovery.
+//               </Text>
+//             </View>
+//           )}
+
+//           {isSeedless && (
+//             <View style={styles.seedlessInfoCard}>
+//               <Text style={styles.seedlessInfoIcon}>✅</Text>
+//               <Text style={styles.seedlessInfoTitle}>Backup Complete</Text>
+//               <Text style={styles.seedlessInfoText}>
+//                 Your backup file and Google Authenticator are set up.
+//               </Text>
+//             </View>
+//           )}
+//         </Animated.View>
+//       </View>
+
+//       {/* Buttons */}
+//       <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
+//         {!isSeedless && (
+//           <TouchableOpacity style={styles.primaryButton} onPress={handleSaveBackup}>
+//             <Text style={styles.primaryButtonIcon}>💾</Text>
+//             <Text style={styles.primaryButtonText}>Save Backup File</Text>
+//           </TouchableOpacity>
+//         )}
+
+//         <TouchableOpacity
+//           style={isSeedless ? styles.primaryButton : styles.secondaryButton}
+//           onPress={handleGoHome}
+//         >
+//           <Text style={isSeedless ? styles.primaryButtonText : styles.secondaryButtonText}>
+//             {isSeedless ? 'Go to Wallet' : 'Skip for now'}
+//           </Text>
+//         </TouchableOpacity>
+//       </Animated.View>
+//     </SafeAreaView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#0A0A0A',
+//   },
+//   content: {
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingHorizontal: 24,
+//   },
+//   iconContainer: {
+//     marginBottom: 24,
+//   },
+//   successIcon: {
+//     fontSize: 80,
+//   },
+//   textContainer: {
+//     alignItems: 'center',
+//     width: '100%',
+//   },
+//   title: {
+//     fontSize: 28,
+//     fontWeight: 'bold',
+//     color: '#FFFFFF',
+//     marginBottom: 8,
+//   },
+//   subtitle: {
+//     fontSize: 16,
+//     color: '#9CA3AF',
+//     marginBottom: 32,
+//   },
+//   walletCard: {
+//     backgroundColor: '#1E1E1E',
+//     borderRadius: 16,
+//     padding: 20,
+//     width: '100%',
+//     alignItems: 'center',
+//     marginBottom: 16,
+//   },
+//   walletName: {
+//     fontSize: 20,
+//     fontWeight: '700',
+//     color: '#FFFFFF',
+//     marginBottom: 12,
+//   },
+//   chainRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   chainBadge: {
+//     paddingHorizontal: 10,
+//     paddingVertical: 4,
+//     borderRadius: 6,
+//     marginRight: 8,
+//   },
+//   chainBadgeText: {
+//     fontSize: 12,
+//     fontWeight: '700',
+//   },
+//   chainLabel: {
+//     fontSize: 14,
+//     color: '#9CA3AF',
+//   },
+//   addressBox: {
+//     backgroundColor: '#2A2A2A',
+//     borderRadius: 8,
+//     padding: 12,
+//     width: '100%',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   addressText: {
+//     fontSize: 14,
+//     color: '#FFFFFF',
+//     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+//   },
+//   securityText: {
+//     fontSize: 12,
+//     color: '#6B7280',
+//   },
+//   backupCard: {
+//     backgroundColor: 'rgba(245, 158, 11, 0.1)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(245, 158, 11, 0.3)',
+//     borderRadius: 12,
+//     padding: 16,
+//     width: '100%',
+//     alignItems: 'center',
+//   },
+//   backupIcon: {
+//     fontSize: 24,
+//     marginBottom: 8,
+//   },
+//   backupTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#F59E0B',
+//     marginBottom: 4,
+//   },
+//   backupText: {
+//     fontSize: 14,
+//     color: '#9CA3AF',
+//     textAlign: 'center',
+//   },
+//   seedlessInfoCard: {
+//     backgroundColor: 'rgba(16, 185, 129, 0.1)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(16, 185, 129, 0.3)',
+//     borderRadius: 12,
+//     padding: 16,
+//     width: '100%',
+//     alignItems: 'center',
+//   },
+//   seedlessInfoIcon: {
+//     fontSize: 24,
+//     marginBottom: 8,
+//   },
+//   seedlessInfoTitle: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//     color: '#10B981',
+//     marginBottom: 4,
+//   },
+//   seedlessInfoText: {
+//     fontSize: 14,
+//     color: '#9CA3AF',
+//     textAlign: 'center',
+//   },
+//   buttonContainer: {
+//     paddingHorizontal: 24,
+//     paddingBottom: 40,
+//     gap: 12,
+//   },
+//   primaryButton: {
+//     backgroundColor: '#F59E0B',
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingVertical: 16,
+//     borderRadius: 12,
+//     gap: 8,
+//   },
+//   primaryButtonIcon: {
+//     fontSize: 18,
+//   },
+//   primaryButtonText: {
+//     color: '#000000',
+//     fontSize: 16,
+//     fontWeight: '700',
+//   },
+//   secondaryButton: {
+//     backgroundColor: '#2A2A2A',
+//     paddingVertical: 16,
+//     borderRadius: 12,
+//     alignItems: 'center',
+//   },
+//   secondaryButtonText: {
+//     color: '#FFFFFF',
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+// });
+
+// export default VaultSuccessScreen;
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -1022,14 +1371,12 @@ import {
   TouchableOpacity,
   Animated,
   Platform,
-  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useVaults } from '../context/VaultContext';
-import RNFS from 'react-native-fs';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'VaultSuccess'>;
 type RouteType = RouteProp<RootStackParamList, 'VaultSuccess'>;
@@ -1038,16 +1385,13 @@ const VaultSuccessScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteType>();
   const { addVault, setActiveVault } = useVaults();
-  
+
   const vault = route.params?.vault;
   const walletType = route.params?.walletType || 'seed';
-  
-  // Determine if this is a seedless wallet
+
   const isSeedless = walletType === 'seedless' || vault?.wallet_type === 'seedless';
-  
-  // For seedless wallets, the chain is ZEC
-  const chain = isSeedless ? 'ZEC' : (vault?.chain || 'SOL');
-  
+  const chain = isSeedless ? 'ZEC' : vault?.chain || 'SOL';
+
   const [scaleAnim] = useState(new Animated.Value(0));
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -1066,7 +1410,6 @@ const VaultSuccessScreen = () => {
       }),
     ]).start();
 
-    // Save vault to context
     if (vault) {
       addVault(vault);
       setActiveVault(vault.vault_id);
@@ -1081,16 +1424,13 @@ const VaultSuccessScreen = () => {
   };
 
   const handleSaveBackup = async () => {
-    // For seedless wallets, skip - backup was already handled
     if (isSeedless) {
       handleGoHome();
       return;
     }
-    
     navigation.navigate('Backup', { vault });
   };
 
-  // Get display address based on wallet type
   const getDisplayAddress = () => {
     if (isSeedless) {
       return vault?.zec?.address || vault?.publicKey || vault?.address;
@@ -1100,35 +1440,50 @@ const VaultSuccessScreen = () => {
 
   const formatAddress = (addr: string | undefined) => {
     if (!addr) return '';
-    return `${addr.slice(0, 8)}...${addr.slice(-8)}`;
+    return `${addr.slice(0, 12)}...${addr.slice(-8)}`;
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Success Animation */}
-        <Animated.View style={[styles.iconContainer, { transform: [{ scale: scaleAnim }] }]}>
-          <Text style={styles.successIcon}>🎉</Text>
+        <Animated.View
+          style={[styles.iconContainer, { transform: [{ scale: scaleAnim }] }]}
+        >
+          <View style={styles.successCircle}>
+            <Text style={styles.successIcon}>✓</Text>
+          </View>
         </Animated.View>
 
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
+          {/* Label */}
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Success</Text>
+          </View>
+
           <Text style={styles.title}>Wallet Created!</Text>
-          <Text style={styles.subtitle}>Your wallet is ready</Text>
+          <Text style={styles.subtitle}>Your wallet is ready to use</Text>
 
           {/* Wallet Card */}
           <View style={styles.walletCard}>
-            <Text style={styles.walletName}>{vault?.vault_name || 'My Wallet'}</Text>
-            
-            {/* Chain Badge - Show correct chain */}
+            <Text style={styles.walletName}>
+              {vault?.vault_name || 'My Wallet'}
+            </Text>
+
+            {/* Chain Badge */}
             <View style={styles.chainRow}>
-              <View style={[
-                styles.chainBadge,
-                { backgroundColor: isSeedless ? '#F4B728' : '#9945FF' }
-              ]}>
-                <Text style={[
-                  styles.chainBadgeText,
-                  { color: isSeedless ? '#000000' : '#FFFFFF' }
-                ]}>
+              <View
+                style={[
+                  styles.chainBadge,
+                  { backgroundColor: isSeedless ? '#F4B728' : '#9945FF' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.chainBadgeText,
+                    { color: isSeedless ? '#000000' : '#FFFFFF' },
+                  ]}
+                >
                   {isSeedless ? 'ZEC' : 'SOL'}
                 </Text>
               </View>
@@ -1144,30 +1499,35 @@ const VaultSuccessScreen = () => {
             </View>
 
             {/* Security info */}
-            <Text style={styles.securityText}>
-              {isSeedless 
-                ? 'Secured by Oasis TEE + Google Authenticator' 
-                : 'Secured by Arcium MPC'}
-            </Text>
-          </View>
-
-          {/* Backup Section - Different for seedless vs seed */}
-          {!isSeedless && (
-            <View style={styles.backupCard}>
-              <Text style={styles.backupIcon}>⚠️</Text>
-              <Text style={styles.backupTitle}>Save Your Backup</Text>
-              <Text style={styles.backupText}>
-                Save this backup for wallet recovery.
+            <View style={styles.securityRow}>
+              <View style={styles.securityDot} />
+              <Text style={styles.securityText}>
+                {isSeedless
+                  ? 'Secured by FROST MPC + Authenticator'
+                  : 'Secured with seed phrase backup'}
               </Text>
             </View>
-          )}
+          </View>
 
-          {isSeedless && (
-            <View style={styles.seedlessInfoCard}>
-              <Text style={styles.seedlessInfoIcon}>✅</Text>
-              <Text style={styles.seedlessInfoTitle}>Backup Complete</Text>
-              <Text style={styles.seedlessInfoText}>
-                Your backup file and Google Authenticator are set up.
+          {/* Backup Section */}
+          {!isSeedless ? (
+            <View style={styles.backupCard}>
+              <View style={styles.backupHeader}>
+                <Text style={styles.backupIcon}>⚠️</Text>
+                <Text style={styles.backupTitle}>Save Your Backup</Text>
+              </View>
+              <Text style={styles.backupText}>
+                Download your backup file for wallet recovery
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.seedlessCard}>
+              <View style={styles.backupHeader}>
+                <Text style={styles.backupIcon}>✅</Text>
+                <Text style={styles.seedlessTitle}>Backup Complete</Text>
+              </View>
+              <Text style={styles.backupText}>
+                Your backup file and authenticator are set up
               </Text>
             </View>
           )}
@@ -1177,7 +1537,11 @@ const VaultSuccessScreen = () => {
       {/* Buttons */}
       <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
         {!isSeedless && (
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSaveBackup}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleSaveBackup}
+            activeOpacity={0.8}
+          >
             <Text style={styles.primaryButtonIcon}>💾</Text>
             <Text style={styles.primaryButtonText}>Save Backup File</Text>
           </TouchableOpacity>
@@ -1186,8 +1550,13 @@ const VaultSuccessScreen = () => {
         <TouchableOpacity
           style={isSeedless ? styles.primaryButton : styles.secondaryButton}
           onPress={handleGoHome}
+          activeOpacity={0.8}
         >
-          <Text style={isSeedless ? styles.primaryButtonText : styles.secondaryButtonText}>
+          <Text
+            style={
+              isSeedless ? styles.primaryButtonText : styles.secondaryButtonText
+            }
+          >
             {isSeedless ? 'Go to Wallet' : 'Skip for now'}
           </Text>
         </TouchableOpacity>
@@ -1199,7 +1568,7 @@ const VaultSuccessScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#0B1426',
   },
   content: {
     flex: 1,
@@ -1210,51 +1579,76 @@ const styles = StyleSheet.create({
   iconContainer: {
     marginBottom: 24,
   },
+  successCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
   successIcon: {
-    fontSize: 80,
+    fontSize: 48,
+    color: '#10B981',
   },
   textContainer: {
     alignItems: 'center',
     width: '100%',
   },
+  labelContainer: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    color: '#10B981',
+    fontWeight: '600',
+  },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#9CA3AF',
-    marginBottom: 32,
+    marginBottom: 28,
   },
   walletCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#0F1C2E',
     borderRadius: 16,
     padding: 20,
     width: '100%',
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1E3A5F',
   },
   walletName: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   chainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   chainBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    marginRight: 8,
+    marginRight: 10,
   },
   chainBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   chainLabel: {
@@ -1262,102 +1656,112 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   addressBox: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: '#0B1426',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#1E3A5F',
   },
   addressText: {
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    letterSpacing: 0.5,
+  },
+  securityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  securityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 8,
   },
   securityText: {
     fontSize: 12,
     color: '#6B7280',
   },
   backupCard: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(245, 158, 11, 0.2)',
     borderRadius: 12,
     padding: 16,
     width: '100%',
+  },
+  backupHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
   },
   backupIcon: {
-    fontSize: 24,
-    marginBottom: 8,
+    fontSize: 18,
   },
   backupTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#F59E0B',
-    marginBottom: 4,
   },
   backupText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#9CA3AF',
-    textAlign: 'center',
+    lineHeight: 18,
   },
-  seedlessInfoCard: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  seedlessCard: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
     borderRadius: 12,
     padding: 16,
     width: '100%',
-    alignItems: 'center',
   },
-  seedlessInfoIcon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  seedlessInfoTitle: {
-    fontSize: 16,
+  seedlessTitle: {
+    fontSize: 15,
     fontWeight: '600',
     color: '#10B981',
-    marginBottom: 4,
-  },
-  seedlessInfoText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
   },
   buttonContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 32,
     gap: 12,
+    width: '100%',
   },
   primaryButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#4ECDC4',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
-    gap: 8,
+    gap: 10,
   },
   primaryButtonIcon: {
     fontSize: 18,
   },
   primaryButtonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#0B1426',
+    fontSize: 17,
+    fontWeight: '600',
   },
   secondaryButton: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#0F1C2E',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1E3A5F',
   },
   secondaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
 

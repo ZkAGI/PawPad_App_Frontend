@@ -110,10 +110,10 @@ function App() {
           component={QuickSummaryScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="Send" component={SendScreen} />
-        <Stack.Screen name="Lending" component={LendingScreen} />
-<Stack.Screen name="DarkPool" component={DarkPoolScreen} />
-<Stack.Screen name="AgentDashboard" component={AgentDashboardScreen} />
+        <Stack.Screen name="Send" component={SendScreen}  options={{ headerShown: false }}/>
+        <Stack.Screen name="Lending" component={LendingScreen} options={{ headerShown: false }}/>
+<Stack.Screen name="DarkPool" component={DarkPoolScreen} options={{ headerShown: false }}/>
+<Stack.Screen name="AgentDashboard" component={AgentDashboardScreen} options={{ headerShown: false }}/>
         <Stack.Screen
           name="ChainSelection"
           component={ChainSelectionScreen}
@@ -137,7 +137,7 @@ function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: 'PawPad' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="VaultNameInput"
@@ -162,7 +162,7 @@ function App() {
         <Stack.Screen
           name="Swap"
           component={SwapScreen}
-          options={{ title: 'Cross-Chain Swap' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="CreatingSeedlessVault"
@@ -180,7 +180,7 @@ function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Recovery" component={RecoveryScreen} />
-        <Stack.Screen name="Backup" component={BackupScreen} />
+        <Stack.Screen name="Backup" component={BackupScreen} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
     </VaultProvider>
