@@ -1,3 +1,4 @@
+
 // import React, { useState } from 'react';
 // import {
 //   View,
@@ -171,6 +172,10 @@
 //   );
 // };
 
+// // Font family constant - replace with your loaded font
+// const FONT_FAMILY = 'TTFirsNeue'; // or 'TT Firs Neue', 'Inter', 'System'
+// const FONT_FAMILY_MEDIUM = 'TTFirsNeue-Medium'; // or use fontWeight
+
 // const styles = StyleSheet.create({
 //   container: {
 //     flex: 1,
@@ -192,17 +197,18 @@
 //   backButtonText: {
 //     color: '#FFFFFF',
 //     fontSize: 20,
+//     fontFamily: FONT_FAMILY,
 //     fontWeight: '300',
 //   },
 //   backButtonLabel: {
 //     color: '#FFFFFF',
 //     fontSize: 17,
-//     fontWeight: '500',
+//     fontFamily: FONT_FAMILY_MEDIUM,
 //   },
 //   skipButton: {
 //     color: '#6B7280',
 //     fontSize: 17,
-//     fontWeight: '500',
+//     fontFamily: FONT_FAMILY_MEDIUM,
 //   },
 //   progressContainer: {
 //     flexDirection: 'row',
@@ -236,14 +242,16 @@
 //     fontSize: 24,
 //     lineHeight: 36,
 //     textAlign: 'center',
-//     fontWeight: '500',
+//     fontFamily: FONT_FAMILY,
 //   },
 //   normalText: {
 //     color: '#FFFFFF',
+//     fontFamily: FONT_FAMILY,
 //     fontWeight: '400',
 //   },
 //   highlightedText: {
 //     color: '#4ECDC4',
+//     fontFamily: FONT_FAMILY,
 //     fontWeight: '400',
 //   },
 //   buttonContainer: {
@@ -286,24 +294,50 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  SafeAreaView,
+  Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-// import VaultShareAnimation from '../components/VaultShareAnimation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
 
 const { width } = Dimensions.get('window');
 
-// Helper component for text with highlighted words
-const HighlightedText = ({
-  text,
-  highlights,
-  style,
-}: {
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// ═══════════════════════════════════════════════════════════════
+// COLORS
+// ═══════════════════════════════════════════════════════════════
+const COLORS = {
+  bgPrimary: '#0B1426',
+  accent: '#4ECDC4',
+  textPrimary: '#FFFFFF',
+  textMuted: '#6B7280',
+  progressInactive: '#1E3A5F',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STEP IMAGES
+// ═══════════════════════════════════════════════════════════════
+const stepImages: { [key: number]: any } = {
+  0: require('../assets/images/mxe/1.png'),
+  1: require('../assets/images/mxe/2.png'),
+  2: require('../assets/images/mxe/3.png'),
+  3: require('../assets/images/mxe/4.png'),
+  4: require('../assets/images/mxe/5.png'),
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HIGHLIGHTED TEXT COMPONENT
+// ═══════════════════════════════════════════════════════════════
+interface HighlightedTextProps {
   text: string;
   highlights: string[];
   style?: any;
-}) => {
-  let parts = [{ text, highlight: false }];
+}
+
+const HighlightedText = ({ text, highlights, style }: HighlightedTextProps) => {
+  let parts: { text: string; highlight: boolean }[] = [{ text, highlight: false }];
 
   highlights.forEach((highlight) => {
     const newParts: { text: string; highlight: boolean }[] = [];
@@ -311,7 +345,8 @@ const HighlightedText = ({
       if (part.highlight) {
         newParts.push(part);
       } else {
-        const splitParts = part.text.split(new RegExp(`(${highlight})`, 'gi'));
+        const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        const splitParts = part.text.split(regex);
         splitParts.forEach((splitPart) => {
           if (splitPart.toLowerCase() === highlight.toLowerCase()) {
             newParts.push({ text: splitPart, highlight: true });
@@ -338,35 +373,33 @@ const HighlightedText = ({
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
 const MXEExplanationScreen = () => {
   const [step, setStep] = useState(0);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   const steps = [
     {
       title: 'Say hello to vault shares,\nyour new recovery method',
       highlights: ['vault shares,'],
-      animation: 'vault-shares-intro',
     },
     {
       title: "They're split into different\nparts for increased\nsecurity, removing single-\npoint of failure",
       highlights: ['different', 'parts for increased', 'security,'],
-      animation: 'vault-shares-split',
     },
     {
       title: 'Each device in your vault\nholds one vault share',
       highlights: ['Each device', 'one vault share'],
-      animation: 'device-shares',
     },
     {
       title: 'Always back up your vault\nshares individually, each in\na different location',
       highlights: ['Always back up', 'different location'],
-      animation: 'backup',
     },
     {
       title: 'These shares collaborate\nto unlock your vault.',
-      highlights: ['unlock', 'your vault.'],
-      animation: 'unlock',
+      highlights: ['collaborate', 'unlock your vault.'],
     },
   ];
 
@@ -376,8 +409,7 @@ const MXEExplanationScreen = () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      // @ts-ignore
-      navigation.navigate('QuickSummary');
+      navigation.navigate('QuickSummary' as never);
     }
   };
 
@@ -390,8 +422,7 @@ const MXEExplanationScreen = () => {
   };
 
   const handleSkip = () => {
-    // @ts-ignore
-    navigation.navigate('QuickSummary');
+    navigation.navigate('QuickSummary' as never);
   };
 
   return (
@@ -415,20 +446,20 @@ const MXEExplanationScreen = () => {
             style={[
               styles.progressBar,
               {
-                backgroundColor: index <= step ? '#4ECDC4' : '#1E3A5F',
+                backgroundColor: index <= step ? COLORS.accent : COLORS.progressInactive,
               },
             ]}
           />
         ))}
       </View>
 
-      {/* Animation Container */}
-      <View style={styles.animationContainer}>
-        {/* Placeholder for animation - replace with your VaultShareAnimation component */}
-        {/* <VaultShareAnimation type={currentStep.animation} /> */}
-        <View style={styles.animationPlaceholder}>
-          {/* Animation will go here */}
-        </View>
+      {/* Image Container */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={stepImages[step]}
+          style={styles.stepImage}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Content */}
@@ -443,30 +474,27 @@ const MXEExplanationScreen = () => {
       {/* Next button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <View style={styles.arrowContainer}>
-            <Text style={styles.arrowText}>→</Text>
-          </View>
+          <Text style={styles.arrowText}>→</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
-// Font family constant - replace with your loaded font
-const FONT_FAMILY = 'TTFirsNeue'; // or 'TT Firs Neue', 'Inter', 'System'
-const FONT_FAMILY_MEDIUM = 'TTFirsNeue-Medium'; // or use fontWeight
-
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B1426',
+    backgroundColor: COLORS.bgPrimary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 56,
+    paddingTop: 16,
     paddingBottom: 16,
   },
   backButton: {
@@ -475,20 +503,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   backButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 20,
-    fontFamily: FONT_FAMILY,
     fontWeight: '300',
   },
   backButtonLabel: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 17,
-    fontFamily: FONT_FAMILY_MEDIUM,
+    fontWeight: '500',
   },
   skipButton: {
-    color: '#6B7280',
+    color: COLORS.textMuted,
     fontSize: 17,
-    fontFamily: FONT_FAMILY_MEDIUM,
+    fontWeight: '500',
   },
   progressContainer: {
     flexDirection: 'row',
@@ -501,17 +528,15 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 1.5,
   },
-  animationContainer: {
+  imageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
   },
-  animationPlaceholder: {
-    width: width * 0.7,
-    height: width * 0.7,
-    justifyContent: 'center',
-    alignItems: 'center',
+  stepImage: {
+    width: width * 0.85,
+    height: width * 0.85,
   },
   contentContainer: {
     paddingHorizontal: 28,
@@ -522,44 +547,34 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 36,
     textAlign: 'center',
-    fontFamily: FONT_FAMILY,
   },
   normalText: {
-    color: '#FFFFFF',
-    fontFamily: FONT_FAMILY,
+    color: COLORS.textPrimary,
     fontWeight: '400',
   },
   highlightedText: {
-    color: '#4ECDC4',
-    fontFamily: FONT_FAMILY,
+    color: COLORS.accent,
     fontWeight: '400',
   },
   buttonContainer: {
     alignItems: 'center',
-    paddingBottom: 60,
+    paddingBottom: 40,
   },
   nextButton: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: COLORS.accent,
     width: 72,
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#4ECDC4',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  arrowContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   arrowText: {
-    color: '#0B1426',
+    color: COLORS.bgPrimary,
     fontSize: 26,
     fontWeight: '600',
   },
