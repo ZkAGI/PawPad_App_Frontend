@@ -6,6 +6,7 @@ import SplashScreen from '../screens/SplashScreen';
 import VaultSetupScreen from '../screens/VaultSetupScreen';
 import VaultCreationScreen from '../screens/VaultCreationScreen';
 import HomeScreen from '../screens/HomeScreen';
+import TEEWalletCreatedScreen from '../screens/TeeWalletCreatedScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,13 @@ const AppNavigator = () => {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="VaultSetup" component={VaultSetupScreen} />
         <Stack.Screen name="VaultCreation" component={VaultCreationScreen} />
+        <Stack.Screen 
+          name="TEEWalletCreated" 
+          component={TEEWalletCreatedScreen}
+          options={{
+            gestureEnabled: false, // Prevent back swipe
+          }}
+        />
         <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
