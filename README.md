@@ -13,7 +13,19 @@ Most wallets stop at layer 1. PawPad extends to layer 2, where you set up agents
 
 ## 📱 Download
 
-##### Android APK: [`PawPad-v1.0.0.apk`](https://github.com/ZkAGI/PawPad_App_Frontend/releases/download/v1.0.0/PawPad.apk)
+**Android APK**: [`pawpad-v1.0.0.apk`](./releases/pawpad-v1.0.0.apk)
+
+**IOS Instructions**:
+```
+git clone https://github.com/ZkAGI/PawPad_App_Frontend.git
+cd PawPad_App_Frontend
+git checkout oasis
+npm install
+cd ios && pod install && cd ..
+npx react-native run-ios
+```
+
+
 ---
 
 ## 🏗️ Architecture

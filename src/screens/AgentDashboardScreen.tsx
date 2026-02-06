@@ -1,11 +1,3 @@
-/**
- * AgentDashboardScreen.tsx - FIXED TYPESCRIPT
- * 
- * Shows AI Agent dashboard with:
- * - Empty state (no agent) → Create button
- * - Agent state → Signals, auto-trade toggle, stats
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -17,15 +9,38 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, VaultData } from '../types/navigation';
+import { RootStackParamList, VaultData, isTEEVault, getTEEAddresses } from '../types/navigation';
+import LinearGradient from 'react-native-linear-gradient';
 import api from '../services/api';
+import { 
+  setTradeConfig, 
+  getTradeConfig,
+  getTradeHistory, 
+  getAllBalances,
+  getSessionToken,
+  ensureSessionLoaded,
+} from '../services/teeSevice';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Custom PNG icons
+const ICONS = {
+  solana: require('../assets/icons/solana.png'),
+  ethereum: require('../assets/icons/ethereum.png'),
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AgentDashboardRouteProp = RouteProp<RootStackParamList, 'AgentDashboard'>;
+
+// ════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ════════════════════════════════════════════════════════════════════════════
 
 interface Signal {
   asset: string;
@@ -39,511 +54,746 @@ interface Signal {
   };
 }
 
-interface Trade {
-  id: string;
-  asset: string;
-  type: 'BUY' | 'SELL';
-  amount: number;
-  price: number;
-  timestamp: string;
-  pnl?: number;
-  via: 'DARK_POOL' | 'DEX' | 'CROSS_CHAIN';
+interface TEETradeConfig {
+  tradingEnabled: boolean;
+  maxTradeAmountUsdc: number;
+  allowedAssets: string[];
 }
 
-// Standalone interface - NOT extending anything
-interface AgentInfo {
-  agent_id: string;
-  vault_id?: string;
-  name?: string;
-  status?: 'active' | 'paused' | 'stopped';
-  preferences?: {
-    risk_level?: string;
-    riskLevel?: string;
-    trading_pairs?: string[];
-    favoriteTokens?: string[];
-    cross_chain_swaps?: boolean;
-    dark_pool_trading?: boolean;
-    enable_lending?: boolean;
-    maxTradeSize?: number;
-    investmentStyle?: string;
-  };
-  stats?: {
-    trades_executed: number;
-    dark_pool_trades: number;
-    cross_chain_trades?: number;
-    total_pnl: number;
-    win_rate: number;
-  };
-  trades?: Trade[];
-  auto_trade_active?: boolean;
-  performance?: {
-    totalTrades: number;
-    successRate: number;
-    totalProfit: number;
-  };
-}
+// ════════════════════════════════════════════════════════════════════════════
+// COLORS
+// ════════════════════════════════════════════════════════════════════════════
+
+const COLORS = {
+  bgPrimary: '#02111B',
+  bgSecondary: '#061624',
+  bgCard: '#0D2137',
+  accent: '#33E6BF',
+  accentBlue: '#2A5298',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#8A9BAE',
+  textMuted: '#5A6B7E',
+  border: 'rgba(42, 82, 152, 0.3)',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  solana: '#9945FF',
+  ethereum: '#627EEA',
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ════════════════════════════════════════════════════════════════════════════
 
 const AgentDashboardScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<AgentDashboardRouteProp>();
-  const { vault, agent: passedAgent } = route.params || {};
+  const { vault, agent: passedAgent } = route.params;
 
-  const [agent, setAgent] = useState<AgentInfo | null>(passedAgent as AgentInfo || null);
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Detect TEE wallet
+  const isTEE = vault ? isTEEVault(vault) : false;
+  const teeAddresses = vault ? getTEEAddresses(vault) : { evm: null, solana: null };
+
+  // State
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [agent, setAgent] = useState<any>(passedAgent || null);
+  const [signals, setSignals] = useState<Signal[]>([]);
   const [autoTradeEnabled, setAutoTradeEnabled] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const vaultId = vault?.vault_id || vault?.sol?.vault_id || '';
-
-  // Add to state (around line 55)
-const [liveStatus, setLiveStatus] = useState<any>(null);
-
-// Add polling effect (after fetchData useEffect)
-useEffect(() => {
-  if (!agent?.agent_id) return;
   
-  // Poll status every 30 seconds
-  const pollStatus = async () => {
-    const status = await api.getAgentStatus(agent.agent_id);
-    if (status.success !== false) {
-      setLiveStatus(status);
-      setAutoTradeEnabled(status.running);
+  // TEE-specific state - FETCHED FROM BACKEND
+  const [teeConfig, setTeeConfig] = useState<TEETradeConfig | null>(null);
+  const [teeConfigLoading, setTeeConfigLoading] = useState(false);
+  
+  // Balances
+  const [solBalance, setSolBalance] = useState(0);
+  const [ethBalance, setEthBalance] = useState(0);
+
+  // Stats
+  const [stats, setStats] = useState({
+    trades: 0,
+    pnl: 0,
+    winRate: 0,
+    secured: 0,
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH TEE TRADE CONFIG FROM BACKEND
+  // Only fetch once, with proper guards to prevent infinite loops
+  // ══════════════════════════════════════════════════════════════════════════
+  const [configFetched, setConfigFetched] = useState(false);
+  
+  const fetchTEEConfig = async () => {
+    // Guard: Only fetch for TEE wallets
+    if (!isTEE) return;
+    
+    // Guard: Don't fetch if already fetched
+    if (configFetched) return;
+    
+    // Guard: Don't fetch if already loading
+    if (teeConfigLoading) return;
+    
+    setTeeConfigLoading(true);
+    try {
+      // FIRST: Check if we have agent data with preferences (most reliable)
+      // This comes from MongoDB and was set during agent creation
+      if (passedAgent) {
+        const agentAny = passedAgent as any;
+        const prefs = agentAny.preferences || passedAgent.preferences;
+        
+        if (prefs) {
+          console.log('[TEE Config] Using agent preferences:', prefs);
+          setTeeConfig({
+            tradingEnabled: true, // Agent exists = trading enabled
+            maxTradeAmountUsdc: prefs.max_position_size || prefs.maxPositionSize || 100,
+            allowedAssets: prefs.trading_pairs || prefs.tradingPairs || ['SOL', 'ETH'],
+          });
+          setAutoTradeEnabled(true);
+          setConfigFetched(true);
+          setTeeConfigLoading(false);
+          return;
+        }
+      }
+      
+      // FALLBACK: Try to fetch from TEE backend
+      await ensureSessionLoaded();
+      
+      const token = getSessionToken();
+      if (!token) {
+        console.log('[TEE Config] No session, using defaults');
+        setTeeConfig({
+          tradingEnabled: false,
+          maxTradeAmountUsdc: 100,
+          allowedAssets: ['SOL', 'ETH'],
+        });
+        setConfigFetched(true);
+        setTeeConfigLoading(false);
+        return;
+      }
+
+      // Fetch current config from TEE backend
+      const response = await getTradeConfig();
+      
+      // Only use backend response if it has real data (not defaults)
+      if (response.ok && response.config && response.config.uid) {
+        console.log('[TEE Config] Fetched from backend:', response.config);
+        setTeeConfig({
+          tradingEnabled: response.config.tradingEnabled,
+          maxTradeAmountUsdc: response.config.maxTradeAmountUsdc,
+          allowedAssets: response.config.allowedAssets || ['SOL', 'ETH'],
+        });
+        setAutoTradeEnabled(response.config.tradingEnabled);
+      } else {
+        // Backend returned defaults (404), check if we have agent in DB
+        console.log('[TEE Config] Backend returned defaults, checking agent...');
+        
+        // Try to load agent from DB
+        const vaultId = vault?.tee?.uid || vault?.vault_id;
+        if (vaultId) {
+          try {
+            const agentResponse = await api.getAgentForVault(vaultId);
+            if (agentResponse.success && agentResponse.agent?.preferences) {
+              const prefs = agentResponse.agent.preferences;
+              console.log('[TEE Config] Using agent DB preferences:', prefs);
+              setTeeConfig({
+                tradingEnabled: true,
+                maxTradeAmountUsdc: prefs.max_position_size || 100,
+                allowedAssets: prefs.trading_pairs || ['SOL', 'ETH'],
+              });
+              setAutoTradeEnabled(true);
+              setConfigFetched(true);
+              setTeeConfigLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.log('[TEE Config] Agent fetch failed:', err);
+          }
+        }
+        
+        // Final fallback
+        setTeeConfig({
+          tradingEnabled: false,
+          maxTradeAmountUsdc: 100,
+          allowedAssets: ['SOL', 'ETH'],
+        });
+      }
+      setConfigFetched(true);
+    } catch (error) {
+      console.error('[TEE Config] Fetch error:', error);
+      // Use defaults on error - don't keep retrying
+      setTeeConfig({
+        tradingEnabled: false,
+        maxTradeAmountUsdc: 100,
+        allowedAssets: ['SOL', 'ETH'],
+      });
+      setConfigFetched(true);
+    } finally {
+      setTeeConfigLoading(false);
     }
   };
-  
-  pollStatus();
-  const interval = setInterval(pollStatus, 30000);
-  return () => clearInterval(interval);
-}, [agent?.agent_id]);
 
-  // Fetch agent and signals
-  const fetchData = useCallback(async () => {
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD DATA - Called once on mount
+  // ══════════════════════════════════════════════════════════════════════════
+  const [dataLoaded, setDataLoaded] = useState(false);
+  
+  const loadData = async () => {
+    // Guard: Don't load if already loaded (except for refresh)
+    if (loading && dataLoaded) return;
+    
+    setLoading(true);
+    
     try {
-      // If no agent passed, try to fetch from API
-      if (!agent && vaultId) {
-        const agentRes = await api.getAgentForVault(vaultId);
-        if (agentRes.success && agentRes.agent) {
-          setAgent(agentRes.agent);
-          setAutoTradeEnabled(agentRes.agent.auto_trade_active || false);
+      // Fetch TEE config (has internal guards)
+      if (isTEE) {
+        await fetchTEEConfig();
+      }
+
+      // Load balances for TEE wallet - only once
+      if (isTEE && (teeAddresses.solana || teeAddresses.evm) && !dataLoaded) {
+        try {
+          const balances = await getAllBalances(teeAddresses.solana, teeAddresses.evm);
+          if (balances.solana) {
+            setSolBalance(balances.solana.sol);
+          }
+          if (balances.evm) {
+            setEthBalance(balances.evm.eth);
+          }
+        } catch (err) {
+          console.log('[Balance] Error:', err);
         }
       }
 
-      // Fetch signals
-      const signalsRes = await api.getSignals();
-      if (signalsRes.success && signalsRes.signals) {
-        setSignals(signalsRes.signals);
+      // Fetch signals from Zynapse API directly
+      if (!dataLoaded) {
+        try {
+          console.log('[Signals] Fetching from Zynapse API...');
+          const response = await fetch('https://zynapse.zkagi.ai/v1/signals', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'api-key': 'zk-123321',
+            },
+          });
+          
+          const data = await response.json();
+          console.log('[Signals] Zynapse API Response:', data);
+          
+          // Response format: { BTC: {...}, ETH: {...}, SOL: {...}, ZEC: {...} }
+          // Convert object to array
+          let signalsArray: any[] = [];
+          
+          if (data && typeof data === 'object' && !Array.isArray(data)) {
+            // It's an object with asset keys like { SOL: {...}, ETH: {...} }
+            signalsArray = Object.values(data);
+          } else if (Array.isArray(data)) {
+            signalsArray = data;
+          } else if (data?.signals) {
+            signalsArray = Array.isArray(data.signals) ? data.signals : Object.values(data.signals);
+          }
+          
+          if (signalsArray.length > 0) {
+            let formattedSignals: Signal[] = signalsArray
+              .filter((s: any) => {
+                // TEE wallets only support SOL and ETH
+                if (isTEE) {
+                  return s.asset === 'SOL' || s.asset === 'ETH';
+                }
+                return true;
+              })
+              .map((s: any) => ({
+                asset: s.asset,
+                signal: (s.signal || 'HOLD') as 'BUY' | 'SELL' | 'HOLD',
+                confidence: s.confidence || Math.round(100 - Math.abs(50 - (s.rsi || 50))), // Derive confidence from RSI if not provided
+                price: s.price || 0,
+                indicators: s.indicators || { 
+                  rsi: Math.round(s.rsi || 50), 
+                  macd: s.macd_hist > 0 ? 'bullish' : s.macd_hist < 0 ? 'bearish' : 'neutral', 
+                  ema_trend: s.price > s.ema20 ? 'up' : s.price < s.ema20 ? 'down' : 'neutral' 
+                },
+              }));
+            
+            console.log('[Signals] Formatted signals:', formattedSignals);
+            setSignals(formattedSignals);
+          } else {
+            console.log('[Signals] Empty response from Zynapse');
+            setSignals([]);
+          }
+        } catch (err) {
+          console.log('[Signals] Zynapse API error:', err);
+          setSignals([]);
+        }
       }
+
+      // Load agent from DB if not passed
+      if (!passedAgent && vault?.vault_id && !dataLoaded) {
+        try {
+          const agentResponse = await api.getAgentForVault(vault.vault_id);
+          if (agentResponse.success && agentResponse.agent) {
+            setAgent(agentResponse.agent);
+            const agentAny = agentResponse.agent as any;
+            setStats({
+              trades: agentAny.stats?.trades_executed || 0,
+              pnl: agentAny.stats?.total_pnl || 0,
+              winRate: agentAny.stats?.win_rate || 0,
+              secured: agentAny.stats?.dark_pool_trades || 0,
+            });
+          }
+        } catch (err) {
+          console.log('[Agent] Fetch error:', err);
+        }
+      } else if (passedAgent && !dataLoaded) {
+        // Handle both AgentData type and raw MongoDB agent format
+        const agentAny = passedAgent as any;
+        setStats({
+          trades: agentAny.stats?.trades_executed || passedAgent.performance?.totalTrades || 0,
+          pnl: agentAny.stats?.total_pnl || passedAgent.performance?.totalProfit || 0,
+          winRate: agentAny.stats?.win_rate || passedAgent.performance?.successRate || 0,
+          secured: agentAny.stats?.dark_pool_trades || 0,
+        });
+      }
+      
+      setDataLoaded(true);
     } catch (error) {
-      console.error('Failed to fetch agent data:', error);
+      console.error('[Dashboard] Load error:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, [agent, vaultId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchData();
   };
 
-  // Toggle auto-trade
-  const toggleAutoTrade = async (enabled: boolean) => {
-    if (!agent?.agent_id) return;
+  // Load data ONCE on mount
+  useEffect(() => {
+    if (!dataLoaded) {
+      loadData();
+    }
+  }, []);
 
-    setActionLoading(true);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Reset flags to allow fresh fetch
+    setConfigFetched(false);
+    setDataLoaded(false);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TOGGLE TRADING (TEE)
+  // ══════════════════════════════════════════════════════════════════════════
+  const handleToggleTrading = async (enabled: boolean) => {
+    if (!isTEE) return;
+
     try {
-      let res;
-      if (enabled) {
-        res = await api.startAutoTrading(agent.agent_id, 240);
-      } else {
-        res = await api.stopAutoTrading(agent.agent_id);
+      const hasSession = await getSessionToken();
+      if (!hasSession) {
+        Alert.alert('Session Expired', 'Please login again to change trading settings.');
+        return;
       }
 
-      if (res.success) {
+      // Update config on TEE backend
+      const response = await setTradeConfig({
+        tradingEnabled: enabled,
+        maxTradeAmountUsdc: teeConfig?.maxTradeAmountUsdc || 100,
+        allowedAssets: teeConfig?.allowedAssets || ['SOL', 'ETH'],
+      });
+
+      if (response.ok) {
         setAutoTradeEnabled(enabled);
+        setTeeConfig(prev => prev ? { ...prev, tradingEnabled: enabled } : null);
         Alert.alert(
-          enabled ? '🤖 Auto-Trading Started!' : '⏸️ Auto-Trading Paused',
-          enabled
-            ? 'Your agent will check Zynapse signals every 15 minutes and execute trades via Dark Pool.'
-            : 'Auto-trading has been paused. You can still execute trades manually.'
+          enabled ? '✅ Trading Enabled' : '⏸️ Trading Paused',
+          enabled 
+            ? 'Your TEE agent will now execute trades automatically.'
+            : 'Auto-trading has been paused.'
         );
       } else {
-        Alert.alert('Error', res.error || 'Failed to toggle auto-trade');
+        Alert.alert('Error', 'Failed to update trading settings');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to toggle auto-trade');
-    } finally {
-      setActionLoading(false);
+      console.error('[Toggle Trading] Error:', error);
+      Alert.alert('Error', error.message || 'Failed to update settings');
     }
   };
 
-  // Execute signal manually
-  const executeSignal = async (signal: Signal) => {
-    if (!vaultId) return;
-
-    Alert.alert(
-      `${signal.signal} ${signal.asset}?`,
-      `Confidence: ${signal.confidence}%\nRSI: ${signal.indicators.rsi}\n\nExecute via Dark Pool?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: `${signal.signal} Now`,
-          onPress: async () => {
-            setActionLoading(true);
-            try {
-              const price = signal.price || (signal.asset === 'SOL' ? 150 : 40);
-              const res = await api.submitDarkPoolOrder(
-                vaultId,
-                signal.signal === 'BUY' ? 'BUY' : 'SELL',
-                signal.asset,
-                0.1,
-                price
-              );
-
-              if (res.success) {
-                Alert.alert('✅ Order Submitted!', `${signal.signal} order sent to Dark Pool`);
-                fetchData();
-              } else {
-                Alert.alert('Error', res.error || 'Order failed');
-              }
-            } catch (error: any) {
-              Alert.alert('Error', error.message);
-            } finally {
-              setActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
+  // ══════════════════════════════════════════════════════════════════════════
+  // FORMAT HELPERS
+  // ══════════════════════════════════════════════════════════════════════════
+  const formatAddress = (address: string | null | undefined) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Loading state
+  const getSignalColor = (signal: string) => {
+    switch (signal) {
+      case 'BUY': return COLORS.success;
+      case 'SELL': return COLORS.error;
+      default: return COLORS.textMuted;
+    }
+  };
+
+  const getSignalBg = (signal: string) => {
+    switch (signal) {
+      case 'BUY': return 'rgba(34, 197, 94, 0.2)';
+      case 'SELL': return 'rgba(239, 68, 68, 0.2)';
+      default: return 'rgba(107, 114, 128, 0.2)';
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOADING STATE
+  // ══════════════════════════════════════════════════════════════════════════
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4ECDC4" />
-          <Text style={styles.loadingText}>Loading agent...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <LinearGradient colors={['#1E3A5F', '#0F2744', '#02111B']} style={styles.gradient} />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.accent} />
+            <Text style={styles.loadingText}>Loading Agent Dashboard...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
-  // Empty state - no agent
-  if (!agent) {
+  // ══════════════════════════════════════════════════════════════════════════
+  // EMPTY STATE - No agent
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!agent && !isTEE) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
+      <View style={styles.container}>
+        <LinearGradient colors={['#1E3A5F', '#0F2744', '#02111B']} style={styles.gradient} />
+        <SafeAreaView style={styles.safeArea}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Text style={styles.backButton}>← Back</Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>🤖 AI Agent</Text>
+            <Text style={styles.title}>AI Agent</Text>
+            <View style={styles.headerSpacer} />
           </View>
-
-          {/* Empty State */}
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🤖</Text>
+          
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🤖</Text>
             <Text style={styles.emptyTitle}>No AI Agent Yet</Text>
-            <Text style={styles.emptyDesc}>
-              Create an AI trading agent to automatically execute trades based on Zynapse signals using MEV-protected Dark Pool.
-            </Text>
-
-            <TouchableOpacity
+            <Text style={styles.emptyText}>Create an AI agent to automate your trading with MEV-protected execution.</Text>
+            <TouchableOpacity 
               style={styles.createButton}
               onPress={() => vault && navigation.navigate('AgentSetup', { vault })}
             >
               <Text style={styles.createButtonText}>Create AI Agent</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Features */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.featuresTitle}>What Your Agent Can Do</Text>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🏊</Text>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Dark Pool Trading</Text>
-                <Text style={styles.featureDesc}>Execute trades with MEV protection via Arcium</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>📊</Text>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Zynapse Signals</Text>
-                <Text style={styles.featureDesc}>Auto-trade based on AI market analysis</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🔄</Text>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Cross-Chain Swaps</Text>
-                <Text style={styles.featureDesc}>Trade SOL ↔ ZEC via NEAR Intents</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🏦</Text>
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Lending Protection</Text>
-                <Text style={styles.featureDesc}>Auto-repay loans to prevent liquidation</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Manual Actions */}
-          <View style={styles.manualSection}>
-            <Text style={styles.sectionTitle}>Manual Actions</Text>
-            <Text style={styles.sectionSubtitle}>Use these features without an agent</Text>
-
-            <View style={styles.actionGrid}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => navigation.navigate('DarkPool', { vault_id: vaultId, vault })}
-              >
-                <Text style={styles.actionIcon}>🏊</Text>
-                <Text style={styles.actionTitle}>Dark Pool</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => navigation.navigate('Lending', { vault_id: vaultId, vault })}
-              >
-                <Text style={styles.actionIcon}>🏦</Text>
-                <Text style={styles.actionTitle}>Lending</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => vault && navigation.navigate('Swap', { vault })}
-              >
-                <Text style={styles.actionIcon}>🔄</Text>
-                <Text style={styles.actionTitle}>Swap</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
-  // Agent exists - show dashboard
+  // ══════════════════════════════════════════════════════════════════════════
+  // MAIN DASHBOARD
+  // ══════════════════════════════════════════════════════════════════════════
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-      >
-
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>🤖 AI Agent</Text>
-        </View>
-
-        {liveStatus?.insufficientFunds && (
-  <View style={styles.warningBanner}>
-    <Text style={styles.warningIcon}>⚠️</Text>
-    <View style={styles.warningText}>
-      <Text style={styles.warningTitle}>Low Balance</Text>
-      <Text style={styles.warningDesc}>
-        {liveStatus.insufficientFunds.message || 'Add funds to continue trading'}
-      </Text>
-    </View>
-    <TouchableOpacity 
-      style={styles.addFundsButton}
-      onPress={() => vault && navigation.navigate('Receive', { vault })}
-    >
-      <Text style={styles.addFundsText}>Add Funds</Text>
-    </TouchableOpacity>
-  </View>
-)}
-
-        {/* Status Card */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            <View style={styles.statusInfo}>
-              <View style={[styles.statusDot, autoTradeEnabled ? styles.statusActive : styles.statusInactive]} />
-              <Text style={styles.statusText}>
-                {autoTradeEnabled ? 'Auto-Trading Active' : 'Manual Mode'}
+    <View style={styles.container}>
+      <LinearGradient colors={['#1E3A5F', '#0F2744', '#02111B']} style={styles.gradient} />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />
+          }
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.backIcon}>←</Text>
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.title}>{isTEE ? '🛡️ TEE Agent' : '🤖 AI Agent'}</Text>
+              <Text style={styles.subtitle}>
+                {isTEE ? 'Oasis TEE Protected' : 'Powered by Zynapse'}
               </Text>
             </View>
-            {actionLoading ? (
-              <ActivityIndicator size="small" color="#4ECDC4" />
-            ) : (
-              <Switch
-                value={autoTradeEnabled}
-                onValueChange={toggleAutoTrade}
-                trackColor={{ false: '#374151', true: '#4ECDC4' }}
-                thumbColor={autoTradeEnabled ? '#fff' : '#9CA3AF'}
-              />
-            )}
+            <View style={styles.headerSpacer} />
           </View>
-          <Text style={styles.statusSubtext}>
-  {liveStatus?.status === 'INSUFFICIENT_FUNDS'
-    ? '⚠️ Paused - Add funds to continue'
-    : autoTradeEnabled
-    ? `Next check: ${liveStatus?.nextCheck ? new Date(liveStatus.nextCheck).toLocaleTimeString() : '~15 min'}`
-    : 'Toggle on to start auto-trading'}
-</Text>
-        </View>
 
-        {/* Stats */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{agent.stats?.trades_executed || 0}</Text>
-            <Text style={styles.statLabel}>Trades</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={[
-              styles.statValue,
-              { color: (agent.stats?.total_pnl || 0) >= 0 ? '#22C55E' : '#EF4444' }
-            ]}>
-              ${(agent.stats?.total_pnl || 0).toFixed(2)}
-            </Text>
-            <Text style={styles.statLabel}>P&L</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{(agent.stats?.win_rate || 0).toFixed(0)}%</Text>
-            <Text style={styles.statLabel}>Win Rate</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{agent.stats?.dark_pool_trades || 0}</Text>
-            <Text style={styles.statLabel}>Dark Pool</Text>
-          </View>
-        </View>
-
-        {/* Signals */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 Trading Signals</Text>
-          {signals.length > 0 ? (
-            signals.map((signal, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.signalCard}
-                onPress={() => signal.signal !== 'HOLD' && executeSignal(signal)}
-                disabled={signal.signal === 'HOLD'}
-              >
-                <View style={styles.signalLeft}>
-                  <Text style={styles.signalAsset}>{signal.asset}</Text>
-                  <Text style={styles.signalPrice}>
-                    ${signal.price?.toFixed(2) || (signal.asset === 'SOL' ? '150.00' : '40.00')}
+          {/* How It Works - Funding Info */}
+          {isTEE && (
+            <View style={styles.infoCard}>
+              <View style={styles.infoHeader}>
+                <Text style={styles.infoIcon}>💡</Text>
+                <Text style={styles.infoTitle}>How Trading Works</Text>
+              </View>
+              
+              <View style={styles.infoSection}>
+                <Text style={styles.infoSubtitle}>📥 Fund Your Wallet</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoBullet}>•</Text>
+                  <Text style={styles.infoText}>
+                    <Text style={styles.infoHighlight}>USDC</Text> - Used to buy SOL/ETH on signals
                   </Text>
                 </View>
-                <View style={styles.signalCenter}>
-                  <Text style={styles.signalIndicator}>RSI: {signal.indicators.rsi}</Text>
-                  <Text style={styles.signalIndicator}>MACD: {signal.indicators.macd}</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoBullet}>•</Text>
+                  <Text style={styles.infoText}>
+                    <Text style={styles.infoHighlight}>Small SOL</Text> - Gas fees on Solana (~0.01 SOL)
+                  </Text>
                 </View>
-                <View style={styles.signalRight}>
-                  <View style={[
-                    styles.signalBadge,
-                    signal.signal === 'BUY' && styles.signalBuy,
-                    signal.signal === 'SELL' && styles.signalSell,
-                    signal.signal === 'HOLD' && styles.signalHold,
-                  ]}>
-                    <Text style={styles.signalBadgeText}>{signal.signal}</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoBullet}>•</Text>
+                  <Text style={styles.infoText}>
+                    <Text style={styles.infoHighlight}>Small ETH</Text> - Gas fees on Ethereum (~0.005 ETH)
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.infoSection}>
+                <Text style={styles.infoSubtitle}>🔄 Auto Trading Flow</Text>
+                <View style={styles.flowRow}>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>BUY Signal</Text>
+                    <Text style={styles.flowArrow}>USDC → SOL/ETH</Text>
                   </View>
-                  <Text style={styles.signalConfidence}>{signal.confidence}%</Text>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>SELL Signal</Text>
+                    <Text style={styles.flowArrow}>SOL/ETH → USDC</Text>
+                  </View>
                 </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptySignals}>
-              <Text style={styles.emptySignalsText}>Loading signals from Zynapse...</Text>
-              <TouchableOpacity onPress={fetchData}>
-                <Text style={styles.refreshLink}>Refresh</Text>
-              </TouchableOpacity>
+              </View>
+
+              <View style={styles.infoDex}>
+                <Text style={styles.infoDexText}>
+                  🔗 SOL trades via <Text style={styles.infoHighlight}>Jupiter</Text> • ETH trades via <Text style={styles.infoHighlight}>Uniswap</Text>
+                </Text>
+              </View>
             </View>
           )}
-        </View>
 
-        {/* Agent Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚙️ Agent Settings</Text>
-          <View style={styles.settingsCard}>
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Risk Level</Text>
-              <Text style={styles.settingValue}>
-                {agent.preferences?.risk_level || agent.preferences?.riskLevel || 'moderate'}
-              </Text>
+          {/* Auto Trading Toggle */}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleInfo}>
+              <View style={[styles.toggleDot, { backgroundColor: autoTradeEnabled ? COLORS.success : COLORS.textMuted }]} />
+              <View>
+                <Text style={styles.toggleTitle}>Auto Trading</Text>
+                <Text style={styles.toggleDesc}>
+                  {autoTradeEnabled ? 'Agent will execute trades on signals' : 'Trading is paused'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Trading Pairs</Text>
-              <Text style={styles.settingValue}>
-                {agent.preferences?.trading_pairs?.join(', ') ||
-                  agent.preferences?.favoriteTokens?.join(', ') ||
-                  'SOL/USDC'}
-              </Text>
+            <Switch
+              value={autoTradeEnabled}
+              onValueChange={handleToggleTrading}
+              trackColor={{ false: '#374151', true: COLORS.accent }}
+              thumbColor={autoTradeEnabled ? '#fff' : '#9CA3AF'}
+            />
+          </View>
+
+          {/* Stats Row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.trades}</Text>
+              <Text style={styles.statLabel}>TRADES</Text>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Dark Pool</Text>
-              <Text style={styles.settingValue}>
-                {agent.preferences?.dark_pool_trading !== false ? '✅' : '❌'}
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: COLORS.accent }]}>
+                ${stats.pnl.toFixed(2)}
               </Text>
+              <Text style={styles.statLabel}>P&L</Text>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Cross-Chain</Text>
-              <Text style={styles.settingValue}>
-                {agent.preferences?.cross_chain_swaps !== false ? '✅' : '❌'}
-              </Text>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.winRate}%</Text>
+              <Text style={styles.statLabel}>WIN RATE</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.secured}</Text>
+              <Text style={styles.statLabel}>SECURED</Text>
             </View>
           </View>
+
+          {/* Trading Signals */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Trading Signals</Text>
+            <TouchableOpacity onPress={onRefresh}>
+              <Text style={styles.refreshText}>Refresh</Text>
+            </TouchableOpacity>
+          </View>
+
+          {signals.map((signal, index) => (
+            <View key={index} style={styles.signalCard}>
+              <View style={styles.signalLeft}>
+                {signal.asset === 'ETH' ? (
+                  <View style={[styles.signalIcon, { backgroundColor: COLORS.ethereum }]}>
+                    <Image 
+                      source={ICONS.ethereum} 
+                      style={styles.signalIconImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                ) : (
+                  <LinearGradient
+                    colors={['#9945FF', '#14F195']}
+                    style={styles.signalIcon}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Image 
+                      source={ICONS.solana} 
+                      style={styles.signalIconImage}
+                      resizeMode="contain"
+                    />
+                  </LinearGradient>
+                )}
+                <View>
+                  <Text style={styles.signalAsset}>{signal.asset}</Text>
+                  <Text style={styles.signalPrice}>${signal.price?.toFixed(2)}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.signalMiddle}>
+                <Text style={styles.indicatorLabel}>RSI</Text>
+                <Text style={styles.indicatorValue}>{signal.indicators.rsi}</Text>
+                <Text style={styles.indicatorLabel}>MACD</Text>
+                <Text style={styles.indicatorValue}>{signal.indicators.macd}</Text>
+              </View>
+              
+              <View style={styles.signalRight}>
+                <View style={[styles.signalBadge, { backgroundColor: getSignalBg(signal.signal) }]}>
+                  <Text style={[styles.signalBadgeText, { color: getSignalColor(signal.signal) }]}>
+                    {signal.signal}
+                  </Text>
+                </View>
+                <Text style={styles.confidenceText}>{signal.confidence}% conf</Text>
+              </View>
+            </View>
+          ))}
+
+          {/* Trade Config - FETCHED FROM TEE BACKEND */}
+          <Text style={styles.sectionTitle}>Trade Config</Text>
+          <View style={styles.settingsCard}>
+            {teeConfigLoading ? (
+              <View style={styles.configLoading}>
+                <ActivityIndicator size="small" color={COLORS.accent} />
+                <Text style={styles.configLoadingText}>Loading config...</Text>
+              </View>
+            ) : isTEE ? (
+              <>
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Trading</Text>
+                  <View style={[
+                    styles.settingBadge, 
+                    teeConfig?.tradingEnabled ? styles.settingBadgeActive : styles.settingBadgeInactive
+                  ]}>
+                    <Text style={[
+                      styles.settingBadgeText, 
+                      { color: teeConfig?.tradingEnabled ? COLORS.success : COLORS.error }
+                    ]}>
+                      {teeConfig?.tradingEnabled ? 'Enabled' : 'Disabled'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.settingDivider} />
+                
+                {/* MAX TRADE - NOW FROM teeConfig, NOT HARDCODED */}
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Max Trade (USDC)</Text>
+                  <Text style={styles.settingValue}>
+                    ${teeConfig?.maxTradeAmountUsdc || 100}
+                  </Text>
+                </View>
+                <View style={styles.settingDivider} />
+                
+                {/* ALLOWED ASSETS - NOW FROM teeConfig, NOT HARDCODED */}
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Allowed Assets</Text>
+                  <Text style={styles.settingValue}>
+                    {teeConfig?.allowedAssets?.join(', ') || 'SOL, ETH'}
+                  </Text>
+                </View>
+                <View style={styles.settingDivider} />
+                
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Security</Text>
+                  <Text style={[styles.settingValue, { color: COLORS.accent }]}>🛡️ Oasis TEE</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Risk Level</Text>
+                  <Text style={styles.settingValue}>
+                    {agent?.preferences?.risk_level || agent?.preferences?.riskLevel || 'moderate'}
+                  </Text>
+                </View>
+                <View style={styles.settingDivider} />
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Trading Pairs</Text>
+                  <Text style={styles.settingValue}>
+                    {agent?.preferences?.trading_pairs?.join(', ') || 
+                     agent?.preferences?.favoriteTokens?.join(', ') || 'SOL/USDC'}
+                  </Text>
+                </View>
+                <View style={styles.settingDivider} />
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Max Trade</Text>
+                  <Text style={styles.settingValue}>
+                    ${agent?.preferences?.max_position_size || agent?.preferences?.maxTradeSize || 100}
+                  </Text>
+                </View>
+                <View style={styles.settingDivider} />
+                <View style={styles.settingRow}>
+                  <Text style={styles.settingLabel}>Dark Pool</Text>
+                  <View style={[styles.settingBadge, styles.settingBadgeActive]}>
+                    <Text style={[styles.settingBadgeText, { color: COLORS.success }]}>Enabled</Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Edit Button */}
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => vault && navigation.navigate('AgentSetup', { vault })}
+            onPress={() => vault && navigation.navigate('AgentSetup', { vault, agent })}
           >
-            <Text style={styles.editButtonText}>Edit Settings</Text>
+            <Text style={styles.editButtonText}>
+              {isTEE ? '⚙️ Reconfigure Agent' : '✏️ Edit Agent Settings'}
+            </Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('DarkPool', { vault_id: vaultId, vault })}
-          >
-            <Text style={styles.quickActionIcon}>🏊</Text>
-            <Text style={styles.quickActionText}>Dark Pool</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('Lending', { vault_id: vaultId, vault })}
-          >
-            <Text style={styles.quickActionIcon}>🏦</Text>
-            <Text style={styles.quickActionText}>Lending</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => vault && navigation.navigate('Swap', { vault })}
-          >
-            <Text style={styles.quickActionIcon}>🔄</Text>
-            <Text style={styles.quickActionText}>Swap</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {isTEE ? '🛡️ Secured by Oasis TEE' : '◈ Powered by Zynapse • ZkAGI'}
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// STYLES
+// ════════════════════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A1628',
+    backgroundColor: COLORS.bgPrimary,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 400,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -551,357 +801,471 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#9CA3AF',
+    color: COLORS.textSecondary,
     marginTop: 12,
+    fontSize: 14,
   },
+
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   backButton: {
-    color: '#4ECDC4',
-    fontSize: 16,
+    width: 44,
+    height: 44,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  backIcon: {
+    fontSize: 20,
+    color: COLORS.textPrimary,
+  },
+  headerCenter: {
+    alignItems: 'center',
+  },
+  headerSpacer: {
+    width: 44,
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyEmoji: {
-    fontSize: 80,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    fontWeight: '700',
   },
-  emptyDesc: {
-    color: '#9CA3AF',
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-    paddingHorizontal: 20,
+  subtitle: {
+    color: COLORS.accent,
+    fontSize: 13,
+    marginTop: 4,
   },
-  createButton: {
-    backgroundColor: '#4ECDC4',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 14,
-  },
-  createButtonText: {
-    color: '#0A1628',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  // Features
-  featuresSection: {
+
+  // Wallet Card (TEE)
+  walletCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
     padding: 16,
-  },
-  featuresTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
   },
-  featureCard: {
+  walletHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    padding: 16,
-    borderRadius: 12,
     marginBottom: 12,
   },
-  featureIcon: {
-    fontSize: 28,
-    marginRight: 14,
+  walletIcon: {
+    fontSize: 20,
+    marginRight: 8,
   },
-  featureInfo: {
+  walletTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
     flex: 1,
   },
-  featureTitle: {
-    color: '#FFFFFF',
+  securedBadge: {
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  securedText: {
+    color: COLORS.success,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  chainDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  addressLabel: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    width: 60,
+  },
+  addressValue: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    flex: 1,
+  },
+
+  // Info Card - How Trading Works
+  infoCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(51, 230, 191, 0.3)',
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  infoTitle: {
+    color: COLORS.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
-  featureDesc: {
-    color: '#6B7280',
+  infoSection: {
+    marginBottom: 12,
+  },
+  infoSubtitle: {
+    color: COLORS.accent,
     fontSize: 13,
-    marginTop: 2,
-  },
-  // Manual section
-  manualSection: {
-    padding: 16,
-  },
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
     fontWeight: '600',
+    marginBottom: 6,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 4,
+    paddingLeft: 4,
   },
-  sectionSubtitle: {
-    color: '#6B7280',
-    fontSize: 13,
-    marginBottom: 16,
+  infoBullet: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    marginRight: 6,
+    marginTop: 1,
   },
-  actionGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionCard: {
+  infoText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
     flex: 1,
-    backgroundColor: '#1E293B',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
+    lineHeight: 18,
   },
-  actionIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  actionTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  infoHighlight: {
+    color: COLORS.accent,
     fontWeight: '600',
   },
-  // Status card
-  statusCard: {
-    backgroundColor: '#1E293B',
-    marginHorizontal: 16,
+  flowRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 4,
+  },
+  flowItem: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(51, 230, 191, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  flowLabel: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    marginBottom: 2,
+  },
+  flowArrow: {
+    color: COLORS.textPrimary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  infoDex: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 10,
+    marginTop: 4,
+  },
+  infoDexText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    textAlign: 'center',
+  },
+
+  // Toggle Card
+  toggleCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
     marginBottom: 16,
-  },
-  statusHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  statusInfo: {
+  toggleInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  statusDot: {
+  toggleDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    marginRight: 8,
+    backgroundColor: COLORS.textMuted,
+    marginRight: 12,
   },
-  statusActive: {
-    backgroundColor: '#22C55E',
-  },
-  statusInactive: {
-    backgroundColor: '#6B7280',
-  },
-  statusText: {
-    color: '#FFFFFF',
+  toggleTitle: {
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
-  statusSubtext: {
-    color: '#6B7280',
-    fontSize: 13,
+  toggleDesc: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    marginTop: 2,
   },
-  // Stats
-  statsGrid: {
+
+  // Stats Row
+  statsRow: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    gap: 8,
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#1E293B',
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginHorizontal: 4,
+    minHeight: 80,
   },
   statValue: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   statLabel: {
-    color: '#6B7280',
-    fontSize: 11,
-    marginTop: 4,
+    color: COLORS.textMuted,
+    fontSize: 9,
+    marginTop: 6,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
+
   // Section
-  section: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  // Signals
+  sectionTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  refreshText: {
+    color: COLORS.accent,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  // Signal Card
   signalCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   signalLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  signalIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  signalIconImage: {
+    width: 24,
+    height: 24,
+    tintColor: COLORS.textPrimary,
+  },
+  signalIconText: {
+    fontSize: 20,
+    color: COLORS.textPrimary,
   },
   signalAsset: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   signalPrice: {
-    color: '#6B7280',
+    color: COLORS.textMuted,
     fontSize: 13,
   },
-  signalCenter: {
-    flex: 1,
+  signalMiddle: {
     alignItems: 'center',
+    paddingHorizontal: 12,
   },
-  signalIndicator: {
-    color: '#9CA3AF',
-    fontSize: 11,
+  indicatorLabel: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+  },
+  indicatorValue: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
   },
   signalRight: {
     alignItems: 'flex-end',
   },
   signalBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  signalBuy: {
-    backgroundColor: '#22C55E20',
-  },
-  signalSell: {
-    backgroundColor: '#EF444420',
-  },
-  signalHold: {
-    backgroundColor: '#6B728020',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   signalBadgeText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: '700',
   },
-  signalConfidence: {
-    color: '#6B7280',
+  confidenceText: {
+    color: COLORS.textMuted,
     fontSize: 11,
+    marginTop: 4,
   },
-  emptySignals: {
-    backgroundColor: '#1E293B',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  emptySignalsText: {
-    color: '#6B7280',
-  },
-  refreshLink: {
-    color: '#4ECDC4',
-    marginTop: 8,
-  },
-  // Settings
+
+  // Settings Card
   settingsCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  configLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  configLoadingText: {
+    color: COLORS.textMuted,
+    marginLeft: 10,
+    fontSize: 14,
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  settingDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
   },
   settingLabel: {
-    color: '#6B7280',
+    color: COLORS.textMuted,
     fontSize: 14,
   },
   settingValue: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
-  editButton: {
-    backgroundColor: '#374151',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
+  settingBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
-  editButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  settingBadgeActive: {
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
   },
-  // Quick actions
-  quickActions: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    gap: 12,
+  settingBadgeInactive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
-  quickAction: {
-    flex: 1,
-    backgroundColor: '#1E293B',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  quickActionIcon: {
-    fontSize: 24,
-    marginBottom: 6,
-  },
-  quickActionText: {
-    color: '#FFFFFF',
+  settingBadgeText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  // Add to styles
-warningBanner: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#78350F',
-  marginHorizontal: 16,
-  padding: 12,
-  borderRadius: 12,
-  marginBottom: 16,
-},
-warningIcon: {
-  fontSize: 24,
-  marginRight: 12,
-},
-warningText: {
-  flex: 1,
-},
-warningTitle: {
-  color: '#FCD34D',
-  fontSize: 14,
-  fontWeight: '600',
-},
-warningDesc: {
-  color: '#FDE68A',
-  fontSize: 12,
-},
-addFundsButton: {
-  backgroundColor: '#F59E0B',
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  borderRadius: 8,
-},
-addFundsText: {
-  color: '#000',
-  fontWeight: '600',
-  fontSize: 12,
-},
+
+  // Edit Button
+  editButton: {
+    backgroundColor: 'transparent',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+  },
+  editButtonText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  emptyText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  createButton: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  createButtonText: {
+    color: COLORS.bgPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  footerText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
 });
 
 export default AgentDashboardScreen;

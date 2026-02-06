@@ -1,1243 +1,2104 @@
-// // // import React, { useEffect, useState } from 'react';
-// // // import {
-// // //   View,
-// // //   Text,
-// // //   StyleSheet,
-// // //   TouchableOpacity,
-// // //   SafeAreaView,
-// // //   ScrollView,
-// // //   ActivityIndicator,
-// // //   Clipboard,
-// // //   Alert,
-// // // } from 'react-native';
-// // // import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-// // // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// // // import { RootStackParamList } from '../types/navigation';
-// // // import api from '../services/api';
-// // // import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-
-// // // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-// // // type RoutePropType = RouteProp<RootStackParamList, 'Home'>;
-
-// // // const HomeScreen = () => {
-// // //   const route = useRoute<RoutePropType>();
-// // //   const navigation = useNavigation<NavigationProp>();
-// // //   const vault = route.params?.vault;
-  
-// // //   const [chains, setChains] = useState<string[]>([]);
-// // //   const [loading, setLoading] = useState(false);
-// // //   const [copied, setCopied] = useState(false);
-// // //   const [balance, setBalance] = useState<number>(0);
-
-// // //   useEffect(() => {
-// // //     if (!vault) {
-// // //       loadChains();
-// // //     }
-// // //   }, [vault]);
-
-// // //   useEffect(() => {
-// // //   if (vault?.address && vault.chain === 'SOL') {
-// // //     fetchBalance();
-// // //   }
-// // // }, [vault]);
-
-// // // const fetchBalance = async () => {
-// // //   if (!vault?.address) return;
-  
-// // //   try {
-// // //     const connection = new Connection('https://api.mainnet-beta.solana.com');
-// // //     const pubkey = new PublicKey(vault.address);
-// // //     const lamports = await connection.getBalance(pubkey);
-// // //     setBalance(lamports / LAMPORTS_PER_SOL);
-// // //   } catch (err) {
-// // //     console.error('Balance fetch error:', err);
-// // //   }
-// // // };
-
-// // //   const loadChains = async () => {
-// // //     try {
-// // //       setLoading(true);
-// // //       const data = await api.getTokens();
-// // //       if (data.supported_chains) {
-// // //         setChains(data.supported_chains);
-// // //       }
-// // //     } catch (err) {
-// // //       console.error(err);
-// // //     } finally {
-// // //       setLoading(false);
-// // //     }
-// // //   };
-
-// // //   const formatAddress = (address: string) => {
-// // //     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-// // //   };
-
-// // //   const copyAddress = () => {
-// // //     if (vault?.address) {
-// // //       Clipboard.setString(vault.address);
-// // //       setCopied(true);
-// // //       Alert.alert('Copied!', 'Address copied to clipboard', [
-// // //         { text: 'OK', onPress: () => {} }
-// // //       ]);
-      
-// // //       setTimeout(() => {
-// // //         setCopied(false);
-// // //       }, 2000);
-// // //     }
-// // //   };
-
-// // //   if (vault) {
-// // //     return (
-// // //       <SafeAreaView style={styles.container}>
-// // //         <ScrollView showsVerticalScrollIndicator={false}>
-// // //           <View style={styles.header}>
-// // //             <Text style={styles.welcomeText}>Welcome to</Text>
-// // //             <Text style={styles.vaultName}>{vault.vault_name}</Text>
-// // //           </View>
-
-// // //           <View style={styles.card}>
-// // //             <View style={styles.cardHeader}>
-// // //               <Text style={styles.cardTitle}>Vault Details</Text>
-// // //               <Text style={styles.chain}>{vault.chain}</Text>
-// // //             </View>
-
-// // //             <View style={styles.infoRow}>
-// // //               <Text style={styles.infoLabel}>Address</Text>
-// // //               <Text style={styles.infoValue}>{formatAddress(vault.address)}</Text>
-// // //             </View>
-
-// // //             <View style={styles.infoRow}>
-// // //               <Text style={styles.infoLabel}>Full Address</Text>
-// // //               <Text style={styles.fullAddress}>{vault.address}</Text>
-// // //             </View>
-
-// // //             <View style={styles.infoRow}>
-// // //               <Text style={styles.infoLabel}>MPC Provider</Text>
-// // //               <Text style={styles.infoValue}>{vault.mpc_provider}</Text>
-// // //             </View>
-
-// // //             <View style={styles.infoRow}>
-// // //               <Text style={styles.infoLabel}>Created</Text>
-// // //               <Text style={styles.infoValue}>
-// // //                 {new Date(vault.created_at).toLocaleDateString()}
-// // //               </Text>
-// // //             </View>
-
-// // //             <TouchableOpacity 
-// // //               style={[styles.copyButton, copied && styles.copyButtonCopied]}
-// // //               onPress={copyAddress}
-// // //             >
-// // //               <Text style={styles.copyButtonText}>
-// // //                 {copied ? '✓ Copied!' : 'Copy Full Address'}
-// // //               </Text>
-// // //             </TouchableOpacity>
-// // //           </View>
-
-// // //           <View style={styles.balanceCard}>
-// // //             <Text style={styles.balanceLabel}>Total Balance</Text>
-// // //             <Text style={styles.balanceAmount}>{balance.toFixed(4)} SOL</Text>
-// // //             <Text style={styles.balanceHint}>
-// // //               Send {vault.chain} to your address to get started
-// // //             </Text>
-// // //           </View>
-
-// // //           <View style={styles.actionsContainer}>
-// // //             <TouchableOpacity style={styles.actionButton}>
-// // //               <Text style={styles.actionEmoji}>📤</Text>
-// // //               <Text style={styles.actionText}>Send</Text>
-// // //             </TouchableOpacity>
-
-// // //             <TouchableOpacity style={styles.actionButton}>
-// // //               <Text style={styles.actionEmoji}>📥</Text>
-// // //               <Text style={styles.actionText}>Receive</Text>
-// // //             </TouchableOpacity>
-
-// // //             <TouchableOpacity
-// // //               style={styles.actionButton}
-// // //               onPress={() => navigation.navigate('Swap')}
-// // //             >
-// // //               <Text style={styles.actionEmoji}>🔄</Text>
-// // //               <Text style={styles.actionText}>Swap</Text>
-// // //             </TouchableOpacity>
-// // //           </View>
-
-// // //           {/* Agent Setup Card */}
-// // //           <View style={styles.card}>
-// // //             <Text style={styles.cardTitle}>🤖 AI Trading Agent</Text>
-// // //             <Text style={styles.agentDescription}>
-// // //               Set up an automated trading agent powered by NEAR AI Intents
-// // //             </Text>
-// // //             <TouchableOpacity
-// // //               style={styles.setupAgentButton}
-// // //               onPress={() => navigation.navigate('AgentPreferences', { vault })}
-// // //             >
-// // //               <Text style={styles.setupAgentButtonText}>Setup AI Agent</Text>
-// // //             </TouchableOpacity>
-// // //           </View>
-
-// // //           {/* Fund Wallet Card */}
-// // //           <View style={styles.card}>
-// // //             <Text style={styles.cardTitle}>💰 Fund Your Wallet</Text>
-// // //             <Text style={styles.agentDescription}>
-// // //               Add {vault.chain} tokens to start trading
-// // //             </Text>
-// // //             <TouchableOpacity
-// // //               style={styles.fundButton}
-// // //               onPress={() => navigation.navigate('FundWallet', { vault })}
-// // //             >
-// // //               <Text style={styles.fundButtonText}>Add Funds</Text>
-// // //             </TouchableOpacity>
-// // //           </View>
-// // //         </ScrollView>
-// // //       </SafeAreaView>
-// // //     );
-// // //   }
-
-// // //   return (
-// // //     <SafeAreaView style={styles.container}>
-// // //       <ScrollView showsVerticalScrollIndicator={false}>
-// // //         <View style={styles.header}>
-// // //           <Text style={styles.vaultName}>PawPad</Text>
-// // //           <Text style={styles.welcomeText}>Multi-Chain MPC Wallet</Text>
-// // //         </View>
-
-// // //         <View style={styles.card}>
-// // //           <Text style={styles.cardTitle}>Quick Actions</Text>
-// // //           <TouchableOpacity
-// // //             style={styles.actionButtonLarge}
-// // //             onPress={() => navigation.navigate('Swap')}
-// // //           >
-// // //             <Text style={styles.actionButtonText}>🔄 Cross-Chain Swap</Text>
-// // //           </TouchableOpacity>
-// // //         </View>
-
-// // //         <View style={styles.card}>
-// // //           <Text style={styles.cardTitle}>Supported Chains</Text>
-// // //           {loading ? (
-// // //             <ActivityIndicator color="#4ECDC4" size="large" />
-// // //           ) : (
-// // //             <View style={styles.chainsContainer}>
-// // //               {chains.map((chain, index) => (
-// // //                 <View key={index} style={styles.chainBadge}>
-// // //                   <Text style={styles.chainText}>{chain}</Text>
-// // //                 </View>
-// // //               ))}
-// // //             </View>
-// // //           )}
-// // //         </View>
-
-// // //         <View style={styles.footer}>
-// // //           <Text style={styles.footerText}>Powered by NEAR Intents</Text>
-// // //         </View>
-// // //       </ScrollView>
-// // //     </SafeAreaView>
-// // //   );
-// // // };
-
-// // // const styles = StyleSheet.create({
-// // //   container: {
-// // //     flex: 1,
-// // //     backgroundColor: '#0A1628',
-// // //     paddingHorizontal: 24,
-// // //   },
-// // //   header: {
-// // //     paddingTop: 40,
-// // //     paddingBottom: 32,
-// // //   },
-// // //   welcomeText: {
-// // //     fontSize: 16,
-// // //     color: '#9CA3AF',
-// // //     marginBottom: 8,
-// // //   },
-// // //   vaultName: {
-// // //     fontSize: 32,
-// // //     color: '#FFFFFF',
-// // //     fontWeight: '600',
-// // //   },
-// // //   card: {
-// // //     backgroundColor: '#1E293B',
-// // //     borderRadius: 16,
-// // //     padding: 20,
-// // //     marginBottom: 20,
-// // //   },
-// // //   cardHeader: {
-// // //     flexDirection: 'row',
-// // //     justifyContent: 'space-between',
-// // //     alignItems: 'center',
-// // //     marginBottom: 20,
-// // //   },
-// // //   cardTitle: {
-// // //     fontSize: 18,
-// // //     color: '#FFFFFF',
-// // //     fontWeight: '600',
-// // //     marginBottom: 16,
-// // //   },
-// // //   chain: {
-// // //     fontSize: 14,
-// // //     color: '#4ECDC4',
-// // //     backgroundColor: 'rgba(78, 205, 196, 0.1)',
-// // //     paddingHorizontal: 12,
-// // //     paddingVertical: 6,
-// // //     borderRadius: 8,
-// // //   },
-// // //   infoRow: {
-// // //     flexDirection: 'row',
-// // //     justifyContent: 'space-between',
-// // //     marginBottom: 16,
-// // //     alignItems: 'flex-start',
-// // //   },
-// // //   infoLabel: {
-// // //     fontSize: 14,
-// // //     color: '#9CA3AF',
-// // //     flex: 1,
-// // //   },
-// // //   infoValue: {
-// // //     fontSize: 14,
-// // //     color: '#FFFFFF',
-// // //     fontWeight: '500',
-// // //     flex: 1,
-// // //     textAlign: 'right',
-// // //   },
-// // //   fullAddress: {
-// // //     fontSize: 12,
-// // //     color: '#FFFFFF',
-// // //     fontWeight: '500',
-// // //     fontFamily: 'monospace',
-// // //     flex: 1,
-// // //     textAlign: 'right',
-// // //   },
-// // //   copyButton: {
-// // //     backgroundColor: '#4F7FFF',
-// // //     borderRadius: 8,
-// // //     paddingVertical: 12,
-// // //     alignItems: 'center',
-// // //     marginTop: 8,
-// // //   },
-// // //   copyButtonCopied: {
-// // //     backgroundColor: '#10B981',
-// // //   },
-// // //   copyButtonText: {
-// // //     color: '#FFFFFF',
-// // //     fontSize: 14,
-// // //     fontWeight: '600',
-// // //   },
-// // //   balanceCard: {
-// // //     backgroundColor: '#1E293B',
-// // //     borderRadius: 16,
-// // //     padding: 24,
-// // //     marginBottom: 20,
-// // //     alignItems: 'center',
-// // //   },
-// // //   balanceLabel: {
-// // //     fontSize: 14,
-// // //     color: '#9CA3AF',
-// // //     marginBottom: 8,
-// // //   },
-// // //   balanceAmount: {
-// // //     fontSize: 48,
-// // //     color: '#FFFFFF',
-// // //     fontWeight: '600',
-// // //     marginBottom: 8,
-// // //   },
-// // //   balanceHint: {
-// // //     fontSize: 12,
-// // //     color: '#6B7280',
-// // //     textAlign: 'center',
-// // //   },
-// // //   actionsContainer: {
-// // //     flexDirection: 'row',
-// // //     gap: 12,
-// // //     marginBottom: 20,
-// // //   },
-// // //   actionButton: {
-// // //     flex: 1,
-// // //     backgroundColor: '#1E293B',
-// // //     borderRadius: 12,
-// // //     paddingVertical: 20,
-// // //     alignItems: 'center',
-// // //   },
-// // //   actionEmoji: {
-// // //     fontSize: 32,
-// // //     marginBottom: 8,
-// // //   },
-// // //   actionText: {
-// // //     fontSize: 14,
-// // //     color: '#FFFFFF',
-// // //   },
-// // //   actionButtonLarge: {
-// // //     backgroundColor: '#4ECDC4',
-// // //     padding: 16,
-// // //     borderRadius: 12,
-// // //     alignItems: 'center',
-// // //   },
-// // //   actionButtonText: {
-// // //     color: '#FFFFFF',
-// // //     fontSize: 16,
-// // //     fontWeight: '600',
-// // //   },
-// // //   agentDescription: {
-// // //     fontSize: 14,
-// // //     color: '#9CA3AF',
-// // //     lineHeight: 20,
-// // //     marginBottom: 16,
-// // //   },
-// // //   setupAgentButton: {
-// // //     backgroundColor: '#8B5CF6',
-// // //     paddingVertical: 12,
-// // //     paddingHorizontal: 16,
-// // //     borderRadius: 8,
-// // //     alignItems: 'center',
-// // //   },
-// // //   setupAgentButtonText: {
-// // //     color: '#FFFFFF',
-// // //     fontSize: 14,
-// // //     fontWeight: '600',
-// // //   },
-// // //   fundButton: {
-// // //     backgroundColor: '#10B981',
-// // //     paddingVertical: 12,
-// // //     paddingHorizontal: 16,
-// // //     borderRadius: 8,
-// // //     alignItems: 'center',
-// // //   },
-// // //   fundButtonText: {
-// // //     color: '#FFFFFF',
-// // //     fontSize: 14,
-// // //     fontWeight: '600',
-// // //   },
-// // //   chainsContainer: {
-// // //     flexDirection: 'row',
-// // //     flexWrap: 'wrap',
-// // //     gap: 8,
-// // //   },
-// // //   chainBadge: {
-// // //     backgroundColor: '#2a2a2a',
-// // //     paddingHorizontal: 16,
-// // //     paddingVertical: 8,
-// // //     borderRadius: 20,
-// // //     borderWidth: 1,
-// // //     borderColor: '#4ECDC4',
-// // //   },
-// // //   chainText: {
-// // //     color: '#4ECDC4',
-// // //     fontSize: 14,
-// // //     fontWeight: '600',
-// // //   },
-// // //   footer: {
-// // //     padding: 24,
-// // //     alignItems: 'center',
-// // //   },
-// // //   footerText: {
-// // //     color: '#666',
-// // //     fontSize: 12,
-// // //   },
-// // // });
-
-// // // export default HomeScreen;
-
-// // import React, { useEffect, useState, useCallback } from 'react';
+// // import React, { useState, useCallback, useEffect, useRef } from 'react';
 // // import {
 // //   View,
 // //   Text,
 // //   StyleSheet,
 // //   TouchableOpacity,
-// //   SafeAreaView,
 // //   ScrollView,
-// //   ActivityIndicator,
-// //   Alert,
 // //   RefreshControl,
+// //   ActivityIndicator,
+// //   Dimensions,
+// //   Animated,
 // // } from 'react-native';
-// // import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+// // import { SafeAreaView } from 'react-native-safe-area-context';
+// // import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 // // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// // import { RootStackParamList } from '../types/navigation';
-// // import Clipboard from '@react-native-clipboard/clipboard';
+// // import { RootStackParamList, VaultData, isUnifiedVault, isTEEVault, getTEEAddresses } from '../types/navigation';
+// // import { useVaults } from '../context/VaultContext';
 // // import api from '../services/api';
-
-// // const API_BASE = 'http://10.0.2.2:3001';
+// // import { getAllBalances } from '../services/teeSevice';
+// // import Clipboard from '@react-native-clipboard/clipboard';
+// // import LinearGradient from 'react-native-linear-gradient';
+// // import Svg, { Defs, RadialGradient, Stop, Ellipse } from 'react-native-svg';
+// // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-// // type RoutePropType = RouteProp<RootStackParamList, 'Home'>;
+// // type RouteType = RouteProp<RootStackParamList, 'Home'>;
 
-// // const HomeScreen = () => {
-// //   const route = useRoute<RoutePropType>();
-// //   const navigation = useNavigation<NavigationProp>();
-// //   const vault = route.params?.vault;
+// // const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// //   const [chains, setChains] = useState<string[]>([]);
-// //   const [loading, setLoading] = useState(false);
-// //   const [copied, setCopied] = useState(false);
-// //   const [balance, setBalance] = useState<number>(0);
-// //   const [balanceUsd, setBalanceUsd] = useState<number>(0);
-// //   const [balanceLoading, setBalanceLoading] = useState(false);
-// //   const [refreshing, setRefreshing] = useState(false);
+// // // ═══════════════════════════════════════════════════════════════
+// // // THEME COLORS
+// // // ═══════════════════════════════════════════════════════════════
+// // const COLORS = {
+// //   bgPrimary: '#02111B',
+// //   bgSecondary: '#061624',
+// //   bgCard: '#0D2137',
+// //   accent: '#33E6BF',
+// //   accentBlue: '#2A5298',
+// //   accentGlow: '#1E88E5',
+// //   textPrimary: '#FFFFFF',
+// //   textSecondary: '#8A9BAE',
+// //   textMuted: '#5A6B7E',
+// //   border: 'rgba(42, 82, 152, 0.3)',
+// //   borderLight: 'rgba(42, 82, 152, 0.15)',
+// //   success: '#10B981',
+// //   toastBg: '#1A3A4A',
+// // };
+
+// // // Gradient Halo Component
+// // const GradientHalo = () => (
+// //   <View style={styles.haloContainer}>
+// //     <Svg width={SCREEN_WIDTH} height={320} style={styles.haloSvg}>
+// //       <Defs>
+// //         <RadialGradient id="haloGrad" cx="50%" cy="40%" rx="60%" ry="50%">
+// //           <Stop offset="0%" stopColor="#1E4976" stopOpacity="0.6" />
+// //           <Stop offset="40%" stopColor="#153556" stopOpacity="0.3" />
+// //           <Stop offset="70%" stopColor="#0A2540" stopOpacity="0.15" />
+// //           <Stop offset="100%" stopColor="#02111B" stopOpacity="0" />
+// //         </RadialGradient>
+// //       </Defs>
+// //       <Ellipse
+// //         cx={SCREEN_WIDTH / 2}
+// //         cy={130}
+// //         rx={SCREEN_WIDTH * 0.7}
+// //         ry={160}
+// //         fill="url(#haloGrad)"
+// //       />
+// //     </Svg>
+// //   </View>
+// // );
+
+// // // ═══════════════════════════════════════════════════════════════
+// // // THEMED TOAST COMPONENT
+// // // ═══════════════════════════════════════════════════════════════
+// // interface ToastProps {
+// //   visible: boolean;
+// //   message: string;
+// // }
+
+// // const Toast = ({ visible, message }: ToastProps) => {
+// //   const opacity = useRef(new Animated.Value(0)).current;
 
 // //   useEffect(() => {
-// //     if (!vault) {
-// //       loadChains();
+// //     if (visible) {
+// //       Animated.sequence([
+// //         Animated.timing(opacity, {
+// //           toValue: 1,
+// //           duration: 200,
+// //           useNativeDriver: true,
+// //         }),
+// //         Animated.delay(1500),
+// //         Animated.timing(opacity, {
+// //           toValue: 0,
+// //           duration: 200,
+// //           useNativeDriver: true,
+// //         }),
+// //       ]).start();
 // //     }
-// //   }, [vault]);
+// //   }, [visible, message]);
 
-// //   useEffect(() => {
-// //     if (vault?.address) {
-// //       fetchBalance();
-// //     }
-// //   }, [vault]);
-
-// //   // Fetch balance from BACKEND API (not direct Solana connection)
-// //   const fetchBalance = async () => {
-// //     if (!vault?.address) return;
-
-// //     setBalanceLoading(true);
-// //     try {
-// //       let url = '';
-
-// //       if (vault.chain === 'SOL') {
-// //         url = `${API_BASE}/api/fund/solana-balance/${vault.address}`;
-// //       } else if (vault.chain === 'ZEC') {
-// //         url = `${API_BASE}/api/frost/balance/${vault.address}`;
-// //       } else {
-// //         console.log('Unsupported chain for balance:', vault.chain);
-// //         return;
-// //       }
-
-// //       const response = await fetch(url);
-// //       const data = await response.json();
-
-// //       if (data.success) {
-// //         setBalance(data.sol || data.balance || 0);
-// //         setBalanceUsd(data.usd || data.balanceUsd || 0);
-// //       } else {
-// //         console.error('Balance fetch failed:', data.error);
-// //       }
-// //     } catch (err) {
-// //       console.error('Balance fetch error:', err);
-// //     } finally {
-// //       setBalanceLoading(false);
-// //     }
-// //   };
-
-// //   const onRefresh = useCallback(async () => {
-// //     setRefreshing(true);
-// //     await fetchBalance();
-// //     setRefreshing(false);
-// //   }, [vault]);
-
-// //   const loadChains = async () => {
-// //     try {
-// //       setLoading(true);
-// //       const data = await api.getTokens();
-// //       if (data.supported_chains) {
-// //         setChains(data.supported_chains);
-// //       }
-// //     } catch (err) {
-// //       console.error(err);
-// //     } finally {
-// //       setLoading(false);
-// //     }
-// //   };
-
-// //   const formatAddress = (address: string) => {
-// //     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-// //   };
-
-// //   const copyAddress = () => {
-// //     if (vault?.address) {
-// //       Clipboard.setString(vault.address);
-// //       setCopied(true);
-// //       Alert.alert('Copied!', 'Address copied to clipboard', [{ text: 'OK' }]);
-// //       setTimeout(() => setCopied(false), 2000);
-// //     }
-// //   };
-
-// //   if (vault) {
-// //     return (
-// //       <SafeAreaView style={styles.container}>
-// //         <ScrollView
-// //           showsVerticalScrollIndicator={false}
-// //           refreshControl={
-// //             <RefreshControl
-// //               refreshing={refreshing}
-// //               onRefresh={onRefresh}
-// //               tintColor="#4ECDC4"
-// //               colors={['#4ECDC4']}
-// //             />
-// //           }
-// //         >
-// //           <View style={styles.header}>
-// //             <Text style={styles.welcomeText}>Welcome to</Text>
-// //             <Text style={styles.vaultName}>{vault.vault_name}</Text>
-// //           </View>
-
-// //           <View style={styles.card}>
-// //             <View style={styles.cardHeader}>
-// //               <Text style={styles.cardTitle}>Vault Details</Text>
-// //               <Text style={styles.chain}>{vault.chain}</Text>
-// //             </View>
-
-// //             <View style={styles.infoRow}>
-// //               <Text style={styles.infoLabel}>Address</Text>
-// //               <Text style={styles.infoValue}>{formatAddress(vault.address)}</Text>
-// //             </View>
-
-// //             <View style={styles.infoRow}>
-// //               <Text style={styles.infoLabel}>Full Address</Text>
-// //               <Text style={styles.fullAddress}>{vault.address}</Text>
-// //             </View>
-
-// //             <View style={styles.infoRow}>
-// //               <Text style={styles.infoLabel}>MPC Provider</Text>
-// //               <Text style={styles.infoValue}>{vault.mpc_provider}</Text>
-// //             </View>
-
-// //             <View style={styles.infoRow}>
-// //               <Text style={styles.infoLabel}>Created</Text>
-// //               <Text style={styles.infoValue}>
-// //                 {new Date(vault.created_at).toLocaleDateString()}
-// //               </Text>
-// //             </View>
-
-// //             <TouchableOpacity
-// //               style={[styles.copyButton, copied && styles.copyButtonCopied]}
-// //               onPress={copyAddress}
-// //             >
-// //               <Text style={styles.copyButtonText}>
-// //                 {copied ? '✓ Copied!' : 'Copy Full Address'}
-// //               </Text>
-// //             </TouchableOpacity>
-// //           </View>
-
-// //           <View style={styles.balanceCard}>
-// //             <Text style={styles.balanceLabel}>Total Balance</Text>
-// //             {balanceLoading ? (
-// //               <ActivityIndicator color="#4ECDC4" size="large" style={{ marginVertical: 16 }} />
-// //             ) : (
-// //               <>
-// //                 <Text style={styles.balanceAmount}>
-// //                   {balance.toFixed(4)} {vault.chain}
-// //                 </Text>
-// //                 {balanceUsd > 0 && (
-// //                   <Text style={styles.balanceUsd}>${balanceUsd.toFixed(2)} USD</Text>
-// //                 )}
-// //               </>
-// //             )}
-// //             <Text style={styles.balanceHint}>
-// //               {balance === 0
-// //                 ? `Send ${vault.chain} to your address to get started`
-// //                 : 'Pull down to refresh'}
-// //             </Text>
-// //           </View>
-
-// //           <View style={styles.actionsContainer}>
-// //             <TouchableOpacity style={styles.actionButton}>
-// //               <Text style={styles.actionEmoji}>📤</Text>
-// //               <Text style={styles.actionText}>Send</Text>
-// //             </TouchableOpacity>
-
-// //             <TouchableOpacity style={styles.actionButton}>
-// //               <Text style={styles.actionEmoji}>📥</Text>
-// //               <Text style={styles.actionText}>Receive</Text>
-// //             </TouchableOpacity>
-
-// //             <TouchableOpacity
-// //               style={styles.actionButton}
-// //               onPress={() => navigation.navigate('Swap')}
-// //             >
-// //               <Text style={styles.actionEmoji}>🔄</Text>
-// //               <Text style={styles.actionText}>Swap</Text>
-// //             </TouchableOpacity>
-// //           </View>
-
-// //           {/* Agent Setup Card */}
-// //           <View style={styles.card}>
-// //             <Text style={styles.cardTitle}>🤖 AI Trading Agent</Text>
-// //             <Text style={styles.agentDescription}>
-// //               Set up an automated trading agent powered by NEAR AI Intents
-// //             </Text>
-// //             <TouchableOpacity
-// //               style={styles.setupAgentButton}
-// //               onPress={() => navigation.navigate('AgentPreferences', { vault })}
-// //             >
-// //               <Text style={styles.setupAgentButtonText}>Setup AI Agent</Text>
-// //             </TouchableOpacity>
-// //           </View>
-
-// //           {/* Fund Wallet Card */}
-// //           <View style={styles.card}>
-// //             <Text style={styles.cardTitle}>💰 Fund Your Wallet</Text>
-// //             <Text style={styles.agentDescription}>
-// //               Add {vault.chain} tokens to start trading
-// //             </Text>
-// //             <TouchableOpacity
-// //               style={styles.fundButton}
-// //               onPress={() => navigation.navigate('FundWallet', { vault })}
-// //             >
-// //               <Text style={styles.fundButtonText}>Add Funds</Text>
-// //             </TouchableOpacity>
-// //           </View>
-
-// //           {/* Backup & Recovery Card */}
-// //           <View style={styles.card}>
-// //             <Text style={styles.cardTitle}>🔐 Backup & Recovery</Text>
-// //             <Text style={styles.agentDescription}>
-// //               Export your wallet backup or recover an existing wallet
-// //             </Text>
-// //             <TouchableOpacity
-// //               style={styles.backupButton}
-// //               onPress={() => navigation.navigate('Backup')}
-// //             >
-// //               <Text style={styles.backupButtonText}>Manage Backup</Text>
-// //             </TouchableOpacity>
-// //           </View>
-// //         </ScrollView>
-// //       </SafeAreaView>
-// //     );
-// //   }
+// //   if (!visible) return null;
 
 // //   return (
-// //     <SafeAreaView style={styles.container}>
-// //       <ScrollView showsVerticalScrollIndicator={false}>
-// //         <View style={styles.header}>
-// //           <Text style={styles.vaultName}>PawPad</Text>
-// //           <Text style={styles.welcomeText}>Multi-Chain MPC Wallet</Text>
-// //         </View>
-
-// //         <View style={styles.card}>
-// //           <Text style={styles.cardTitle}>Quick Actions</Text>
-// //           <TouchableOpacity
-// //             style={styles.actionButtonLarge}
-// //             onPress={() => navigation.navigate('Swap')}
-// //           >
-// //             <Text style={styles.actionButtonText}>🔄 Cross-Chain Swap</Text>
-// //           </TouchableOpacity>
-// //         </View>
-
-// //         <View style={styles.card}>
-// //           <Text style={styles.cardTitle}>Supported Chains</Text>
-// //           {loading ? (
-// //             <ActivityIndicator color="#4ECDC4" size="large" />
-// //           ) : (
-// //             <View style={styles.chainsContainer}>
-// //               {chains.map((chain, index) => (
-// //                 <View key={index} style={styles.chainBadge}>
-// //                   <Text style={styles.chainText}>{chain}</Text>
-// //                 </View>
-// //               ))}
-// //             </View>
-// //           )}
-// //         </View>
-
-// //         <View style={styles.footer}>
-// //           <Text style={styles.footerText}>Powered by NEAR Intents</Text>
-// //         </View>
-// //       </ScrollView>
-// //     </SafeAreaView>
+// //     <Animated.View style={[styles.toast, { opacity }]}>
+// //       <Text style={styles.toastIcon}>✓</Text>
+// //       <Text style={styles.toastText}>{message}</Text>
+// //     </Animated.View>
 // //   );
 // // };
 
+// // // ═══════════════════════════════════════════════════════════════
+// // // HOME SCREEN
+// // // ═══════════════════════════════════════════════════════════════
+// // const HomeScreen = () => {
+// //   const navigation = useNavigation<NavigationProp>();
+// //   const route = useRoute<RouteType>();
+// //   const { activeVault, vaults, isLoading: contextLoading } = useVaults();
+
+// //   const [refreshing, setRefreshing] = useState(false);
+// //   const [solBalance, setSolBalance] = useState<number>(0);
+// //   const [solUsd, setSolUsd] = useState<number>(0);
+// //   const [zecBalance, setZecBalance] = useState<number>(0);
+// //   const [zecUsd, setZecUsd] = useState<number>(0);
+// //   const [evmBalance, setEvmBalance] = useState<number>(0);
+// //   const [evmUsd, setEvmUsd] = useState<number>(0);
+// //   const [loadingBalance, setLoadingBalance] = useState(false);
+// //   const [teeWallet, setTeeWallet] = useState<VaultData | null>(null);
+  
+// //   // Toast state
+// //   const [toastVisible, setToastVisible] = useState(false);
+// //   const [toastMessage, setToastMessage] = useState('');
+
+// //   // Load TEE wallet from AsyncStorage on mount
+// //   useEffect(() => {
+// //     const loadTEEWallet = async () => {
+// //       try {
+// //         const stored = await AsyncStorage.getItem('tee_wallet');
+// //         if (stored) {
+// //           setTeeWallet(JSON.parse(stored));
+// //         }
+// //       } catch (error) {
+// //         console.log('Error loading TEE wallet:', error);
+// //       }
+// //     };
+// //     loadTEEWallet();
+// //   }, []);
+
+// //   const routeVault = route.params?.vault;
+// //   const vault: VaultData | null = routeVault || (activeVault as VaultData | null) || teeWallet;
+  
+// //   const isSeedless = vault?.wallet_type === 'seedless';
+// //   const isTEE = vault ? isTEEVault(vault) : false;
+// //   const teeAddresses = vault ? getTEEAddresses(vault) : { evm: null, solana: null };
+// //   const unified = vault ? isUnifiedVault(vault) : false;
+
+// //   // Chain detection
+// //   const hasSol = !isSeedless && (vault?.chain === 'SOL' || vault?.sol?.address || vault?.chain === 'unified' || (isTEE && teeAddresses.solana));
+// //   const hasZec = isSeedless || vault?.chain === 'ZEC' || vault?.zec?.address || vault?.zec?.unified_address || vault?.zec?.transparent_address || vault?.chain === 'unified';
+// //   const hasEvm = isTEE && teeAddresses.evm;
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // SHOW TOAST
+// //   // ═══════════════════════════════════════════════════════════════
+// //   const showToast = useCallback((message: string) => {
+// //     setToastMessage(message);
+// //     setToastVisible(true);
+// //     setTimeout(() => setToastVisible(false), 2000);
+// //   }, []);
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // COPY ADDRESS (with themed toast)
+// //   // ═══════════════════════════════════════════════════════════════
+// //   const copyAddress = useCallback((address: string | undefined | null) => {
+// //     if (!address) return;
+    
+// //     Clipboard.setString(address);
+// //     const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
+// //     showToast(`Copied: ${shortAddr}`);
+// //   }, [showToast]);
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // LOAD BALANCES (with error handling)
+// //   // ═══════════════════════════════════════════════════════════════
+// //   const loadBalances = useCallback(async () => {
+// //     if (!vault) return;
+    
+// //     setLoadingBalance(true);
+
+// //     try {
+// //       // TEE Wallet - use teeService for all balances
+// //       if (isTEE && (teeAddresses.solana || teeAddresses.evm)) {
+// //         const balances = await getAllBalances(teeAddresses.solana, teeAddresses.evm);
+        
+// //         // Update SOL balance
+// //         if (balances.solana) {
+// //           const solPrice = 200; // TODO: fetch real price
+// //           setSolBalance(balances.solana.sol);
+// //           setSolUsd(balances.solana.sol * solPrice);
+// //         }
+        
+// //         // Update ETH balance
+// //         if (balances.evm) {
+// //           const ethPrice = 2950; // TODO: fetch real price
+// //           setEvmBalance(balances.evm.eth);
+// //           setEvmUsd(balances.evm.eth * ethPrice);
+// //         }
+// //       } else {
+// //         // Non-TEE wallet - use existing API
+        
+// //         // Load SOL balance
+// //         if (hasSol) {
+// //           const address = vault.sol?.address || vault.address;
+// //           if (address) {
+// //             try {
+// //               const response = await api.getSolBalance(address);
+// //               if (response.success !== false) {
+// //                 const bal = response.sol || response.balance || 0;
+// //                 const usd = response.usd || bal * 200;
+// //                 setSolBalance(bal);
+// //                 setSolUsd(usd);
+// //               }
+// //             } catch (err: any) {
+// //               console.log('[Balance] SOL fetch failed, keeping previous value');
+// //             }
+// //           }
+// //         }
+
+// //         // Load ZEC balance
+// //         if (hasZec && (vault.zec?.address || vault.zec?.unified_address)) {
+// //           const zecAddress = vault.zec?.unified_address || vault.zec?.address;
+// //           try {
+// //             const response = await api.getZecBalance(zecAddress!);
+// //             if (response.success !== false) {
+// //               const bal = response.shielded_balance || response.balance || response.total_zec || 0;
+// //               const usd = response.usd || bal * 40;
+// //               setZecBalance(bal);
+// //               setZecUsd(usd);
+// //             }
+// //           } catch (err) {
+// //             console.log('[Balance] ZEC fetch failed, keeping previous value');
+// //           }
+// //         }
+// //       }
+// //     } catch (error) {
+// //       console.log('[Balance] General error:', error);
+// //     } finally {
+// //       setLoadingBalance(false);
+// //     }
+// //   }, [vault, hasSol, hasZec, hasEvm, isTEE, teeAddresses]);
+
+// //   // Load balances on focus (but not too frequently)
+// //   const lastLoadRef = useRef<number>(0);
+  
+// //   useFocusEffect(
+// //     useCallback(() => {
+// //       if (vault) {
+// //         const now = Date.now();
+// //         // Only load if more than 10 seconds since last load
+// //         if (now - lastLoadRef.current > 10000) {
+// //           lastLoadRef.current = now;
+// //           loadBalances();
+// //         }
+// //       }
+// //     }, [vault, loadBalances])
+// //   );
+
+// //   const onRefresh = async () => {
+// //     setRefreshing(true);
+// //     lastLoadRef.current = Date.now();
+// //     await loadBalances();
+// //     setRefreshing(false);
+// //   };
+
+// //   const formatAddress = (address: string | undefined | null) => {
+// //     if (!address) return '';
+// //     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+// //   };
+
+// //   const safeToFixed = (value: number | undefined | null, decimals: number = 2): string => {
+// //     if (value === undefined || value === null || isNaN(value)) {
+// //       return '0.00';
+// //     }
+// //     return value.toFixed(decimals);
+// //   };
+
+// //   const totalUsd = (hasSol ? solUsd : 0) + (hasZec ? zecUsd : 0) + (hasEvm ? evmUsd : 0);
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // EMPTY STATE
+// //   // ═══════════════════════════════════════════════════════════════
+// //   if (!vault && !contextLoading) {
+// //     return (
+// //       <View style={styles.container}>
+// //         <GradientHalo />
+// //         <SafeAreaView style={styles.safeArea}>
+// //           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+// //             <View style={styles.emptyCard}>
+// //               <View style={styles.emptyIconContainer}>
+// //                 <Text style={styles.emptyEmoji}>🔐</Text>
+// //               </View>
+// //               <Text style={styles.emptyTitle}>No Wallet Found</Text>
+// //               <Text style={styles.emptyText}>Create a wallet to get started</Text>
+// //               <TouchableOpacity
+// //                 style={styles.primaryButton}
+// //                 onPress={() => navigation.navigate('ChainSelection', {})}
+// //                 activeOpacity={0.8}
+// //               >
+// //                 <Text style={styles.primaryButtonText}>Create Wallet</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity
+// //                 style={styles.secondaryButton}
+// //                 onPress={() => navigation.navigate('Recovery')}
+// //                 activeOpacity={0.8}
+// //               >
+// //                 <Text style={styles.secondaryButtonText}>Recover Wallet</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </ScrollView>
+// //         </SafeAreaView>
+// //       </View>
+// //     );
+// //   }
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // LOADING STATE
+// //   // ═══════════════════════════════════════════════════════════════
+// //   if (contextLoading) {
+// //     return (
+// //       <View style={styles.container}>
+// //         <GradientHalo />
+// //         <SafeAreaView style={styles.safeArea}>
+// //           <View style={styles.loadingContainer}>
+// //             <ActivityIndicator size="large" color={COLORS.accent} />
+// //             <Text style={styles.loadingText}>Loading wallet...</Text>
+// //           </View>
+// //         </SafeAreaView>
+// //       </View>
+// //     );
+// //   }
+
+// //   // ═══════════════════════════════════════════════════════════════
+// //   // MAIN SCREEN
+// //   // ═══════════════════════════════════════════════════════════════
+// //   return (
+// //     <View style={styles.container}>
+// //       <GradientHalo />
+
+// //       {/* Themed Toast */}
+// //       <Toast visible={toastVisible} message={toastMessage} />
+
+// //       <SafeAreaView style={styles.safeArea}>
+// //         <ScrollView
+// //           showsVerticalScrollIndicator={false}
+// //           contentContainerStyle={styles.scrollContent}
+// //           refreshControl={
+// //             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />
+// //           }
+// //         >
+// //           {/* Header - NO ACTION on TEE Wallet click */}
+// //           <View style={styles.header}>
+// //             <View style={styles.vaultSelector}>
+// //               <Text style={styles.vaultIcon}>{isTEE ? '🛡️' : '⚡'}</Text>
+// //               <Text style={styles.vaultName}>{vault?.vault_name || 'My Wallet'}</Text>
+// //               {/* Removed dropdown arrow since no action */}
+// //             </View>
+
+// //             <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7}>
+// //               <View style={styles.settingsIconContainer}>
+// //                 <Text style={styles.settingsIcon}>⚙</Text>
+// //               </View>
+// //             </TouchableOpacity>
+// //           </View>
+
+// //           {/* Balance Display */}
+// //           <View style={styles.balanceContainer}>
+// //             {loadingBalance && totalUsd === 0 ? (
+// //               <ActivityIndicator color={COLORS.textPrimary} size="large" />
+// //             ) : (
+// //               <>
+// //                 <Text style={styles.balanceAmount}>${safeToFixed(totalUsd, 2)}</Text>
+// //                 <TouchableOpacity style={styles.hideBalanceBtn} activeOpacity={0.7}>
+// //                   <Text style={styles.hideBalanceIcon}>◉</Text>
+// //                   <Text style={styles.hideBalanceText}>Hide balance</Text>
+// //                 </TouchableOpacity>
+// //               </>
+// //             )}
+// //           </View>
+
+// //           {/* Action Buttons */}
+// //           <View style={styles.actionsRow}>
+// //             <TouchableOpacity
+// //               style={styles.actionBtn}
+// //               onPress={() => navigation.navigate('Swap', { vault: vault || undefined })}
+// //               activeOpacity={0.7}
+// //             >
+// //               <View style={[styles.actionIconWrap, styles.actionIconActive]}>
+// //                 <Text style={styles.actionIconTextActive}>⇄</Text>
+// //               </View>
+// //               <Text style={styles.actionText}>Swap</Text>
+// //             </TouchableOpacity>
+
+// //             <TouchableOpacity
+// //               style={styles.actionBtn}
+// //               onPress={() => vault && navigation.navigate('Send', { vault, chain: isTEE ? 'EVM' : 'SOL' })}
+// //               activeOpacity={0.7}
+// //             >
+// //               <View style={styles.actionIconWrap}>
+// //                 <Text style={styles.actionIconText}>↗</Text>
+// //               </View>
+// //               <Text style={styles.actionText}>Send</Text>
+// //             </TouchableOpacity>
+
+// //             <TouchableOpacity
+// //               style={styles.actionBtn}
+// //               onPress={() => navigation.navigate('FundWallet', { vault: vault || undefined })}
+// //               activeOpacity={0.7}
+// //             >
+// //               <View style={styles.actionIconWrap}>
+// //                 <Text style={styles.actionIconText}>↓</Text>
+// //               </View>
+// //               <Text style={styles.actionText}>Buy</Text>
+// //             </TouchableOpacity>
+
+// //             <TouchableOpacity
+// //               style={styles.actionBtn}
+// //               onPress={() => vault && navigation.navigate('AgentDashboard', { vault })}
+// //               activeOpacity={0.7}
+// //               disabled={!vault}
+// //             >
+// //               <View style={styles.actionIconWrap}>
+// //                 <Text style={styles.actionIconText}>◎</Text>
+// //               </View>
+// //               <Text style={styles.actionText}>Agent</Text>
+// //             </TouchableOpacity>
+// //           </View>
+
+// //           {/* Portfolio Header */}
+// //           <View style={styles.portfolioHeader}>
+// //             <Text style={styles.portfolioTitle}>Portfolio</Text>
+// //             <View style={styles.portfolioActions}>
+// //               <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+// //                 <Text style={styles.portfolioActionIcon}>⌕</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+// //                 <Text style={styles.portfolioActionIcon}>⊞</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </View>
+
+// //           {/* Token List */}
+// //           <View style={styles.tokenList}>
+// //             {/* EVM Row (TEE wallets only) */}
+// //             {hasEvm && (
+// //               <TouchableOpacity 
+// //                 style={styles.tokenRow} 
+// //                 activeOpacity={0.7}
+// //                 onPress={() => copyAddress(teeAddresses.evm)}
+// //               >
+// //                 <View style={styles.tokenIcon}>
+// //                   <View style={styles.tokenIconEvm}>
+// //                     <Text style={styles.tokenIconSymbol}>Ξ</Text>
+// //                   </View>
+// //                 </View>
+// //                 <View style={styles.tokenDetails}>
+// //                   <Text style={styles.tokenName}>Ethereum</Text>
+// //                   <View style={styles.tokenAddressWrap}>
+// //                     <Text style={styles.tokenAddress}>
+// //                       {formatAddress(teeAddresses.evm)}
+// //                     </Text>
+// //                     <Text style={styles.copyBtn}>⧉</Text>
+// //                   </View>
+// //                 </View>
+// //                 <View style={styles.tokenValues}>
+// //                   <Text style={styles.tokenUsd}>${safeToFixed(evmUsd, 2)}</Text>
+// //                   <Text style={styles.tokenBal}>{safeToFixed(evmBalance, 4)} ETH</Text>
+// //                 </View>
+// //                 <Text style={styles.rowChevron}>›</Text>
+// //               </TouchableOpacity>
+// //             )}
+
+// //             {/* SOL Row */}
+// //             {hasSol && (
+// //               <TouchableOpacity 
+// //                 style={[styles.tokenRow, hasEvm && styles.tokenRowBorder]} 
+// //                 activeOpacity={0.7}
+// //                 onPress={() => copyAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+// //               >
+// //                 <View style={styles.tokenIcon}>
+// //                   <LinearGradient
+// //                     colors={['#9945FF', '#14F195']}
+// //                     style={styles.tokenIconGradient}
+// //                     start={{ x: 0, y: 0 }}
+// //                     end={{ x: 1, y: 1 }}
+// //                   >
+// //                     <Text style={styles.tokenIconSymbol}>◎</Text>
+// //                   </LinearGradient>
+// //                 </View>
+// //                 <View style={styles.tokenDetails}>
+// //                   <Text style={styles.tokenName}>Solana</Text>
+// //                   <View style={styles.tokenAddressWrap}>
+// //                     <Text style={styles.tokenAddress}>
+// //                       {formatAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+// //                     </Text>
+// //                     <Text style={styles.copyBtn}>⧉</Text>
+// //                   </View>
+// //                 </View>
+// //                 <View style={styles.tokenValues}>
+// //                   <Text style={styles.tokenUsd}>${safeToFixed(solUsd, 2)}</Text>
+// //                   <Text style={styles.tokenBal}>{safeToFixed(solBalance, 4)} SOL</Text>
+// //                 </View>
+// //                 <Text style={styles.rowChevron}>›</Text>
+// //               </TouchableOpacity>
+// //             )}
+
+// //             {/* ZEC Row */}
+// //             {hasZec && (vault?.zec?.address || vault?.zec?.unified_address) && (
+// //               <TouchableOpacity 
+// //                 style={[styles.tokenRow, (hasSol || hasEvm) && styles.tokenRowBorder]} 
+// //                 activeOpacity={0.7}
+// //                 onPress={() => copyAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+// //               >
+// //                 <View style={styles.tokenIcon}>
+// //                   <View style={styles.tokenIconZec}>
+// //                     <Text style={styles.tokenIconSymbolDark}>Z</Text>
+// //                   </View>
+// //                 </View>
+// //                 <View style={styles.tokenDetails}>
+// //                   <Text style={styles.tokenName}>Zcash</Text>
+// //                   <View style={styles.tokenAddressWrap}>
+// //                     <Text style={styles.tokenAddress}>
+// //                       {formatAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+// //                     </Text>
+// //                     <Text style={styles.copyBtn}>⧉</Text>
+// //                   </View>
+// //                 </View>
+// //                 <View style={styles.tokenValues}>
+// //                   <Text style={styles.tokenUsd}>${safeToFixed(zecUsd, 2)}</Text>
+// //                   <Text style={styles.tokenBal}>{safeToFixed(zecBalance, 4)} ZEC</Text>
+// //                 </View>
+// //                 <Text style={styles.rowChevron}>›</Text>
+// //               </TouchableOpacity>
+// //             )}
+
+// //             {!hasSol && !hasZec && !hasEvm && (
+// //               <View style={styles.emptyTokens}>
+// //                 <Text style={styles.emptyTokensText}>No assets yet</Text>
+// //               </View>
+// //             )}
+// //           </View>
+
+// //           {/* Features Section */}
+// //           {vault && (
+// //             <>
+// //               <View style={styles.featuresHeader}>
+// //                 <Text style={styles.featuresTitle}>Features</Text>
+// //               </View>
+
+// //               {!isSeedless && !isTEE && (
+// //                 <TouchableOpacity
+// //                   style={styles.featureRow}
+// //                   onPress={() => navigation.navigate('DarkPool', { vault_id: vault.vault_id, vault })}
+// //                   activeOpacity={0.7}
+// //                 >
+// //                   <View style={styles.featureIcon}>
+// //                     <Text style={styles.featureIconText}>◈</Text>
+// //                   </View>
+// //                   <View style={styles.featureInfo}>
+// //                     <Text style={styles.featureTitle}>Dark Pool Trading</Text>
+// //                     <Text style={styles.featureDesc}>MEV-protected encrypted orders</Text>
+// //                   </View>
+// //                   <Text style={styles.featureArrow}>→</Text>
+// //                 </TouchableOpacity>
+// //               )}
+
+// //               <TouchableOpacity
+// //                 style={styles.featureRow}
+// //                 onPress={() => navigation.navigate('Backup', { vault })}
+// //                 activeOpacity={0.7}
+// //               >
+// //                 <View style={styles.featureIcon}>
+// //                   <Text style={styles.featureIconText}>⬡</Text>
+// //                 </View>
+// //                 <View style={styles.featureInfo}>
+// //                   <Text style={styles.featureTitle}>Backup & Recovery</Text>
+// //                   <Text style={styles.featureDesc}>
+// //                     {isTEE ? 'Download backup file' : 'Secure your wallet keys'}
+// //                   </Text>
+// //                 </View>
+// //                 <Text style={styles.featureArrow}>→</Text>
+// //               </TouchableOpacity>
+// //             </>
+// //           )}
+
+// //           {/* Footer */}
+// //           <View style={styles.footer}>
+// //             <Text style={styles.footerText}>
+// //               {isTEE ? '🛡️ Secured by Oasis TEE' : isSeedless ? '◈ Secured by Oasis TEE' : '◈ Powered by ZkAGI'}
+// //             </Text>
+// //           </View>
+// //         </ScrollView>
+// //       </SafeAreaView>
+// //     </View>
+// //   );
+// // };
+
+// // // ═══════════════════════════════════════════════════════════════
+// // // STYLES
+// // // ═══════════════════════════════════════════════════════════════
 // // const styles = StyleSheet.create({
 // //   container: {
 // //     flex: 1,
-// //     backgroundColor: '#0A1628',
-// //     paddingHorizontal: 24,
+// //     backgroundColor: COLORS.bgPrimary,
 // //   },
-// //   header: {
-// //     paddingTop: 40,
+// //   safeArea: {
+// //     flex: 1,
+// //   },
+// //   scrollContent: {
+// //     paddingHorizontal: 16,
 // //     paddingBottom: 32,
 // //   },
-// //   welcomeText: {
+// //   haloContainer: {
+// //     position: 'absolute',
+// //     top: 0,
+// //     left: 0,
+// //     right: 0,
+// //     height: 320,
+// //     overflow: 'hidden',
+// //   },
+// //   haloSvg: {
+// //     position: 'absolute',
+// //     top: 0,
+// //     left: 0,
+// //   },
+// //   // Toast styles
+// //   toast: {
+// //     position: 'absolute',
+// //     bottom: 100,
+// //     left: 20,
+// //     right: 20,
+// //     backgroundColor: COLORS.toastBg,
+// //     borderRadius: 12,
+// //     paddingVertical: 14,
+// //     paddingHorizontal: 20,
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     zIndex: 1000,
+// //     borderWidth: 1,
+// //     borderColor: COLORS.accent,
+// //     shadowColor: '#000',
+// //     shadowOffset: { width: 0, height: 4 },
+// //     shadowOpacity: 0.3,
+// //     shadowRadius: 8,
+// //     elevation: 8,
+// //   },
+// //   toastIcon: {
 // //     fontSize: 16,
-// //     color: '#9CA3AF',
-// //     marginBottom: 8,
+// //     color: COLORS.accent,
+// //     marginRight: 10,
 // //   },
-// //   vaultName: {
-// //     fontSize: 32,
-// //     color: '#FFFFFF',
-// //     fontWeight: '600',
+// //   toastText: {
+// //     color: COLORS.textPrimary,
+// //     fontSize: 14,
+// //     fontWeight: '500',
 // //   },
-// //   card: {
-// //     backgroundColor: '#1E293B',
-// //     borderRadius: 16,
-// //     padding: 20,
-// //     marginBottom: 20,
+// //   loadingContainer: {
+// //     flex: 1,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
 // //   },
-// //   cardHeader: {
+// //   loadingText: {
+// //     color: COLORS.textSecondary,
+// //     marginTop: 12,
+// //     fontSize: 14,
+// //   },
+// //   header: {
 // //     flexDirection: 'row',
 // //     justifyContent: 'space-between',
 // //     alignItems: 'center',
-// //     marginBottom: 20,
+// //     paddingTop: 8,
+// //     paddingBottom: 20,
 // //   },
-// //   cardTitle: {
-// //     fontSize: 18,
-// //     color: '#FFFFFF',
-// //     fontWeight: '600',
-// //     marginBottom: 16,
-// //   },
-// //   chain: {
-// //     fontSize: 14,
-// //     color: '#4ECDC4',
-// //     backgroundColor: 'rgba(78, 205, 196, 0.1)',
+// //   vaultSelector: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     backgroundColor: COLORS.bgCard,
 // //     paddingHorizontal: 12,
-// //     paddingVertical: 6,
-// //     borderRadius: 8,
-// //   },
-// //   infoRow: {
-// //     flexDirection: 'row',
-// //     justifyContent: 'space-between',
-// //     marginBottom: 16,
-// //     alignItems: 'flex-start',
-// //   },
-// //   infoLabel: {
-// //     fontSize: 14,
-// //     color: '#9CA3AF',
-// //     flex: 1,
-// //   },
-// //   infoValue: {
-// //     fontSize: 14,
-// //     color: '#FFFFFF',
-// //     fontWeight: '500',
-// //     flex: 1,
-// //     textAlign: 'right',
-// //   },
-// //   fullAddress: {
-// //     fontSize: 12,
-// //     color: '#FFFFFF',
-// //     fontWeight: '500',
-// //     fontFamily: 'monospace',
-// //     flex: 1,
-// //     textAlign: 'right',
-// //   },
-// //   copyButton: {
-// //     backgroundColor: '#4F7FFF',
-// //     borderRadius: 8,
-// //     paddingVertical: 12,
-// //     alignItems: 'center',
-// //     marginTop: 8,
-// //   },
-// //   copyButtonCopied: {
-// //     backgroundColor: '#10B981',
-// //   },
-// //   copyButtonText: {
-// //     color: '#FFFFFF',
-// //     fontSize: 14,
-// //     fontWeight: '600',
-// //   },
-// //   balanceCard: {
-// //     backgroundColor: '#1E293B',
-// //     borderRadius: 16,
-// //     padding: 24,
-// //     marginBottom: 20,
-// //     alignItems: 'center',
-// //   },
-// //   balanceLabel: {
-// //     fontSize: 14,
-// //     color: '#9CA3AF',
-// //     marginBottom: 8,
-// //   },
-// //   balanceAmount: {
-// //     fontSize: 48,
-// //     color: '#FFFFFF',
-// //     fontWeight: '600',
-// //     marginBottom: 4,
-// //   },
-// //   balanceUsd: {
-// //     fontSize: 18,
-// //     color: '#4ECDC4',
-// //     marginBottom: 8,
-// //   },
-// //   balanceHint: {
-// //     fontSize: 12,
-// //     color: '#6B7280',
-// //     textAlign: 'center',
-// //   },
-// //   actionsContainer: {
-// //     flexDirection: 'row',
-// //     gap: 12,
-// //     marginBottom: 20,
-// //   },
-// //   actionButton: {
-// //     flex: 1,
-// //     backgroundColor: '#1E293B',
-// //     borderRadius: 12,
-// //     paddingVertical: 20,
-// //     alignItems: 'center',
-// //   },
-// //   actionEmoji: {
-// //     fontSize: 32,
-// //     marginBottom: 8,
-// //   },
-// //   actionText: {
-// //     fontSize: 14,
-// //     color: '#FFFFFF',
-// //   },
-// //   actionButtonLarge: {
-// //     backgroundColor: '#4ECDC4',
-// //     padding: 16,
-// //     borderRadius: 12,
-// //     alignItems: 'center',
-// //   },
-// //   actionButtonText: {
-// //     color: '#FFFFFF',
-// //     fontSize: 16,
-// //     fontWeight: '600',
-// //   },
-// //   agentDescription: {
-// //     fontSize: 14,
-// //     color: '#9CA3AF',
-// //     lineHeight: 20,
-// //     marginBottom: 16,
-// //   },
-// //   setupAgentButton: {
-// //     backgroundColor: '#8B5CF6',
-// //     paddingVertical: 12,
-// //     paddingHorizontal: 16,
-// //     borderRadius: 8,
-// //     alignItems: 'center',
-// //   },
-// //   setupAgentButtonText: {
-// //     color: '#FFFFFF',
-// //     fontSize: 14,
-// //     fontWeight: '600',
-// //   },
-// //   fundButton: {
-// //     backgroundColor: '#10B981',
-// //     paddingVertical: 12,
-// //     paddingHorizontal: 16,
-// //     borderRadius: 8,
-// //     alignItems: 'center',
-// //   },
-// //   fundButtonText: {
-// //     color: '#FFFFFF',
-// //     fontSize: 14,
-// //     fontWeight: '600',
-// //   },
-// //   backupButton: {
-// //     backgroundColor: '#F59E0B',
-// //     paddingVertical: 12,
-// //     paddingHorizontal: 16,
-// //     borderRadius: 8,
-// //     alignItems: 'center',
-// //   },
-// //   backupButtonText: {
-// //     color: '#000000',
-// //     fontSize: 14,
-// //     fontWeight: '600',
-// //   },
-// //   chainsContainer: {
-// //     flexDirection: 'row',
-// //     flexWrap: 'wrap',
-// //     gap: 8,
-// //   },
-// //   chainBadge: {
-// //     backgroundColor: '#2a2a2a',
-// //     paddingHorizontal: 16,
 // //     paddingVertical: 8,
 // //     borderRadius: 20,
 // //     borderWidth: 1,
-// //     borderColor: '#4ECDC4',
+// //     borderColor: COLORS.border,
 // //   },
-// //   chainText: {
-// //     color: '#4ECDC4',
+// //   vaultIcon: {
 // //     fontSize: 14,
+// //     marginRight: 8,
+// //   },
+// //   vaultName: {
+// //     fontSize: 14,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //   },
+// //   settingsBtn: {
+// //     padding: 4,
+// //   },
+// //   settingsIconContainer: {
+// //     width: 40,
+// //     height: 40,
+// //     borderRadius: 20,
+// //     backgroundColor: 'transparent',
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //   },
+// //   settingsIcon: {
+// //     fontSize: 18,
+// //     color: COLORS.textSecondary,
+// //   },
+// //   balanceContainer: {
+// //     alignItems: 'center',
+// //     paddingTop: 24,
+// //     paddingBottom: 32,
+// //   },
+// //   balanceAmount: {
+// //     fontSize: 44,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '300',
+// //     letterSpacing: -1,
+// //   },
+// //   hideBalanceBtn: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     marginTop: 12,
+// //     paddingHorizontal: 12,
+// //     paddingVertical: 6,
+// //     borderRadius: 16,
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   hideBalanceIcon: {
+// //     fontSize: 12,
+// //     color: COLORS.accent,
+// //     marginRight: 6,
+// //   },
+// //   hideBalanceText: {
+// //     fontSize: 13,
+// //     color: COLORS.accent,
+// //     fontWeight: '500',
+// //   },
+// //   actionsRow: {
+// //     flexDirection: 'row',
+// //     justifyContent: 'center',
+// //     paddingBottom: 24,
+// //     gap: 20,
+// //   },
+// //   actionBtn: {
+// //     alignItems: 'center',
+// //     width: 64,
+// //   },
+// //   actionIconWrap: {
+// //     width: 52,
+// //     height: 52,
+// //     backgroundColor: COLORS.bgCard,
+// //     borderRadius: 14,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //     marginBottom: 8,
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   actionIconActive: {
+// //     backgroundColor: COLORS.accent,
+// //     borderColor: COLORS.accent,
+// //   },
+// //   actionIconText: {
+// //     fontSize: 20,
+// //     color: COLORS.textPrimary,
+// //   },
+// //   actionIconTextActive: {
+// //     fontSize: 20,
+// //     color: COLORS.bgPrimary,
 // //     fontWeight: '600',
 // //   },
+// //   actionText: {
+// //     fontSize: 12,
+// //     color: COLORS.textSecondary,
+// //     fontWeight: '500',
+// //   },
+// //   portfolioHeader: {
+// //     flexDirection: 'row',
+// //     justifyContent: 'space-between',
+// //     alignItems: 'center',
+// //     paddingTop: 8,
+// //     paddingBottom: 12,
+// //     borderBottomWidth: 1,
+// //     borderBottomColor: COLORS.borderLight,
+// //   },
+// //   portfolioTitle: {
+// //     fontSize: 15,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //   },
+// //   portfolioActions: {
+// //     flexDirection: 'row',
+// //     gap: 8,
+// //   },
+// //   portfolioActionBtn: {
+// //     width: 36,
+// //     height: 36,
+// //     backgroundColor: COLORS.bgCard,
+// //     borderRadius: 10,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   portfolioActionIcon: {
+// //     fontSize: 16,
+// //     color: COLORS.textSecondary,
+// //   },
+// //   tokenList: {
+// //     backgroundColor: COLORS.bgCard,
+// //     borderRadius: 16,
+// //     marginTop: 12,
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //     overflow: 'hidden',
+// //   },
+// //   tokenRow: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     padding: 14,
+// //   },
+// //   tokenRowBorder: {
+// //     borderTopWidth: 1,
+// //     borderTopColor: COLORS.borderLight,
+// //   },
+// //   tokenIcon: {
+// //     marginRight: 12,
+// //   },
+// //   tokenIconGradient: {
+// //     width: 40,
+// //     height: 40,
+// //     borderRadius: 20,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //   },
+// //   tokenIconZec: {
+// //     width: 40,
+// //     height: 40,
+// //     borderRadius: 20,
+// //     backgroundColor: '#F4B728',
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //   },
+// //   tokenIconEvm: {
+// //     width: 40,
+// //     height: 40,
+// //     borderRadius: 20,
+// //     backgroundColor: '#627EEA',
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //   },
+// //   tokenIconSymbol: {
+// //     fontSize: 18,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '600',
+// //   },
+// //   tokenIconSymbolDark: {
+// //     fontSize: 16,
+// //     color: '#1A1A1A',
+// //     fontWeight: '700',
+// //   },
+// //   tokenDetails: {
+// //     flex: 1,
+// //   },
+// //   tokenName: {
+// //     fontSize: 15,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //     marginBottom: 2,
+// //   },
+// //   tokenAddressWrap: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //   },
+// //   tokenAddress: {
+// //     fontSize: 12,
+// //     color: COLORS.textMuted,
+// //   },
+// //   copyBtn: {
+// //     fontSize: 12,
+// //     color: COLORS.textMuted,
+// //     marginLeft: 4,
+// //   },
+// //   tokenValues: {
+// //     alignItems: 'flex-end',
+// //     marginRight: 8,
+// //   },
+// //   tokenUsd: {
+// //     fontSize: 15,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //   },
+// //   tokenBal: {
+// //     fontSize: 12,
+// //     color: COLORS.textMuted,
+// //     marginTop: 2,
+// //   },
+// //   rowChevron: {
+// //     fontSize: 20,
+// //     color: COLORS.textMuted,
+// //   },
+// //   emptyTokens: {
+// //     padding: 32,
+// //     alignItems: 'center',
+// //   },
+// //   emptyTokensText: {
+// //     color: COLORS.textMuted,
+// //     fontSize: 14,
+// //   },
+// //   featuresHeader: {
+// //     paddingTop: 24,
+// //     paddingBottom: 12,
+// //   },
+// //   featuresTitle: {
+// //     fontSize: 15,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //   },
+// //   featureRow: {
+// //     flexDirection: 'row',
+// //     alignItems: 'center',
+// //     backgroundColor: COLORS.bgCard,
+// //     padding: 14,
+// //     borderRadius: 14,
+// //     marginBottom: 10,
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   featureIcon: {
+// //     width: 40,
+// //     height: 40,
+// //     backgroundColor: 'rgba(42, 82, 152, 0.3)',
+// //     borderRadius: 10,
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //     marginRight: 12,
+// //   },
+// //   featureIconText: {
+// //     fontSize: 18,
+// //     color: COLORS.accent,
+// //   },
+// //   featureInfo: {
+// //     flex: 1,
+// //   },
+// //   featureTitle: {
+// //     fontSize: 14,
+// //     color: COLORS.textPrimary,
+// //     fontWeight: '500',
+// //     marginBottom: 2,
+// //   },
+// //   featureDesc: {
+// //     fontSize: 12,
+// //     color: COLORS.textMuted,
+// //   },
+// //   featureArrow: {
+// //     fontSize: 16,
+// //     color: COLORS.accent,
+// //   },
 // //   footer: {
-// //     padding: 24,
+// //     paddingTop: 24,
+// //     paddingBottom: 8,
 // //     alignItems: 'center',
 // //   },
 // //   footerText: {
-// //     color: '#666',
-// //     fontSize: 12,
+// //     fontSize: 11,
+// //     color: COLORS.textMuted,
+// //   },
+// //   emptyCard: {
+// //     backgroundColor: COLORS.bgCard,
+// //     borderRadius: 20,
+// //     padding: 32,
+// //     marginTop: 80,
+// //     alignItems: 'center',
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   emptyIconContainer: {
+// //     width: 72,
+// //     height: 72,
+// //     borderRadius: 20,
+// //     backgroundColor: 'rgba(42, 82, 152, 0.2)',
+// //     justifyContent: 'center',
+// //     alignItems: 'center',
+// //     marginBottom: 20,
+// //   },
+// //   emptyEmoji: {
+// //     fontSize: 32,
+// //   },
+// //   emptyTitle: {
+// //     fontSize: 20,
+// //     fontWeight: '600',
+// //     color: COLORS.textPrimary,
+// //     marginBottom: 8,
+// //   },
+// //   emptyText: {
+// //     fontSize: 14,
+// //     color: COLORS.textSecondary,
+// //     marginBottom: 24,
+// //   },
+// //   primaryButton: {
+// //     width: '100%',
+// //     backgroundColor: COLORS.accent,
+// //     paddingVertical: 14,
+// //     borderRadius: 12,
+// //     alignItems: 'center',
+// //     marginBottom: 10,
+// //   },
+// //   primaryButtonText: {
+// //     color: COLORS.bgPrimary,
+// //     fontSize: 15,
+// //     fontWeight: '600',
+// //   },
+// //   secondaryButton: {
+// //     width: '100%',
+// //     backgroundColor: 'transparent',
+// //     paddingVertical: 14,
+// //     borderRadius: 12,
+// //     alignItems: 'center',
+// //     borderWidth: 1,
+// //     borderColor: COLORS.border,
+// //   },
+// //   secondaryButtonText: {
+// //     color: COLORS.textPrimary,
+// //     fontSize: 15,
+// //     fontWeight: '500',
 // //   },
 // // });
 
 // // export default HomeScreen;
 
-// /**
-//  * HomeScreen - COMPLETE VERSION
-//  * 
-//  * FILE: PAWPAD/src/screens/HomeScreen.tsx
-//  * ACTION: REPLACE your entire HomeScreen.tsx with this file
-//  * 
-//  * Shows BOTH SOL and ZEC balances!
-//  */
-
-// import React, { useState, useCallback } from 'react';
+// import React, { useState, useCallback, useEffect, useRef } from 'react';
 // import {
 //   View,
 //   Text,
 //   StyleSheet,
 //   TouchableOpacity,
-//   SafeAreaView,
 //   ScrollView,
 //   RefreshControl,
-//   Platform,
+//   ActivityIndicator,
+//   Dimensions,
+//   Animated,
 // } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 // import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 // import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import { RootStackParamList, VaultData } from '../types/navigation';
-// import Clipboard from '@react-native-clipboard/clipboard';
+// import { RootStackParamList, VaultData, isUnifiedVault, isTEEVault, getTEEAddresses } from '../types/navigation';
+// import { useVaults } from '../context/VaultContext';
 // import api from '../services/api';
+// import { getAllBalances } from '../services/teeSevice';
+// import Clipboard from '@react-native-clipboard/clipboard';
+// import LinearGradient from 'react-native-linear-gradient';
+// import Svg, { Defs, RadialGradient, Stop, Ellipse } from 'react-native-svg';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 // type RouteType = RouteProp<RootStackParamList, 'Home'>;
 
+// const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// // ═══════════════════════════════════════════════════════════════
+// // THEME COLORS
+// // ═══════════════════════════════════════════════════════════════
+// const COLORS = {
+//   bgPrimary: '#02111B',
+//   bgSecondary: '#061624',
+//   bgCard: '#0D2137',
+//   accent: '#33E6BF',
+//   accentBlue: '#2A5298',
+//   accentGlow: '#1E88E5',
+//   textPrimary: '#FFFFFF',
+//   textSecondary: '#8A9BAE',
+//   textMuted: '#5A6B7E',
+//   border: 'rgba(42, 82, 152, 0.3)',
+//   borderLight: 'rgba(42, 82, 152, 0.15)',
+//   success: '#10B981',
+//   toastBg: '#1A3A4A',
+// };
+
+// // Gradient Halo Component
+// const GradientHalo = () => (
+//   <View style={styles.haloContainer}>
+//     <Svg width={SCREEN_WIDTH} height={320} style={styles.haloSvg}>
+//       <Defs>
+//         <RadialGradient id="haloGrad" cx="50%" cy="40%" rx="60%" ry="50%">
+//           <Stop offset="0%" stopColor="#1E4976" stopOpacity="0.6" />
+//           <Stop offset="40%" stopColor="#153556" stopOpacity="0.3" />
+//           <Stop offset="70%" stopColor="#0A2540" stopOpacity="0.15" />
+//           <Stop offset="100%" stopColor="#02111B" stopOpacity="0" />
+//         </RadialGradient>
+//       </Defs>
+//       <Ellipse
+//         cx={SCREEN_WIDTH / 2}
+//         cy={130}
+//         rx={SCREEN_WIDTH * 0.7}
+//         ry={160}
+//         fill="url(#haloGrad)"
+//       />
+//     </Svg>
+//   </View>
+// );
+
+// // ═══════════════════════════════════════════════════════════════
+// // THEMED TOAST COMPONENT
+// // ═══════════════════════════════════════════════════════════════
+// interface ToastProps {
+//   visible: boolean;
+//   message: string;
+// }
+
+// const Toast = ({ visible, message }: ToastProps) => {
+//   const opacity = useRef(new Animated.Value(0)).current;
+
+//   useEffect(() => {
+//     if (visible) {
+//       Animated.sequence([
+//         Animated.timing(opacity, {
+//           toValue: 1,
+//           duration: 200,
+//           useNativeDriver: true,
+//         }),
+//         Animated.delay(1500),
+//         Animated.timing(opacity, {
+//           toValue: 0,
+//           duration: 200,
+//           useNativeDriver: true,
+//         }),
+//       ]).start();
+//     }
+//   }, [visible, message]);
+
+//   if (!visible) return null;
+
+//   return (
+//     <Animated.View style={[styles.toast, { opacity }]}>
+//       <Text style={styles.toastIcon}>✓</Text>
+//       <Text style={styles.toastText}>{message}</Text>
+//     </Animated.View>
+//   );
+// };
+
+// // ═══════════════════════════════════════════════════════════════
+// // HOME SCREEN
+// // ═══════════════════════════════════════════════════════════════
 // const HomeScreen = () => {
 //   const navigation = useNavigation<NavigationProp>();
 //   const route = useRoute<RouteType>();
-//   const vault = route.params?.vault;
+//   const { activeVault, vaults, isLoading: contextLoading } = useVaults();
 
 //   const [refreshing, setRefreshing] = useState(false);
-//   const [copiedSol, setCopiedSol] = useState(false);
-//   const [copiedZec, setCopiedZec] = useState(false);
+//   const [solBalance, setSolBalance] = useState<number>(0);
+//   const [solUsd, setSolUsd] = useState<number>(0);
+//   const [zecBalance, setZecBalance] = useState<number>(0);
+//   const [zecUsd, setZecUsd] = useState<number>(0);
+//   const [evmBalance, setEvmBalance] = useState<number>(0);
+//   const [evmUsd, setEvmUsd] = useState<number>(0);
+//   const [loadingBalance, setLoadingBalance] = useState(false);
+//   const [teeWallet, setTeeWallet] = useState<VaultData | null>(null);
   
-//   const [solBalance, setSolBalance] = useState({ sol: 0, usd: 0, loading: true });
-//   const [zecBalance, setZecBalance] = useState({ zec: 0, usd: 0, loading: true });
+//   // Toast state
+//   const [toastVisible, setToastVisible] = useState(false);
+//   const [toastMessage, setToastMessage] = useState('');
 
-//   const isUnified = vault?.vault_type === 'unified' && vault?.sol && vault?.zec;
-
-//   const fetchBalances = useCallback(async () => {
-//     try {
-//       // SOL balance
-//       const solAddr = vault?.sol?.address || vault?.address;
-//       if (solAddr) {
-//         const data = await api.getSolBalance(solAddr);
-//         setSolBalance({
-//           sol: data.sol || 0,
-//           usd: (data.sol || 0) * 200,
-//           loading: false,
-//         });
+//   // Load TEE wallet from AsyncStorage on mount
+//   useEffect(() => {
+//     const loadTEEWallet = async () => {
+//       try {
+//         const stored = await AsyncStorage.getItem('tee_wallet');
+//         if (stored) {
+//           setTeeWallet(JSON.parse(stored));
+//         }
+//       } catch (error) {
+//         console.log('Error loading TEE wallet:', error);
 //       }
+//     };
+//     loadTEEWallet();
+//   }, []);
 
-//       // ZEC balance
-//       if (isUnified && vault?.zec?.address) {
-//         const data = await api.getZecBalance(vault.zec.address);
-//         setZecBalance({
-//           zec: data.total_zec || 0,
-//           usd: (data.total_zec || 0) * 40,
-//           loading: false,
-//         });
+//   const routeVault = route.params?.vault;
+//   const vault: VaultData | null = routeVault || (activeVault as VaultData | null) || teeWallet;
+  
+//   const isSeedless = vault?.wallet_type === 'seedless';
+//   const isTEE = vault ? isTEEVault(vault) : false;
+//   const teeAddresses = vault ? getTEEAddresses(vault) : { evm: null, solana: null };
+//   const unified = vault ? isUnifiedVault(vault) : false;
+
+//   // Chain detection
+//   const hasSol = !isSeedless && (vault?.chain === 'SOL' || vault?.sol?.address || vault?.chain === 'unified' || (isTEE && teeAddresses.solana));
+//   const hasZec = isSeedless || vault?.chain === 'ZEC' || vault?.zec?.address || vault?.zec?.unified_address || vault?.zec?.transparent_address || vault?.chain === 'unified';
+//   const hasEvm = isTEE && teeAddresses.evm;
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // SHOW TOAST
+//   // ═══════════════════════════════════════════════════════════════
+//   const showToast = useCallback((message: string) => {
+//     setToastMessage(message);
+//     setToastVisible(true);
+//     setTimeout(() => setToastVisible(false), 2000);
+//   }, []);
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // COPY ADDRESS (with themed toast)
+//   // ═══════════════════════════════════════════════════════════════
+//   const copyAddress = useCallback((address: string | undefined | null) => {
+//     if (!address) return;
+    
+//     Clipboard.setString(address);
+//     const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
+//     showToast(`Copied: ${shortAddr}`);
+//   }, [showToast]);
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // LOAD BALANCES (with error handling)
+//   // ═══════════════════════════════════════════════════════════════
+//   const loadBalances = useCallback(async () => {
+//     if (!vault) return;
+    
+//     setLoadingBalance(true);
+
+//     try {
+//       // TEE Wallet - use teeService for all balances
+//       if (isTEE && (teeAddresses.solana || teeAddresses.evm)) {
+//         const balances = await getAllBalances(teeAddresses.solana, teeAddresses.evm);
+        
+//         // Update SOL balance
+//         if (balances.solana) {
+//           const solPrice = 200; // TODO: fetch real price
+//           setSolBalance(balances.solana.sol);
+//           setSolUsd(balances.solana.sol * solPrice);
+//         }
+        
+//         // Update ETH balance
+//         if (balances.evm) {
+//           const ethPrice = 2950; // TODO: fetch real price
+//           setEvmBalance(balances.evm.eth);
+//           setEvmUsd(balances.evm.eth * ethPrice);
+//         }
+//       } else {
+//         // Non-TEE wallet - use existing API
+        
+//         // Load SOL balance
+//         if (hasSol) {
+//           const address = vault.sol?.address || vault.address;
+//           if (address) {
+//             try {
+//               const response = await api.getSolBalance(address);
+//               if (response.success !== false) {
+//                 const bal = response.sol || response.balance || 0;
+//                 const usd = response.usd || bal * 200;
+//                 setSolBalance(bal);
+//                 setSolUsd(usd);
+//               }
+//             } catch (err: any) {
+//               console.log('[Balance] SOL fetch failed, keeping previous value');
+//             }
+//           }
+//         }
+
+//         // Load ZEC balance
+//         if (hasZec && (vault.zec?.address || vault.zec?.unified_address)) {
+//           const zecAddress = vault.zec?.unified_address || vault.zec?.address;
+//           try {
+//             const response = await api.getZecBalance(zecAddress!);
+//             if (response.success !== false) {
+//               const bal = response.shielded_balance || response.balance || response.total_zec || 0;
+//               const usd = response.usd || bal * 40;
+//               setZecBalance(bal);
+//               setZecUsd(usd);
+//             }
+//           } catch (err) {
+//             console.log('[Balance] ZEC fetch failed, keeping previous value');
+//           }
+//         }
 //       }
 //     } catch (error) {
-//       console.error('Balance error:', error);
-//       setSolBalance(prev => ({ ...prev, loading: false }));
-//       setZecBalance(prev => ({ ...prev, loading: false }));
+//       console.log('[Balance] General error:', error);
+//     } finally {
+//       setLoadingBalance(false);
 //     }
-//   }, [vault, isUnified]);
+//   }, [vault, hasSol, hasZec, hasEvm, isTEE, teeAddresses]);
 
+//   // Load balances on focus (but not too frequently)
+//   const lastLoadRef = useRef<number>(0);
+  
 //   useFocusEffect(
 //     useCallback(() => {
-//       fetchBalances();
-//     }, [fetchBalances])
+//       if (vault) {
+//         const now = Date.now();
+//         // Only load if more than 10 seconds since last load
+//         if (now - lastLoadRef.current > 10000) {
+//           lastLoadRef.current = now;
+//           loadBalances();
+//         }
+//       }
+//     }, [vault, loadBalances])
 //   );
 
 //   const onRefresh = async () => {
 //     setRefreshing(true);
-//     await fetchBalances();
+//     lastLoadRef.current = Date.now();
+//     await loadBalances();
 //     setRefreshing(false);
 //   };
 
-//   const copyAddress = (address: string, type: 'sol' | 'zec') => {
-//     Clipboard.setString(address);
-//     if (type === 'sol') {
-//       setCopiedSol(true);
-//       setTimeout(() => setCopiedSol(false), 2000);
-//     } else {
-//       setCopiedZec(true);
-//       setTimeout(() => setCopiedZec(false), 2000);
-//     }
+//   const formatAddress = (address: string | undefined | null) => {
+//     if (!address) return '';
+//     return `${address.slice(0, 6)}...${address.slice(-4)}`;
 //   };
 
-//   const totalUsd = solBalance.usd + zecBalance.usd;
+//   const safeToFixed = (value: number | undefined | null, decimals: number = 2): string => {
+//     if (value === undefined || value === null || isNaN(value)) {
+//       return '0.00';
+//     }
+//     return value.toFixed(decimals);
+//   };
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <ScrollView
-//         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4ECDC4" />}
-//       >
-//         <View style={styles.content}>
-//           {/* Header */}
-//           <View style={styles.header}>
-//             <View>
-//               <Text style={styles.walletName}>{vault?.vault_name}</Text>
-//               {isUnified && (
-//                 <View style={styles.unifiedBadge}>
-//                   <Text style={styles.unifiedBadgeText}>UNIFIED WALLET</Text>
-//                 </View>
-//               )}
-//             </View>
-//             <TouchableOpacity onPress={() => navigation.navigate('Settings', { vault })}>
-//               <Text style={styles.settingsIcon}>⚙️</Text>
-//             </TouchableOpacity>
-//           </View>
+//   const totalUsd = (hasSol ? solUsd : 0) + (hasZec ? zecUsd : 0) + (hasEvm ? evmUsd : 0);
 
-//           {/* Total Balance */}
-//           <View style={styles.totalCard}>
-//             <Text style={styles.totalLabel}>Total Balance</Text>
-//             <Text style={styles.totalValue}>${totalUsd.toFixed(2)}</Text>
-//           </View>
-
-//           {/* SOL Card */}
-//           <View style={styles.balanceCard}>
-//             <View style={styles.balanceHeader}>
-//               <View style={styles.chainInfo}>
-//                 <View style={styles.solBadge}><Text style={styles.badgeText}>SOL</Text></View>
-//                 <Text style={styles.chainName}>Solana</Text>
+//   // ═══════════════════════════════════════════════════════════════
+//   // EMPTY STATE
+//   // ═══════════════════════════════════════════════════════════════
+//   if (!vault && !contextLoading) {
+//     return (
+//       <View style={styles.container}>
+//         <GradientHalo />
+//         <SafeAreaView style={styles.safeArea}>
+//           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+//             <View style={styles.emptyCard}>
+//               <View style={styles.emptyIconContainer}>
+//                 <Text style={styles.emptyEmoji}>🔐</Text>
 //               </View>
-//               <Text style={styles.balanceAmount}>
-//                 {solBalance.loading ? '...' : `${solBalance.sol.toFixed(4)} SOL`}
-//               </Text>
-//             </View>
-            
-//             <TouchableOpacity
-//               style={styles.addressRow}
-//               onPress={() => copyAddress(vault?.sol?.address || vault?.address || '', 'sol')}
-//             >
-//               <Text style={styles.addressText} numberOfLines={1}>
-//                 {vault?.sol?.address || vault?.address}
-//               </Text>
-//               <Text>{copiedSol ? '✓' : '📋'}</Text>
-//             </TouchableOpacity>
-
-//             <View style={styles.actions}>
-//               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('FundWallet', { vault: vault! })}>
-//                 <Text style={styles.actionBtnText}>+ Receive</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity style={[styles.actionBtn, styles.actionBtnOutline]}>
-//                 <Text style={styles.actionBtnTextOutline}>↑ Send</Text>
-//               </TouchableOpacity>
-//             </View>
-//           </View>
-
-//           {/* ZEC Card */}
-//           {isUnified && vault?.zec?.address && (
-//             <View style={styles.balanceCard}>
-//               <View style={styles.balanceHeader}>
-//                 <View style={styles.chainInfo}>
-//                   <View style={styles.zecBadge}><Text style={styles.badgeTextDark}>ZEC</Text></View>
-//                   <Text style={styles.chainName}>Zcash</Text>
-//                   <View style={styles.shieldedBadge}><Text style={styles.shieldedText}>🔒 Shielded</Text></View>
-//                 </View>
-//                 <Text style={styles.balanceAmount}>
-//                   {zecBalance.loading ? '...' : `${zecBalance.zec.toFixed(4)} ZEC`}
-//                 </Text>
-//               </View>
-              
+//               <Text style={styles.emptyTitle}>No Wallet Found</Text>
+//               <Text style={styles.emptyText}>Create a wallet to get started</Text>
 //               <TouchableOpacity
-//                 style={styles.addressRow}
-//                 onPress={() => copyAddress(vault.zec.address, 'zec')}
+//                 style={styles.primaryButton}
+//                 onPress={() => navigation.navigate('ChainSelection', {})}
+//                 activeOpacity={0.8}
 //               >
-//                 <Text style={styles.addressText} numberOfLines={1}>{vault.zec.address}</Text>
-//                 <Text>{copiedZec ? '✓' : '📋'}</Text>
+//                 <Text style={styles.primaryButtonText}>Create Wallet</Text>
 //               </TouchableOpacity>
-
-//               <View style={styles.actions}>
-//                 <TouchableOpacity style={[styles.actionBtn, styles.zecBtn]}>
-//                   <Text style={styles.actionBtnTextDark}>💱 Swap from SOL</Text>
-//                 </TouchableOpacity>
-//                 <TouchableOpacity style={[styles.actionBtn, styles.actionBtnOutline]}>
-//                   <Text style={styles.actionBtnTextOutline}>↑ Send</Text>
-//                 </TouchableOpacity>
-//               </View>
+//               <TouchableOpacity
+//                 style={styles.secondaryButton}
+//                 onPress={() => navigation.navigate('Recovery')}
+//                 activeOpacity={0.8}
+//               >
+//                 <Text style={styles.secondaryButtonText}>Recover Wallet</Text>
+//               </TouchableOpacity>
 //             </View>
-//           )}
+//           </ScrollView>
+//         </SafeAreaView>
+//       </View>
+//     );
+//   }
 
-//           {/* Quick Actions */}
-//           <View style={styles.quickCard}>
-//             <Text style={styles.quickTitle}>Quick Actions</Text>
-            
-//             {isUnified && (
-//               <TouchableOpacity style={styles.quickItem}>
-//                 <Text style={styles.quickIcon}>💱</Text>
-//                 <View style={styles.quickInfo}>
-//                   <Text style={styles.quickItemTitle}>Swap SOL ↔ ZEC</Text>
-//                   <Text style={styles.quickItemDesc}>Exchange between chains</Text>
+//   // ═══════════════════════════════════════════════════════════════
+//   // LOADING STATE
+//   // ═══════════════════════════════════════════════════════════════
+//   if (contextLoading) {
+//     return (
+//       <View style={styles.container}>
+//         <GradientHalo />
+//         <SafeAreaView style={styles.safeArea}>
+//           <View style={styles.loadingContainer}>
+//             <ActivityIndicator size="large" color={COLORS.accent} />
+//             <Text style={styles.loadingText}>Loading wallet...</Text>
+//           </View>
+//         </SafeAreaView>
+//       </View>
+//     );
+//   }
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // MAIN SCREEN
+//   // ═══════════════════════════════════════════════════════════════
+//   return (
+//     <View style={styles.container}>
+//       <GradientHalo />
+
+//       {/* Themed Toast */}
+//       <Toast visible={toastVisible} message={toastMessage} />
+
+//       <SafeAreaView style={styles.safeArea}>
+//         <ScrollView
+//           showsVerticalScrollIndicator={false}
+//           contentContainerStyle={styles.scrollContent}
+//           refreshControl={
+//             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />
+//           }
+//         >
+//           {/* Header - NO ACTION on TEE Wallet click */}
+//           <View style={styles.header}>
+//             <View style={styles.vaultSelector}>
+//               <Text style={styles.vaultIcon}>{isTEE ? '🛡️' : '⚡'}</Text>
+//               <Text style={styles.vaultName}>{vault?.vault_name || 'My Wallet'}</Text>
+//               {/* Removed dropdown arrow since no action */}
+//             </View>
+
+//             <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7}>
+//               <View style={styles.settingsIconContainer}>
+//                 <Text style={styles.settingsIcon}>⚙</Text>
+//               </View>
+//             </TouchableOpacity>
+//           </View>
+
+//           {/* Balance Display */}
+//           <View style={styles.balanceContainer}>
+//             {loadingBalance && totalUsd === 0 ? (
+//               <ActivityIndicator color={COLORS.textPrimary} size="large" />
+//             ) : (
+//               <>
+//                 <Text style={styles.balanceAmount}>${safeToFixed(totalUsd, 2)}</Text>
+//                 <TouchableOpacity style={styles.hideBalanceBtn} activeOpacity={0.7}>
+//                   <Text style={styles.hideBalanceIcon}>◉</Text>
+//                   <Text style={styles.hideBalanceText}>Hide balance</Text>
+//                 </TouchableOpacity>
+//               </>
+//             )}
+//           </View>
+
+//           {/* Action Buttons */}
+//           <View style={styles.actionsRow}>
+//             <TouchableOpacity
+//               style={[styles.actionBtn, isTEE && styles.actionBtnDisabled]}
+//               onPress={() => !isTEE && navigation.navigate('Swap', { vault: vault || undefined })}
+//               activeOpacity={isTEE ? 1 : 0.7}
+//               disabled={isTEE}
+//             >
+//               <View style={[styles.actionIconWrap, !isTEE && styles.actionIconActive, isTEE && styles.actionIconDisabled]}>
+//                 <Text style={[!isTEE ? styles.actionIconTextActive : styles.actionIconText, isTEE && styles.actionIconTextDisabled]}>⇄</Text>
+//               </View>
+//               <Text style={[styles.actionText, isTEE && styles.actionTextDisabled]}>
+//                 {isTEE ? 'Coming Soon' : 'Swap'}
+//               </Text>
+//             </TouchableOpacity>
+
+//             <TouchableOpacity
+//               style={styles.actionBtn}
+//               onPress={() => vault && navigation.navigate('Send', { vault, chain: isTEE ? 'EVM' : 'SOL' })}
+//               activeOpacity={0.7}
+//             >
+//               <View style={styles.actionIconWrap}>
+//                 <Text style={styles.actionIconText}>↗</Text>
+//               </View>
+//               <Text style={styles.actionText}>Send</Text>
+//             </TouchableOpacity>
+
+//             <TouchableOpacity
+//               style={styles.actionBtn}
+//               onPress={() => navigation.navigate('FundWallet', { vault: vault || undefined })}
+//               activeOpacity={0.7}
+//             >
+//               <View style={styles.actionIconWrap}>
+//                 <Text style={styles.actionIconText}>↓</Text>
+//               </View>
+//               <Text style={styles.actionText}>Buy</Text>
+//             </TouchableOpacity>
+
+//             <TouchableOpacity
+//               style={styles.actionBtn}
+//               onPress={() => vault && navigation.navigate('AgentDashboard', { vault })}
+//               activeOpacity={0.7}
+//               disabled={!vault}
+//             >
+//               <View style={styles.actionIconWrap}>
+//                 <Text style={styles.actionIconText}>◎</Text>
+//               </View>
+//               <Text style={styles.actionText}>Agent</Text>
+//             </TouchableOpacity>
+//           </View>
+
+//           {/* Portfolio Header */}
+//           <View style={styles.portfolioHeader}>
+//             <Text style={styles.portfolioTitle}>Portfolio</Text>
+//             <View style={styles.portfolioActions}>
+//               <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+//                 <Text style={styles.portfolioActionIcon}>⌕</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+//                 <Text style={styles.portfolioActionIcon}>⊞</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+
+//           {/* Token List */}
+//           <View style={styles.tokenList}>
+//             {/* EVM Row (TEE wallets only) */}
+//             {hasEvm && (
+//               <TouchableOpacity 
+//                 style={styles.tokenRow} 
+//                 activeOpacity={0.7}
+//                 onPress={() => copyAddress(teeAddresses.evm)}
+//               >
+//                 <View style={styles.tokenIcon}>
+//                   <View style={styles.tokenIconEvm}>
+//                     <Text style={styles.tokenIconSymbol}>Ξ</Text>
+//                   </View>
 //                 </View>
-//                 <Text style={styles.quickArrow}>→</Text>
+//                 <View style={styles.tokenDetails}>
+//                   <Text style={styles.tokenName}>Ethereum</Text>
+//                   <View style={styles.tokenAddressWrap}>
+//                     <Text style={styles.tokenAddress}>
+//                       {formatAddress(teeAddresses.evm)}
+//                     </Text>
+//                     <Text style={styles.copyBtn}>⧉</Text>
+//                   </View>
+//                 </View>
+//                 <View style={styles.tokenValues}>
+//                   <Text style={styles.tokenUsd}>${safeToFixed(evmUsd, 2)}</Text>
+//                   <Text style={styles.tokenBal}>{safeToFixed(evmBalance, 4)} ETH</Text>
+//                 </View>
+//                 <Text style={styles.rowChevron}>›</Text>
 //               </TouchableOpacity>
 //             )}
 
-//             <TouchableOpacity style={styles.quickItem} onPress={() => navigation.navigate('FundWallet', { vault: vault! })}>
-//               <Text style={styles.quickIcon}>💳</Text>
-//               <View style={styles.quickInfo}>
-//                 <Text style={styles.quickItemTitle}>Fund Wallet</Text>
-//                 <Text style={styles.quickItemDesc}>Add funds</Text>
-//               </View>
-//               <Text style={styles.quickArrow}>→</Text>
-//             </TouchableOpacity>
+//             {/* SOL Row */}
+//             {hasSol && (
+//               <TouchableOpacity 
+//                 style={[styles.tokenRow, hasEvm && styles.tokenRowBorder]} 
+//                 activeOpacity={0.7}
+//                 onPress={() => copyAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+//               >
+//                 <View style={styles.tokenIcon}>
+//                   <LinearGradient
+//                     colors={['#9945FF', '#14F195']}
+//                     style={styles.tokenIconGradient}
+//                     start={{ x: 0, y: 0 }}
+//                     end={{ x: 1, y: 1 }}
+//                   >
+//                     <Text style={styles.tokenIconSymbol}>◎</Text>
+//                   </LinearGradient>
+//                 </View>
+//                 <View style={styles.tokenDetails}>
+//                   <Text style={styles.tokenName}>Solana</Text>
+//                   <View style={styles.tokenAddressWrap}>
+//                     <Text style={styles.tokenAddress}>
+//                       {formatAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+//                     </Text>
+//                     <Text style={styles.copyBtn}>⧉</Text>
+//                   </View>
+//                 </View>
+//                 <View style={styles.tokenValues}>
+//                   <Text style={styles.tokenUsd}>${safeToFixed(solUsd, 2)}</Text>
+//                   <Text style={styles.tokenBal}>{safeToFixed(solBalance, 4)} SOL</Text>
+//                 </View>
+//                 <Text style={styles.rowChevron}>›</Text>
+//               </TouchableOpacity>
+//             )}
 
-//             <TouchableOpacity style={styles.quickItem}>
-//               <Text style={styles.quickIcon}>💾</Text>
-//               <View style={styles.quickInfo}>
-//                 <Text style={styles.quickItemTitle}>Export Backup</Text>
-//                 <Text style={styles.quickItemDesc}>Save backup file</Text>
+//             {/* ZEC Row */}
+//             {hasZec && (vault?.zec?.address || vault?.zec?.unified_address) && (
+//               <TouchableOpacity 
+//                 style={[styles.tokenRow, (hasSol || hasEvm) && styles.tokenRowBorder]} 
+//                 activeOpacity={0.7}
+//                 onPress={() => copyAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+//               >
+//                 <View style={styles.tokenIcon}>
+//                   <View style={styles.tokenIconZec}>
+//                     <Text style={styles.tokenIconSymbolDark}>Z</Text>
+//                   </View>
+//                 </View>
+//                 <View style={styles.tokenDetails}>
+//                   <Text style={styles.tokenName}>Zcash</Text>
+//                   <View style={styles.tokenAddressWrap}>
+//                     <Text style={styles.tokenAddress}>
+//                       {formatAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+//                     </Text>
+//                     <Text style={styles.copyBtn}>⧉</Text>
+//                   </View>
+//                 </View>
+//                 <View style={styles.tokenValues}>
+//                   <Text style={styles.tokenUsd}>${safeToFixed(zecUsd, 2)}</Text>
+//                   <Text style={styles.tokenBal}>{safeToFixed(zecBalance, 4)} ZEC</Text>
+//                 </View>
+//                 <Text style={styles.rowChevron}>›</Text>
+//               </TouchableOpacity>
+//             )}
+
+//             {!hasSol && !hasZec && !hasEvm && (
+//               <View style={styles.emptyTokens}>
+//                 <Text style={styles.emptyTokensText}>No assets yet</Text>
 //               </View>
-//               <Text style={styles.quickArrow}>→</Text>
-//             </TouchableOpacity>
+//             )}
 //           </View>
 
-//           {/* Security */}
-//           <View style={styles.securityBanner}>
-//             <Text style={styles.securityText}>
-//               🔐 {isUnified ? 'Both wallets secured by MPC' : 'Secured by Arcium MPC'} - no seed phrase
+//           {/* Features Section */}
+//           {vault && (
+//             <>
+//               <View style={styles.featuresHeader}>
+//                 <Text style={styles.featuresTitle}>Features</Text>
+//               </View>
+
+//               {!isSeedless && !isTEE && (
+//                 <TouchableOpacity
+//                   style={styles.featureRow}
+//                   onPress={() => navigation.navigate('DarkPool', { vault_id: vault.vault_id, vault })}
+//                   activeOpacity={0.7}
+//                 >
+//                   <View style={styles.featureIcon}>
+//                     <Text style={styles.featureIconText}>◈</Text>
+//                   </View>
+//                   <View style={styles.featureInfo}>
+//                     <Text style={styles.featureTitle}>Dark Pool Trading</Text>
+//                     <Text style={styles.featureDesc}>MEV-protected encrypted orders</Text>
+//                   </View>
+//                   <Text style={styles.featureArrow}>→</Text>
+//                 </TouchableOpacity>
+//               )}
+
+//               <TouchableOpacity
+//                 style={styles.featureRow}
+//                 onPress={() => navigation.navigate('Backup', { vault })}
+//                 activeOpacity={0.7}
+//               >
+//                 <View style={styles.featureIcon}>
+//                   <Text style={styles.featureIconText}>⬡</Text>
+//                 </View>
+//                 <View style={styles.featureInfo}>
+//                   <Text style={styles.featureTitle}>Backup & Recovery</Text>
+//                   <Text style={styles.featureDesc}>
+//                     {isTEE ? 'Download backup file' : 'Secure your wallet keys'}
+//                   </Text>
+//                 </View>
+//                 <Text style={styles.featureArrow}>→</Text>
+//               </TouchableOpacity>
+//             </>
+//           )}
+
+//           {/* Footer */}
+//           <View style={styles.footer}>
+//             <Text style={styles.footerText}>
+//               {isTEE ? '🛡️ Secured by Oasis TEE' : isSeedless ? '◈ Secured by Oasis TEE' : '◈ Powered by ZkAGI'}
 //             </Text>
 //           </View>
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
+//         </ScrollView>
+//       </SafeAreaView>
+//     </View>
 //   );
 // };
 
+// // ═══════════════════════════════════════════════════════════════
+// // STYLES
+// // ═══════════════════════════════════════════════════════════════
 // const styles = StyleSheet.create({
-//   container: { flex: 1, backgroundColor: '#0A1628' },
-//   content: { padding: 20 },
-//   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-//   walletName: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF' },
-//   unifiedBadge: { backgroundColor: 'rgba(147, 51, 234, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginTop: 6, alignSelf: 'flex-start' },
-//   unifiedBadgeText: { color: '#A855F7', fontSize: 10, fontWeight: '700' },
-//   settingsIcon: { fontSize: 24 },
-//   totalCard: { backgroundColor: '#1E293B', borderRadius: 16, padding: 24, marginBottom: 16, alignItems: 'center' },
-//   totalLabel: { color: '#9CA3AF', fontSize: 14, marginBottom: 8 },
-//   totalValue: { color: '#FFFFFF', fontSize: 36, fontWeight: 'bold' },
-//   balanceCard: { backgroundColor: '#1E293B', borderRadius: 16, padding: 16, marginBottom: 16 },
-//   balanceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-//   chainInfo: { flexDirection: 'row', alignItems: 'center' },
-//   solBadge: { backgroundColor: '#9945FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginRight: 8 },
-//   zecBadge: { backgroundColor: '#F4B728', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginRight: 8 },
-//   badgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-//   badgeTextDark: { color: '#000000', fontSize: 12, fontWeight: '700' },
-//   chainName: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
-//   shieldedBadge: { backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 },
-//   shieldedText: { color: '#10B981', fontSize: 10 },
-//   balanceAmount: { color: '#4ECDC4', fontSize: 18, fontWeight: '600' },
-//   addressRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F172A', borderRadius: 8, padding: 10, marginBottom: 12 },
-//   addressText: { flex: 1, color: '#6B7280', fontSize: 12, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
-//   actions: { flexDirection: 'row', gap: 10 },
-//   actionBtn: { flex: 1, backgroundColor: '#4ECDC4', borderRadius: 8, padding: 12, alignItems: 'center' },
-//   actionBtnOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#4ECDC4' },
-//   zecBtn: { backgroundColor: '#F4B728' },
-//   actionBtnText: { color: '#000000', fontWeight: '600' },
-//   actionBtnTextOutline: { color: '#4ECDC4', fontWeight: '600' },
-//   actionBtnTextDark: { color: '#000000', fontWeight: '600' },
-//   quickCard: { backgroundColor: '#1E293B', borderRadius: 16, padding: 16, marginBottom: 16 },
-//   quickTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginBottom: 12 },
-//   quickItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#374151' },
-//   quickIcon: { fontSize: 24, marginRight: 12 },
-//   quickInfo: { flex: 1 },
-//   quickItemTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '500' },
-//   quickItemDesc: { color: '#6B7280', fontSize: 12, marginTop: 2 },
-//   quickArrow: { color: '#4ECDC4', fontSize: 18 },
-//   securityBanner: { backgroundColor: 'rgba(78, 205, 196, 0.1)', borderRadius: 8, padding: 12 },
-//   securityText: { color: '#9CA3AF', fontSize: 12, textAlign: 'center' },
+//   container: {
+//     flex: 1,
+//     backgroundColor: COLORS.bgPrimary,
+//   },
+//   safeArea: {
+//     flex: 1,
+//   },
+//   scrollContent: {
+//     paddingHorizontal: 16,
+//     paddingBottom: 32,
+//   },
+//   haloContainer: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     height: 320,
+//     overflow: 'hidden',
+//   },
+//   haloSvg: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//   },
+//   // Toast styles
+//   toast: {
+//     position: 'absolute',
+//     bottom: 100,
+//     left: 20,
+//     right: 20,
+//     backgroundColor: COLORS.toastBg,
+//     borderRadius: 12,
+//     paddingVertical: 14,
+//     paddingHorizontal: 20,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     zIndex: 1000,
+//     borderWidth: 1,
+//     borderColor: COLORS.accent,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 8,
+//     elevation: 8,
+//   },
+//   toastIcon: {
+//     fontSize: 16,
+//     color: COLORS.accent,
+//     marginRight: 10,
+//   },
+//   toastText: {
+//     color: COLORS.textPrimary,
+//     fontSize: 14,
+//     fontWeight: '500',
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   loadingText: {
+//     color: COLORS.textSecondary,
+//     marginTop: 12,
+//     fontSize: 14,
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingTop: 8,
+//     paddingBottom: 20,
+//   },
+//   vaultSelector: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     backgroundColor: COLORS.bgCard,
+//     paddingHorizontal: 12,
+//     paddingVertical: 8,
+//     borderRadius: 20,
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   vaultIcon: {
+//     fontSize: 14,
+//     marginRight: 8,
+//   },
+//   vaultName: {
+//     fontSize: 14,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//   },
+//   settingsBtn: {
+//     padding: 4,
+//   },
+//   settingsIconContainer: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     backgroundColor: 'transparent',
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   settingsIcon: {
+//     fontSize: 18,
+//     color: COLORS.textSecondary,
+//   },
+//   balanceContainer: {
+//     alignItems: 'center',
+//     paddingTop: 24,
+//     paddingBottom: 32,
+//   },
+//   balanceAmount: {
+//     fontSize: 44,
+//     color: COLORS.textPrimary,
+//     fontWeight: '300',
+//     letterSpacing: -1,
+//   },
+//   hideBalanceBtn: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginTop: 12,
+//     paddingHorizontal: 12,
+//     paddingVertical: 6,
+//     borderRadius: 16,
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   hideBalanceIcon: {
+//     fontSize: 12,
+//     color: COLORS.accent,
+//     marginRight: 6,
+//   },
+//   hideBalanceText: {
+//     fontSize: 13,
+//     color: COLORS.accent,
+//     fontWeight: '500',
+//   },
+//   actionsRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'center',
+//     paddingBottom: 24,
+//     gap: 20,
+//   },
+//   actionBtn: {
+//     alignItems: 'center',
+//     width: 64,
+//   },
+//   actionIconWrap: {
+//     width: 52,
+//     height: 52,
+//     backgroundColor: COLORS.bgCard,
+//     borderRadius: 14,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginBottom: 8,
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   actionIconActive: {
+//     backgroundColor: COLORS.accent,
+//     borderColor: COLORS.accent,
+//   },
+//   actionIconDisabled: {
+//     backgroundColor: COLORS.bgCard,
+//     borderColor: COLORS.border,
+//     opacity: 0.5,
+//   },
+//   actionIconText: {
+//     fontSize: 20,
+//     color: COLORS.textPrimary,
+//   },
+//   actionIconTextActive: {
+//     fontSize: 20,
+//     color: COLORS.bgPrimary,
+//     fontWeight: '600',
+//   },
+//   actionIconTextDisabled: {
+//     color: COLORS.textMuted,
+//   },
+//   actionText: {
+//     fontSize: 12,
+//     color: COLORS.textSecondary,
+//     fontWeight: '500',
+//   },
+//   actionTextDisabled: {
+//     color: COLORS.textMuted,
+//     fontSize: 10,
+//   },
+//   actionBtnDisabled: {
+//     opacity: 0.7,
+//   },
+//   portfolioHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingTop: 8,
+//     paddingBottom: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: COLORS.borderLight,
+//   },
+//   portfolioTitle: {
+//     fontSize: 15,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//   },
+//   portfolioActions: {
+//     flexDirection: 'row',
+//     gap: 8,
+//   },
+//   portfolioActionBtn: {
+//     width: 36,
+//     height: 36,
+//     backgroundColor: COLORS.bgCard,
+//     borderRadius: 10,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   portfolioActionIcon: {
+//     fontSize: 16,
+//     color: COLORS.textSecondary,
+//   },
+//   tokenList: {
+//     backgroundColor: COLORS.bgCard,
+//     borderRadius: 16,
+//     marginTop: 12,
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//     overflow: 'hidden',
+//   },
+//   tokenRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 14,
+//   },
+//   tokenRowBorder: {
+//     borderTopWidth: 1,
+//     borderTopColor: COLORS.borderLight,
+//   },
+//   tokenIcon: {
+//     marginRight: 12,
+//   },
+//   tokenIconGradient: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   tokenIconZec: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     backgroundColor: '#F4B728',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   tokenIconEvm: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     backgroundColor: '#627EEA',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   tokenIconSymbol: {
+//     fontSize: 18,
+//     color: COLORS.textPrimary,
+//     fontWeight: '600',
+//   },
+//   tokenIconSymbolDark: {
+//     fontSize: 16,
+//     color: '#1A1A1A',
+//     fontWeight: '700',
+//   },
+//   tokenDetails: {
+//     flex: 1,
+//   },
+//   tokenName: {
+//     fontSize: 15,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//     marginBottom: 2,
+//   },
+//   tokenAddressWrap: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   tokenAddress: {
+//     fontSize: 12,
+//     color: COLORS.textMuted,
+//   },
+//   copyBtn: {
+//     fontSize: 12,
+//     color: COLORS.textMuted,
+//     marginLeft: 4,
+//   },
+//   tokenValues: {
+//     alignItems: 'flex-end',
+//     marginRight: 8,
+//   },
+//   tokenUsd: {
+//     fontSize: 15,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//   },
+//   tokenBal: {
+//     fontSize: 12,
+//     color: COLORS.textMuted,
+//     marginTop: 2,
+//   },
+//   rowChevron: {
+//     fontSize: 20,
+//     color: COLORS.textMuted,
+//   },
+//   emptyTokens: {
+//     padding: 32,
+//     alignItems: 'center',
+//   },
+//   emptyTokensText: {
+//     color: COLORS.textMuted,
+//     fontSize: 14,
+//   },
+//   featuresHeader: {
+//     paddingTop: 24,
+//     paddingBottom: 12,
+//   },
+//   featuresTitle: {
+//     fontSize: 15,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//   },
+//   featureRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     backgroundColor: COLORS.bgCard,
+//     padding: 14,
+//     borderRadius: 14,
+//     marginBottom: 10,
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   featureIcon: {
+//     width: 40,
+//     height: 40,
+//     backgroundColor: 'rgba(42, 82, 152, 0.3)',
+//     borderRadius: 10,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginRight: 12,
+//   },
+//   featureIconText: {
+//     fontSize: 18,
+//     color: COLORS.accent,
+//   },
+//   featureInfo: {
+//     flex: 1,
+//   },
+//   featureTitle: {
+//     fontSize: 14,
+//     color: COLORS.textPrimary,
+//     fontWeight: '500',
+//     marginBottom: 2,
+//   },
+//   featureDesc: {
+//     fontSize: 12,
+//     color: COLORS.textMuted,
+//   },
+//   featureArrow: {
+//     fontSize: 16,
+//     color: COLORS.accent,
+//   },
+//   footer: {
+//     paddingTop: 24,
+//     paddingBottom: 8,
+//     alignItems: 'center',
+//   },
+//   footerText: {
+//     fontSize: 11,
+//     color: COLORS.textMuted,
+//   },
+//   emptyCard: {
+//     backgroundColor: COLORS.bgCard,
+//     borderRadius: 20,
+//     padding: 32,
+//     marginTop: 80,
+//     alignItems: 'center',
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   emptyIconContainer: {
+//     width: 72,
+//     height: 72,
+//     borderRadius: 20,
+//     backgroundColor: 'rgba(42, 82, 152, 0.2)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginBottom: 20,
+//   },
+//   emptyEmoji: {
+//     fontSize: 32,
+//   },
+//   emptyTitle: {
+//     fontSize: 20,
+//     fontWeight: '600',
+//     color: COLORS.textPrimary,
+//     marginBottom: 8,
+//   },
+//   emptyText: {
+//     fontSize: 14,
+//     color: COLORS.textSecondary,
+//     marginBottom: 24,
+//   },
+//   primaryButton: {
+//     width: '100%',
+//     backgroundColor: COLORS.accent,
+//     paddingVertical: 14,
+//     borderRadius: 12,
+//     alignItems: 'center',
+//     marginBottom: 10,
+//   },
+//   primaryButtonText: {
+//     color: COLORS.bgPrimary,
+//     fontSize: 15,
+//     fontWeight: '600',
+//   },
+//   secondaryButton: {
+//     width: '100%',
+//     backgroundColor: 'transparent',
+//     paddingVertical: 14,
+//     borderRadius: 12,
+//     alignItems: 'center',
+//     borderWidth: 1,
+//     borderColor: COLORS.border,
+//   },
+//   secondaryButtonText: {
+//     color: COLORS.textPrimary,
+//     fontSize: 15,
+//     fontWeight: '500',
+//   },
 // });
 
 // export default HomeScreen;
-/**
- * HomeScreen - Fixed with correct hooks order
- * 
- * CRITICAL: All hooks MUST be called before any conditional returns!
- */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -1246,130 +2107,376 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
-  Platform,
+  Dimensions,
+  Animated,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, VaultData, isUnifiedVault } from '../types/navigation';
+import { RootStackParamList, VaultData, isUnifiedVault, isTEEVault, getTEEAddresses } from '../types/navigation';
 import { useVaults } from '../context/VaultContext';
 import api from '../services/api';
+import { getAllBalances, loadSession, ensureSessionLoaded } from '../services/teeSevice';
 import Clipboard from '@react-native-clipboard/clipboard';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Defs, RadialGradient, Stop, Ellipse } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM ICONS - Update paths to match your asset folder structure
+// ═══════════════════════════════════════════════════════════════
+const ICONS = {
+  paw: require('../assets/icons/paw.png'),
+  solana: require('../assets/icons/solana.png'),
+  ethereum: require('../assets/icons/ethereum.png'),
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 type RouteType = RouteProp<RootStackParamList, 'Home'>;
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ═══════════════════════════════════════════════════════════════
+// THEME COLORS
+// ═══════════════════════════════════════════════════════════════
+const COLORS = {
+  bgPrimary: '#02111B',
+  bgSecondary: '#061624',
+  bgCard: '#0D2137',
+  accent: '#33E6BF',
+  accentBlue: '#2A5298',
+  accentGlow: '#1E88E5',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#8A9BAE',
+  textMuted: '#5A6B7E',
+  border: 'rgba(42, 82, 152, 0.3)',
+  borderLight: 'rgba(42, 82, 152, 0.15)',
+  success: '#10B981',
+  toastBg: '#1A3A4A',
+  ethereum: '#627EEA',
+  solana: '#9945FF',
+};
+
+// Gradient Halo Component
+const GradientHalo = () => (
+  <View style={styles.haloContainer}>
+    <Svg width={SCREEN_WIDTH} height={320} style={styles.haloSvg}>
+      <Defs>
+        <RadialGradient id="haloGrad" cx="50%" cy="40%" rx="60%" ry="50%">
+          <Stop offset="0%" stopColor="#1E4976" stopOpacity="0.6" />
+          <Stop offset="40%" stopColor="#153556" stopOpacity="0.3" />
+          <Stop offset="70%" stopColor="#0A2540" stopOpacity="0.15" />
+          <Stop offset="100%" stopColor="#02111B" stopOpacity="0" />
+        </RadialGradient>
+      </Defs>
+      <Ellipse
+        cx={SCREEN_WIDTH / 2}
+        cy={130}
+        rx={SCREEN_WIDTH * 0.7}
+        ry={160}
+        fill="url(#haloGrad)"
+      />
+    </Svg>
+  </View>
+);
+
+// ═══════════════════════════════════════════════════════════════
+// THEMED TOAST COMPONENT
+// ═══════════════════════════════════════════════════════════════
+interface ToastProps {
+  visible: boolean;
+  message: string;
+}
+
+const Toast = ({ visible, message }: ToastProps) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1500),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, message]);
+
+  if (!visible) return null;
+
+  return (
+    <Animated.View style={[styles.toast, { opacity }]}>
+      <Text style={styles.toastIcon}>✓</Text>
+      <Text style={styles.toastText}>{message}</Text>
+    </Animated.View>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ═══════════════════════════════════════════════════════════════
 const HomeScreen = () => {
-  // ═══════════════════════════════════════════════════════════════
-  // ALL HOOKS MUST BE AT THE TOP
-  // ═══════════════════════════════════════════════════════════════
-  
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteType>();
   const { activeVault, vaults, isLoading: contextLoading } = useVaults();
-  
-  // State hooks
+
   const [refreshing, setRefreshing] = useState(false);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [solUsd, setSolUsd] = useState<number>(0);
+  const [solUsdcBalance, setSolUsdcBalance] = useState<number>(0); // USDC on Solana
   const [zecBalance, setZecBalance] = useState<number>(0);
   const [zecUsd, setZecUsd] = useState<number>(0);
+  const [evmBalance, setEvmBalance] = useState<number>(0);
+  const [evmUsd, setEvmUsd] = useState<number>(0);
+  const [ethUsdcBalance, setEthUsdcBalance] = useState<number>(0); // USDC on Ethereum
   const [loadingBalance, setLoadingBalance] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [teeWallet, setTeeWallet] = useState<VaultData | null>(null);
+  
+  // Agent state - check if agent exists for this wallet
+  const [hasAgent, setHasAgent] = useState<boolean>(false);
+  const [agentData, setAgentData] = useState<any>(null);
+  const [checkingAgent, setCheckingAgent] = useState<boolean>(false);
+  
+  // Toast state
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
-  // Get vault from route params or context
+  // Load TEE wallet from AsyncStorage on mount
+  useEffect(() => {
+    const loadTEEWallet = async () => {
+      try {
+        // Load TEE session first (restores token from AsyncStorage)
+        await loadSession();
+        
+        // Then load wallet
+        const stored = await AsyncStorage.getItem('tee_wallet');
+        if (stored) {
+          setTeeWallet(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.log('Error loading TEE wallet:', error);
+      }
+    };
+    loadTEEWallet();
+  }, []);
+
   const routeVault = route.params?.vault;
-  const vault: VaultData | null = routeVault || (activeVault as VaultData | null);
+  const vault: VaultData | null = routeVault || (activeVault as VaultData | null) || teeWallet;
   
-  // Check if unified vault
+  const isSeedless = vault?.wallet_type === 'seedless';
+  const isTEE = vault ? isTEEVault(vault) : false;
+  const teeAddresses = vault ? getTEEAddresses(vault) : { evm: null, solana: null };
   const unified = vault ? isUnifiedVault(vault) : false;
-  
-  // Determine wallet type
-  const hasSol = vault?.chain === 'SOL' || vault?.sol?.address || unified;
-  // const hasZec = vault?.chain === 'ZEC' || vault?.zec?.address || unified;
-  const hasZec = vault?.chain === 'ZEC' || vault?.zec?.address || vault?.zec?.unified_address || vault?.zec?.transparent_address || unified;
 
-  // Load balances callback
+  // Chain detection
+  const hasSol = !isSeedless && (vault?.chain === 'SOL' || vault?.sol?.address || vault?.chain === 'unified' || (isTEE && teeAddresses.solana));
+  const hasZec = isSeedless || vault?.chain === 'ZEC' || vault?.zec?.address || vault?.zec?.unified_address || vault?.zec?.transparent_address || vault?.chain === 'unified';
+  const hasEvm = isTEE && teeAddresses.evm;
+
+  // ═══════════════════════════════════════════════════════════════
+  // GET VAULT IDENTIFIER (handles TEE wallets without vault_id)
+  // This is a regular function, not a hook, to avoid hook ordering issues
+  // ═══════════════════════════════════════════════════════════════
+  const getVaultIdentifier = (v: VaultData | null): string | null => {
+    if (!v) return null;
+    
+    // For TEE wallets - prefer uid, then evm address, then solana address
+    if (v.wallet_type === 'tee' || v.tee) {
+      return v.tee?.uid 
+          || v.vault_id 
+          || v.tee?.evm?.address 
+          || v.tee?.solana?.address
+          || null;
+    }
+    
+    // For seed/seedless wallets
+    return v.vault_id || v.sol?.vault_id || null;
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // CHECK IF AGENT EXISTS FOR THIS VAULT
+  // Uses: GET /api/ai/agents/vault/:vault_id
+  // For TEE: uses uid or evm address as identifier
+  // ═══════════════════════════════════════════════════════════════
+  const checkAgentExists = useCallback(async () => {
+    const vaultId = getVaultIdentifier(vault);
+    if (!vaultId) {
+      console.log('[Agent] No vault identifier found');
+      return;
+    }
+    
+    setCheckingAgent(true);
+    try {
+      // Use the correct API method: getAgentForVault
+      // This calls: GET /api/ai/agents/vault/:vault_id
+      const response = await api.getAgentForVault(vaultId);
+      
+      if (response.success && response.agent) {
+        setHasAgent(true);
+        setAgentData(response.agent);
+        console.log('[Agent] Found existing agent:', response.agent.agent_id);
+      } else {
+        setHasAgent(false);
+        setAgentData(null);
+        console.log('[Agent] No agent found for vault:', vaultId);
+      }
+    } catch (error) {
+      console.log('[Agent] Check failed:', error);
+      setHasAgent(false);
+      setAgentData(null);
+    } finally {
+      setCheckingAgent(false);
+    }
+  }, [vault]);
+
+  // Check agent on mount and when vault changes
+  useEffect(() => {
+    checkAgentExists();
+  }, [checkAgentExists]);
+
+  // Re-check agent when screen is focused (in case agent was just created)
+  useFocusEffect(
+    useCallback(() => {
+      checkAgentExists();
+    }, [checkAgentExists])
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // HANDLE AGENT BUTTON PRESS
+  // If agent exists → go to Dashboard
+  // If no agent → go to Setup
+  // ═══════════════════════════════════════════════════════════════
+  const handleAgentPress = useCallback(() => {
+    if (!vault) return;
+    
+    if (hasAgent && agentData) {
+      // Agent exists → Go directly to Dashboard
+      console.log('[Agent] Navigating to Dashboard (agent exists)');
+      navigation.navigate('AgentDashboard', { vault, agent: agentData });
+    } else {
+      // No agent → Go to Setup
+      console.log('[Agent] Navigating to Setup (no agent)');
+      navigation.navigate('AgentSetup', { vault });
+    }
+  }, [vault, hasAgent, agentData, navigation]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // SHOW TOAST
+  // ═══════════════════════════════════════════════════════════════
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 2000);
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════
+  // COPY ADDRESS
+  // ═══════════════════════════════════════════════════════════════
+  const copyAddress = useCallback((address: string | undefined | null) => {
+    if (!address) return;
+    
+    Clipboard.setString(address);
+    const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    showToast(`Copied: ${shortAddr}`);
+  }, [showToast]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOAD BALANCES
+  // ═══════════════════════════════════════════════════════════════
   const loadBalances = useCallback(async () => {
     if (!vault) return;
     
     setLoadingBalance(true);
-    
-    // Reset balances first to avoid stale data
-    setSolBalance(0);
-    setSolUsd(0);
-    setZecBalance(0);
-    setZecUsd(0);
-    
+
     try {
-      // Load SOL balance if wallet has SOL
-      if (hasSol) {
-        const address = vault.sol?.address || vault.address;
-        if (address) {
+      if (isTEE && (teeAddresses.solana || teeAddresses.evm)) {
+        const balances = await getAllBalances(teeAddresses.solana, teeAddresses.evm);
+        
+        if (balances.solana) {
+          const solPrice = 200;
+          setSolBalance(balances.solana.sol);
+          setSolUsd(balances.solana.sol * solPrice);
+          setSolUsdcBalance(balances.solana.usdc || 0); // USDC on Solana
+        }
+        
+        if (balances.evm) {
+          const ethPrice = 2950;
+          setEvmBalance(balances.evm.eth);
+          setEvmUsd(balances.evm.eth * ethPrice);
+          setEthUsdcBalance(balances.evm.usdc || 0); // USDC on Ethereum
+        }
+      } else {
+        if (hasSol) {
+          const address = vault.sol?.address || vault.address;
+          if (address) {
+            try {
+              const response = await api.getSolBalance(address);
+              if (response.success !== false) {
+                const bal = response.sol || response.balance || 0;
+                const usd = response.usd || bal * 200;
+                setSolBalance(bal);
+                setSolUsd(usd);
+              }
+            } catch (err: any) {
+              console.log('[Balance] SOL fetch failed');
+            }
+          }
+        }
+
+        if (hasZec && (vault.zec?.address || vault.zec?.unified_address)) {
+          const zecAddress = vault.zec?.unified_address || vault.zec?.address;
           try {
-            const response = await api.getSolBalance(address);
-            const bal = response.sol || response.balance || 0;
-            const usd = response.usd || bal * 200;
-            setSolBalance(bal);
-            setSolUsd(usd);
+            const response = await api.getZecBalance(zecAddress!);
+            if (response.success !== false) {
+              const bal = response.shielded_balance || response.balance || response.total_zec || 0;
+              const usd = response.usd || bal * 40;
+              setZecBalance(bal);
+              setZecUsd(usd);
+            }
           } catch (err) {
-            console.log('SOL balance error:', err);
+            console.log('[Balance] ZEC fetch failed');
           }
         }
       }
-      
-      // Load ZEC balance if wallet has ZEC
-      // if (hasZec && vault.zec?.address) {
-      if (hasZec && (vault.zec?.address || vault.zec?.unified_address)) {
-  const zecAddress = vault.zec?.unified_address || vault.zec?.address;
-        try {
-          //const response = await api.getZecBalance(vault.zec.address);
-          const response = await api.getZecBalance(zecAddress!);
-          const bal = response.shielded_balance || response.balance || response.total_zec || 0;
-          const usd = response.usd || bal * 40;
-          setZecBalance(bal);
-          setZecUsd(usd);
-        } catch (err) {
-          console.log('ZEC balance error:', err);
-        }
-      }
     } catch (error) {
-      console.log('Balance fetch error:', error);
+      console.log('[Balance] General error:', error);
     } finally {
       setLoadingBalance(false);
     }
-  }, [vault, hasSol, hasZec]);
+  }, [vault, hasSol, hasZec, hasEvm, isTEE, teeAddresses]);
 
-  // Load on focus
+  const lastLoadRef = useRef<number>(0);
+  
   useFocusEffect(
     useCallback(() => {
       if (vault) {
-        loadBalances();
+        const now = Date.now();
+        if (now - lastLoadRef.current > 10000) {
+          lastLoadRef.current = now;
+          loadBalances();
+        }
       }
     }, [vault, loadBalances])
   );
 
-  // ═══════════════════════════════════════════════════════════════
-  // HELPER FUNCTIONS
-  // ═══════════════════════════════════════════════════════════════
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadBalances();
+    lastLoadRef.current = Date.now();
+    await Promise.all([loadBalances(), checkAgentExists()]);
     setRefreshing(false);
   };
 
-  const copyAddress = () => {
-    const address = vault?.sol?.address || vault?.address;
-    if (!address) return;
-    Clipboard.setString(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const formatAddress = (address: string | undefined) => {
-    if (!address) return 'No address';
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  const formatAddress = (address: string | undefined | null) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const safeToFixed = (value: number | undefined | null, decimals: number = 2): string => {
@@ -1379,261 +2486,430 @@ const HomeScreen = () => {
     return value.toFixed(decimals);
   };
 
-  // Calculate total - only include balances that actually exist
-  const totalUsd = (hasSol ? solUsd : 0) + (hasZec ? zecUsd : 0);
+  // Total USD includes native tokens + USDC
+  const totalUsd = (hasSol ? solUsd : 0) + (hasZec ? zecUsd : 0) + (hasEvm ? evmUsd : 0) + solUsdcBalance + ethUsdcBalance;
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER - No vault state
+  // EMPTY STATE
   // ═══════════════════════════════════════════════════════════════
-
   if (!vault && !contextLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>🔐</Text>
-            <Text style={styles.emptyTitle}>No Wallet Found</Text>
-            <Text style={styles.emptyText}>Create a wallet to get started</Text>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => navigation.navigate('ChainSelection')}
-            >
-              <Text style={styles.primaryButtonText}>Create Wallet</Text>
+      <View style={styles.container}>
+        <GradientHalo />
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyIconContainer}>
+                <Text style={styles.emptyEmoji}>🔐</Text>
+              </View>
+              <Text style={styles.emptyTitle}>No Wallet Found</Text>
+              <Text style={styles.emptyText}>Create a wallet to get started</Text>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('ChainSelection', {})}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryButtonText}>Create Wallet</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => navigation.navigate('Recovery')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.secondaryButtonText}>Recover Wallet</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOADING STATE
+  // ═══════════════════════════════════════════════════════════════
+  if (contextLoading) {
+    return (
+      <View style={styles.container}>
+        <GradientHalo />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.accent} />
+            <Text style={styles.loadingText}>Loading wallet...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MAIN SCREEN
+  // ═══════════════════════════════════════════════════════════════
+  return (
+    <View style={styles.container}>
+      <GradientHalo />
+      <Toast visible={toastVisible} message={toastMessage} />
+
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />
+          }
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.vaultSelector}>
+              <Text style={styles.vaultIcon}>{isTEE ? '🛡️' : '⚡'}</Text>
+              <Text style={styles.vaultName}>{vault?.vault_name || 'My Wallet'}</Text>
+            </View>
+
+            <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7}>
+              <View style={styles.settingsIconContainer}>
+                <Text style={styles.settingsIcon}>⚙</Text>
+              </View>
             </TouchableOpacity>
+          </View>
+
+          {/* Balance Display */}
+          <View style={styles.balanceContainer}>
+            {loadingBalance && totalUsd === 0 ? (
+              <ActivityIndicator color={COLORS.textPrimary} size="large" />
+            ) : (
+              <>
+                <Text style={styles.balanceAmount}>${safeToFixed(totalUsd, 2)}</Text>
+                <TouchableOpacity style={styles.hideBalanceBtn} activeOpacity={0.7}>
+                  <Text style={styles.hideBalanceIcon}>◉</Text>
+                  <Text style={styles.hideBalanceText}>Hide balance</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionsRow}>
+            {/* Swap Button */}
             <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={() => navigation.navigate('Recovery')}
+              style={[styles.actionBtn, isTEE && styles.actionBtnDisabled]}
+              onPress={() => !isTEE && navigation.navigate('Swap', { vault: vault || undefined })}
+              activeOpacity={isTEE ? 1 : 0.7}
+              disabled={isTEE}
             >
-              <Text style={styles.secondaryButtonText}>Recover Wallet</Text>
+              <View style={[styles.actionIconWrap, !isTEE && styles.actionIconActive, isTEE && styles.actionIconDisabled]}>
+                <Text style={[!isTEE ? styles.actionIconTextActive : styles.actionIconText, isTEE && styles.actionIconTextDisabled]}>⇄</Text>
+              </View>
+              <Text style={[styles.actionText, isTEE && styles.actionTextDisabled]}>
+                {isTEE ? 'Coming Soon' : 'Swap'}
+              </Text>
             </TouchableOpacity>
+
+            {/* Send Button */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => vault && navigation.navigate('Send', { vault, chain: isTEE ? 'EVM' : 'SOL' })}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionIconWrap}>
+                <Text style={styles.actionIconText}>↗</Text>
+              </View>
+              <Text style={styles.actionText}>Send</Text>
+            </TouchableOpacity>
+
+            {/* Buy Button */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => navigation.navigate('FundWallet', { vault: vault || undefined })}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionIconWrap}>
+                <Text style={styles.actionIconText}>↓</Text>
+              </View>
+              <Text style={styles.actionText}>Buy</Text>
+            </TouchableOpacity>
+
+            {/* Agent Button - SMART ROUTING */}
+            {/* If agent exists → Dashboard, if not → Setup */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={handleAgentPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.actionIconWrap, hasAgent && styles.actionIconActive]}>
+                <Image 
+                  source={ICONS.paw} 
+                  style={[styles.actionIconImage, hasAgent && { tintColor: COLORS.bgPrimary }]}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.actionText}>Agent</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Agent Dashboard Button - Only show if agent exists */}
+          {hasAgent && (
+            <TouchableOpacity
+              style={styles.agentDashboardBtn}
+              onPress={() => vault && navigation.navigate('AgentDashboard', { vault, agent: agentData })}
+              activeOpacity={0.8}
+            >
+              <View style={styles.agentDashboardContent}>
+                <View style={styles.agentDashboardIconWrap}>
+                  <Image 
+                    source={ICONS.paw} 
+                    style={styles.agentDashboardIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={styles.agentDashboardInfo}>
+                  <Text style={styles.agentDashboardTitle}>Agent Dashboard</Text>
+                  <Text style={styles.agentDashboardDesc}>View your AI agent's activity</Text>
+                </View>
+                <Text style={styles.agentDashboardArrow}>→</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Portfolio Header */}
+          <View style={styles.portfolioHeader}>
+            <Text style={styles.portfolioTitle}>Portfolio</Text>
+            <View style={styles.portfolioActions}>
+              <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+                <Text style={styles.portfolioActionIcon}>⌕</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.portfolioActionBtn} activeOpacity={0.7}>
+                <Text style={styles.portfolioActionIcon}>⊞</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Token List */}
+          <View style={styles.tokenList}>
+            {/* EVM/Ethereum Row */}
+            {hasEvm && (
+              <TouchableOpacity 
+                style={styles.tokenRow} 
+                activeOpacity={0.7}
+                onPress={() => copyAddress(teeAddresses.evm)}
+              >
+                <View style={styles.tokenIcon}>
+                  <View style={[styles.tokenIconContainer, { backgroundColor: COLORS.ethereum }]}>
+                    <Image 
+                      source={ICONS.ethereum} 
+                      style={styles.tokenIconImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </View>
+                <View style={styles.tokenDetails}>
+                  <Text style={styles.tokenName}>Ethereum</Text>
+                  <View style={styles.tokenAddressWrap}>
+                    <Text style={styles.tokenAddress}>
+                      {formatAddress(teeAddresses.evm)}
+                    </Text>
+                    <Text style={styles.copyBtn}>⧉</Text>
+                  </View>
+                </View>
+                <View style={styles.tokenValues}>
+                  <Text style={styles.tokenUsd}>${safeToFixed(evmUsd + ethUsdcBalance, 2)}</Text>
+                  <Text style={styles.tokenBal}>{safeToFixed(evmBalance, 4)} ETH</Text>
+                  {isTEE && (
+                    <Text style={styles.tokenBalUsdc}>{safeToFixed(ethUsdcBalance, 2)} USDC</Text>
+                  )}
+                </View>
+                <Text style={styles.rowChevron}>›</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* SOL/Solana Row */}
+            {hasSol && (
+              <TouchableOpacity 
+                style={[styles.tokenRow, hasEvm && styles.tokenRowBorder]} 
+                activeOpacity={0.7}
+                onPress={() => copyAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+              >
+                <View style={styles.tokenIcon}>
+                  <LinearGradient
+                    colors={['#9945FF', '#14F195']}
+                    style={styles.tokenIconContainer}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Image 
+                      source={ICONS.solana} 
+                      style={styles.tokenIconImage}
+                      resizeMode="contain"
+                    />
+                  </LinearGradient>
+                </View>
+                <View style={styles.tokenDetails}>
+                  <Text style={styles.tokenName}>Solana</Text>
+                  <View style={styles.tokenAddressWrap}>
+                    <Text style={styles.tokenAddress}>
+                      {formatAddress(isTEE ? teeAddresses.solana : (vault?.sol?.address || vault?.address))}
+                    </Text>
+                    <Text style={styles.copyBtn}>⧉</Text>
+                  </View>
+                </View>
+                <View style={styles.tokenValues}>
+                  <Text style={styles.tokenUsd}>${safeToFixed(solUsd + solUsdcBalance, 2)}</Text>
+                  <Text style={styles.tokenBal}>{safeToFixed(solBalance, 4)} SOL</Text>
+                  {isTEE && (
+                    <Text style={styles.tokenBalUsdc}>{safeToFixed(solUsdcBalance, 2)} USDC</Text>
+                  )}
+                </View>
+                <Text style={styles.rowChevron}>›</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* ZEC Row */}
+            {hasZec && (vault?.zec?.address || vault?.zec?.unified_address) && (
+              <TouchableOpacity 
+                style={[styles.tokenRow, (hasSol || hasEvm) && styles.tokenRowBorder]} 
+                activeOpacity={0.7}
+                onPress={() => copyAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+              >
+                <View style={styles.tokenIcon}>
+                  <View style={styles.tokenIconZec}>
+                    <Text style={styles.tokenIconSymbolDark}>Z</Text>
+                  </View>
+                </View>
+                <View style={styles.tokenDetails}>
+                  <Text style={styles.tokenName}>Zcash</Text>
+                  <View style={styles.tokenAddressWrap}>
+                    <Text style={styles.tokenAddress}>
+                      {formatAddress(vault?.zec?.unified_address || vault?.zec?.address)}
+                    </Text>
+                    <Text style={styles.copyBtn}>⧉</Text>
+                  </View>
+                </View>
+                <View style={styles.tokenValues}>
+                  <Text style={styles.tokenUsd}>${safeToFixed(zecUsd, 2)}</Text>
+                  <Text style={styles.tokenBal}>{safeToFixed(zecBalance, 4)} ZEC</Text>
+                </View>
+                <Text style={styles.rowChevron}>›</Text>
+              </TouchableOpacity>
+            )}
+
+            {!hasSol && !hasZec && !hasEvm && (
+              <View style={styles.emptyTokens}>
+                <Text style={styles.emptyTokensText}>No assets yet</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Features Section */}
+          {vault && (
+            <>
+              <View style={styles.featuresHeader}>
+                <Text style={styles.featuresTitle}>Features</Text>
+              </View>
+
+              {!isSeedless && !isTEE && (
+                <TouchableOpacity
+                  style={styles.featureRow}
+                  onPress={() => navigation.navigate('DarkPool', { vault_id: vault.vault_id, vault })}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.featureIcon}>
+                    <Text style={styles.featureIconText}>◈</Text>
+                  </View>
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Dark Pool Trading</Text>
+                    <Text style={styles.featureDesc}>MEV-protected encrypted orders</Text>
+                  </View>
+                  <Text style={styles.featureArrow}>→</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.featureRow}
+                onPress={() => navigation.navigate('Backup', { vault })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.featureIcon}>
+                  <Text style={styles.featureIconText}>⬡</Text>
+                </View>
+                <View style={styles.featureInfo}>
+                  <Text style={styles.featureTitle}>Backup & Recovery</Text>
+                  <Text style={styles.featureDesc}>
+                    {isTEE ? 'Download backup file' : 'Secure your wallet keys'}
+                  </Text>
+                </View>
+                <Text style={styles.featureArrow}>→</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {isTEE ? '🛡️ Secured by Oasis TEE' : isSeedless ? '◈ Secured by Oasis TEE' : '◈ Powered by ZkAGI'}
+            </Text>
           </View>
         </ScrollView>
       </SafeAreaView>
-    );
-  }
-
-  if (contextLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4ECDC4" />
-          <Text style={styles.loadingText}>Loading wallet...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // MAIN RENDER - Phantom Style
-  // ═══════════════════════════════════════════════════════════════
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4ECDC4" />
-        }
-      >
-        {/* Header with wallet name and copy button */}
-        <View style={styles.header}>
-          <View style={styles.walletNameRow}>
-            <Text style={styles.walletName}>{vault?.vault_name || 'My Wallet'}</Text>
-            <TouchableOpacity style={styles.copyButton} onPress={copyAddress}>
-              <Text style={styles.copyIcon}>{copied ? '✓' : '📋'}</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.addressText}>
-            {formatAddress(vault?.sol?.address || vault?.address)}
-          </Text>
-        </View>
-
-        {/* Total Balance - Big centered */}
-        <View style={styles.balanceSection}>
-          {loadingBalance ? (
-            <ActivityIndicator color="#FFFFFF" size="large" />
-          ) : (
-            <>
-              <Text style={styles.totalBalance}>${safeToFixed(totalUsd, 2)}</Text>
-              <Text style={styles.balanceHint}>
-                {totalUsd === 0 ? 'Fund your wallet to get started' : 'Pull down to refresh'}
-              </Text>
-            </>
-          )}
-        </View>
-
-        {/* Action Buttons Row - Phantom Style */}
-        <View style={styles.actionRow}>
-          {/* <TouchableOpacity
-            style={styles.actionItem}
-            onPress={() => vault && navigation.navigate('Receive', { vault, chain: 'SOL' })}
-          >
-            <View style={styles.actionIconBg}>
-              <Text style={styles.actionIcon}>📥</Text>
-            </View>
-            <Text style={styles.actionLabel}>Receive</Text>
-          </TouchableOpacity> */}
-
-          <TouchableOpacity
-            style={styles.actionItem}
-            onPress={() => vault && navigation.navigate('Send', { vault, chain: 'SOL' })}
-          >
-            <View style={styles.actionIconBg}>
-              <Text style={styles.actionIcon}>📤</Text>
-            </View>
-            <Text style={styles.actionLabel}>Send</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionItem}
-            onPress={() => navigation.navigate('Swap', { vault: vault || undefined })}
-          >
-            <View style={styles.actionIconBg}>
-              <Text style={styles.actionIcon}>🔄</Text>
-            </View>
-            <Text style={styles.actionLabel}>Swap</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionItem}
-            onPress={() => navigation.navigate('FundWallet', { vault: vault || undefined })}
-          >
-            <View style={styles.actionIconBg}>
-              <Text style={styles.actionIcon}>💵</Text>
-            </View>
-            <Text style={styles.actionLabel}>Buy</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tokens Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tokens</Text>
-        </View>
-
-        {/* Token List - Phantom Style */}
-        <View style={styles.tokenList}>
-          {/* SOL Token Row */}
-          {hasSol && (
-            <TouchableOpacity style={styles.tokenRow}>
-              <View style={styles.tokenIcon}>
-                <View style={styles.solIcon}>
-                  <Text style={styles.tokenIconText}>◎</Text>
-                </View>
-              </View>
-              <View style={styles.tokenInfo}>
-                <Text style={styles.tokenName}>Solana</Text>
-                <Text style={styles.tokenBalance}>{safeToFixed(solBalance, 4)} SOL</Text>
-              </View>
-              <View style={styles.tokenValue}>
-                <Text style={styles.tokenUsd}>${safeToFixed(solUsd, 2)}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* ZEC Token Row - Only show if wallet has ZEC */}
-          {/* {hasZec && vault?.zec?.address && ( */}
-          {hasZec && (vault?.zec?.address || vault?.zec?.unified_address) && (
-            <TouchableOpacity style={styles.tokenRow}>
-              <View style={styles.tokenIcon}>
-                <View style={styles.zecIcon}>
-                  <Text style={styles.tokenIconTextDark}>Z</Text>
-                </View>
-              </View>
-              <View style={styles.tokenInfo}>
-                <Text style={styles.tokenName}>Zcash</Text>
-                <Text style={styles.tokenBalance}>{safeToFixed(zecBalance, 4)} ZEC</Text>
-              </View>
-              <View style={styles.tokenValue}>
-                <Text style={styles.tokenUsd}>${safeToFixed(zecUsd, 2)}</Text>
-                <View style={styles.shieldedTag}>
-                  <Text style={styles.shieldedTagText}>🔒 Shielded</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Empty state if no tokens */}
-          {!hasSol && !hasZec && (
-            <View style={styles.emptyTokens}>
-              <Text style={styles.emptyTokensText}>No tokens yet</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Quick Actions */}
-        {vault && (
-  <>
-    {/* Feature Cards - Vertical Stack */}
-    <TouchableOpacity
-      style={styles.quickActionCard}
-      onPress={() => navigation.navigate('DarkPool', { vault_id: vault.vault_id, vault })}
-    >
-      <Text style={styles.quickActionEmoji}>🏊</Text>
-      <View style={styles.quickActionInfo}>
-        <Text style={styles.quickActionTitle}>Dark Pool Trading</Text>
-        <Text style={styles.quickActionDesc}>MEV-protected encrypted orders</Text>
-      </View>
-      <Text style={styles.quickActionArrow}>→</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.quickActionCard}
-      onPress={() => navigation.navigate('Lending', { vault_id: vault.vault_id, vault })}
-    >
-      <Text style={styles.quickActionEmoji}>🏦</Text>
-      <View style={styles.quickActionInfo}>
-        <Text style={styles.quickActionTitle}>Private Lending</Text>
-        <Text style={styles.quickActionDesc}>Borrow with Arcium privacy</Text>
-      </View>
-      <Text style={styles.quickActionArrow}>→</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.quickActionCard}
-      onPress={() => navigation.navigate('AgentDashboard', { vault })}
-    >
-      <Text style={styles.quickActionEmoji}>🤖</Text>
-      <View style={styles.quickActionInfo}>
-        <Text style={styles.quickActionTitle}>AI Trading Agent</Text>
-        <Text style={styles.quickActionDesc}>Auto-trade with Zynapse signals</Text>
-      </View>
-      <Text style={styles.quickActionArrow}>→</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.quickActionCard}
-      onPress={() => navigation.navigate('Backup', { vault })}
-    >
-      <Text style={styles.quickActionEmoji}>🔐</Text>
-      <View style={styles.quickActionInfo}>
-        <Text style={styles.quickActionTitle}>Backup & Recovery</Text>
-        <Text style={styles.quickActionDesc}>Secure your wallet</Text>
-      </View>
-      <Text style={styles.quickActionArrow}>→</Text>
-    </TouchableOpacity>
-  </>
-)}
-
-
-        {/* Security Footer */}
-        <View style={styles.securityFooter}>
-          <Text style={styles.securityText}>
-            🔐 Secured by Arcium MPC • No seed phrase
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: COLORS.bgPrimary,
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  haloContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 320,
+    overflow: 'hidden',
+  },
+  haloSvg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  toast: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: COLORS.toastBg,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1000,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  toastIcon: {
+    fontSize: 16,
+    color: COLORS.accent,
+    marginRight: 10,
+  },
+  toastText: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -1641,297 +2917,434 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#9CA3AF',
+    color: COLORS.textSecondary,
     marginTop: 12,
     fontSize: 14,
   },
-
-  // Header
   header: {
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  walletNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  walletName: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  copyButton: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 8,
-  },
-  copyIcon: {
-    fontSize: 14,
-  },
-  addressText: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-
-  // Balance Section
-  balanceSection: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  totalBalance: {
-    fontSize: 48,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  balanceHint: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
-  },
-
-  // Action Row - Phantom Style
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E1E1E',
-  },
-  actionItem: {
-    alignItems: 'center',
-  },
-  actionIconBg: {
-    width: 56,
-    height: 56,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  actionIcon: {
-    fontSize: 24,
-  },
-  actionLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-
-  // Section Header
-  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 24,
-    paddingBottom: 12,
+    paddingTop: 8,
+    paddingBottom: 20,
   },
-  sectionTitle: {
+  vaultSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.bgCard,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  vaultIcon: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  vaultName: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  settingsBtn: {
+    padding: 4,
+  },
+  settingsIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsIcon: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.textSecondary,
+  },
+  balanceContainer: {
+    alignItems: 'center',
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  balanceAmount: {
+    fontSize: 44,
+    color: COLORS.textPrimary,
+    fontWeight: '300',
+    letterSpacing: -1,
+  },
+  hideBalanceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  hideBalanceIcon: {
+    fontSize: 12,
+    color: COLORS.accent,
+    marginRight: 6,
+  },
+  hideBalanceText: {
+    fontSize: 13,
+    color: COLORS.accent,
+    fontWeight: '500',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingBottom: 16,
+    gap: 20,
+  },
+  actionBtn: {
+    alignItems: 'center',
+    width: 64,
+  },
+  actionIconWrap: {
+    width: 52,
+    height: 52,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  actionIconActive: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  actionIconDisabled: {
+    backgroundColor: COLORS.bgCard,
+    borderColor: COLORS.border,
+    opacity: 0.5,
+  },
+  actionIconText: {
+    fontSize: 20,
+    color: COLORS.textPrimary,
+  },
+  actionIconTextActive: {
+    fontSize: 20,
+    color: COLORS.bgPrimary,
     fontWeight: '600',
   },
-
-  // Token List
-  tokenList: {
+  actionIconTextDisabled: {
+    color: COLORS.textMuted,
+  },
+  actionIconImage: {
+    width: 24,
+    height: 24,
+    tintColor: COLORS.textPrimary,
+  },
+  actionText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  actionTextDisabled: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+  },
+  actionBtnDisabled: {
+    opacity: 0.7,
+  },
+  agentDashboardBtn: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    overflow: 'hidden',
+  },
+  agentDashboardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+  },
+  agentDashboardIconWrap: {
+    width: 44,
+    height: 44,
+    backgroundColor: COLORS.accent,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  agentDashboardIcon: {
+    width: 24,
+    height: 24,
+    tintColor: COLORS.bgPrimary,
+  },
+  agentDashboardInfo: {
+    flex: 1,
+  },
+  agentDashboardTitle: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  agentDashboardDesc: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  agentDashboardArrow: {
+    fontSize: 18,
+    color: COLORS.accent,
+    fontWeight: '600',
+  },
+  portfolioHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  portfolioTitle: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  portfolioActions: {
+    flexDirection: 'row',
     gap: 8,
+  },
+  portfolioActionBtn: {
+    width: 36,
+    height: 36,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  portfolioActionIcon: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  tokenList: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
   },
   tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 16,
+    padding: 14,
+  },
+  tokenRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
   },
   tokenIcon: {
     marginRight: 12,
   },
-  solIcon: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#9945FF',
-    borderRadius: 22,
+  tokenIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  zecIcon: {
-    width: 44,
-    height: 44,
+  tokenIconImage: {
+    width: 22,
+    height: 22,
+    tintColor: COLORS.textPrimary,
+  },
+  tokenIconZec: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#F4B728',
-    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tokenIconText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  tokenIconSymbolDark: {
+    fontSize: 16,
+    color: '#1A1A1A',
+    fontWeight: '700',
   },
-  tokenIconTextDark: {
-    fontSize: 20,
-    color: '#000000',
-    fontWeight: 'bold',
-  },
-  tokenInfo: {
+  tokenDetails: {
     flex: 1,
   },
   tokenName: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
     marginBottom: 2,
   },
-  tokenBalance: {
-    fontSize: 14,
-    color: '#6B7280',
+  tokenAddressWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  tokenValue: {
+  tokenAddress: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  copyBtn: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginLeft: 4,
+  },
+  tokenValues: {
     alignItems: 'flex-end',
+    marginRight: 8,
   },
   tokenUsd: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
   },
-  shieldedTag: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4,
+  tokenBal: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 2,
   },
-  shieldedTagText: {
-    fontSize: 10,
-    color: '#10B981',
+  tokenBalUsdc: {
+    fontSize: 11,
+    color: COLORS.accent,
+    marginTop: 2,
+  },
+  rowChevron: {
+    fontSize: 20,
+    color: COLORS.textMuted,
   },
   emptyTokens: {
-    padding: 40,
+    padding: 32,
     alignItems: 'center',
   },
   emptyTokensText: {
-    color: '#6B7280',
+    color: COLORS.textMuted,
     fontSize: 14,
   },
-
-  // Quick Actions
-  quickActions: {
-    marginTop: 24,
-    gap: 12,
+  featuresHeader: {
+    paddingTop: 24,
+    paddingBottom: 12,
   },
- quickActionCard: {
-  backgroundColor: '#1E293B',
-  marginHorizontal: 16,
-  // marginBottom: 12,
-  marginTop: 12,
-  padding: 16,
-  borderRadius: 12,
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-quickActionEmoji: {
-  fontSize: 28,
-  marginRight: 12,
-},
-quickActionInfo: {
-  flex: 1,
-},
-quickActionTitle: {
-  color: '#FFFFFF',
-  fontSize: 16,
-  fontWeight: '600',
-},
-quickActionDesc: {
-  color: '#6B7280',
-  fontSize: 12,
-  marginTop: 2,
-},
-quickActionArrow: {
-  color: '#4ECDC4',
-  fontSize: 20,
-},
-
-  // Security Footer
-  securityFooter: {
-    marginTop: 24,
-    paddingVertical: 16,
+  featuresTitle: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  featureRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.bgCard,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  securityText: {
+  featureIcon: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'rgba(42, 82, 152, 0.3)',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  featureIconText: {
+    fontSize: 18,
+    color: COLORS.accent,
+  },
+  featureInfo: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  featureDesc: {
     fontSize: 12,
-    color: '#4B5563',
+    color: COLORS.textMuted,
   },
-
-  // Empty State
-  emptyCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 24,
-    padding: 40,
-    marginTop: 60,
+  featureArrow: {
+    fontSize: 16,
+    color: COLORS.accent,
+  },
+  footer: {
+    paddingTop: 24,
+    paddingBottom: 8,
     alignItems: 'center',
   },
-  emptyEmoji: {
-    fontSize: 64,
+  footerText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  emptyCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 20,
+    padding: 32,
+    marginTop: 80,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  emptyIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: 'rgba(42, 82, 152, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
   },
+  emptyEmoji: {
+    fontSize: 32,
+  },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
     marginBottom: 8,
   },
-  featureButton: {
-  backgroundColor: '#1E293B',
-  padding: 16,
-  borderRadius: 12,
-  alignItems: 'center',
-  flex: 1,
-  marginHorizontal: 4,
-},
-featureIcon: {
-  fontSize: 28,
-  marginBottom: 8,
-},
-featureTitle: {
-  color: '#FFFFFF',
-  fontSize: 12,
-  fontWeight: '600',
-},
   emptyText: {
-    fontSize: 16,
-    color: '#9CA3AF',
+    fontSize: 14,
+    color: COLORS.textSecondary,
     marginBottom: 24,
-    textAlign: 'center',
   },
   primaryButton: {
-    backgroundColor: '#4ECDC4',
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 12,
     width: '100%',
+    backgroundColor: COLORS.accent,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   primaryButtonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '700',
+    color: COLORS.bgPrimary,
+    fontSize: 15,
+    fontWeight: '600',
   },
   secondaryButton: {
-    backgroundColor: '#2A2A2A',
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 12,
     width: '100%',
+    backgroundColor: 'transparent',
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   secondaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: '500',
   },
 });
 

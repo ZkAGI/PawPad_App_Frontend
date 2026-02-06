@@ -428,6 +428,7 @@ export interface Vault {
   vault_id: string;
   vault_name: string;
   vault_type?: 'unified' | 'personal' | 'shared' | 'sol' | 'zec';
+  wallet_type?: 'seed' | 'seedless';
   email?: string;
   created_at?: string;
 
@@ -441,17 +442,28 @@ export interface Vault {
 
   zec?: {
     address: string;
+    transparent_address?: string;
+    unified_address?: string;   
+    sapling_address?: string; 
     viewing_key?: string;
     wallet_id?: string;
     provider?: string;
+    mpc_provider?: string;
   };
 
   // Legacy fields (backwards compatibility)
   chain?: string;
   address?: string;
+  publicKey?: string; 
   mpc_provider?: string;
   balance?: number;
   lastUpdated?: string;
+
+  oasis?: {
+    txHash?: string;
+    walletIdHash?: string;
+    stored?: boolean;
+  };
 
   // FROST-specific fields (for shared ZEC vaults)
   threshold?: number;
@@ -476,16 +488,19 @@ export function toVault(data: any): Vault {
     vault_id: data.vault_id || data.vaultId || `vault_${Date.now()}`,
     vault_name: data.vault_name || data.vaultName || 'Unnamed Vault',
     vault_type: data.vault_type || data.vaultType || 'personal',
+    wallet_type: data.wallet_type,
     email: data.email,
     created_at: data.created_at || data.createdAt || new Date().toISOString(),
     
     // Unified vault fields
     sol: data.sol,
     zec: data.zec,
+    oasis: data.oasis,
     
     // Legacy fields
     chain: data.chain || (data.sol ? 'SOL' : data.zec ? 'ZEC' : undefined),
     address: data.address || data.sol?.address || data.zec?.address,
+    publicKey: data.publicKey, 
     mpc_provider: data.mpc_provider || data.sol?.mpc_provider,
     balance: data.balance || 0,
     lastUpdated: data.lastUpdated,
