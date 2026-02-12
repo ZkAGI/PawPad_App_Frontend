@@ -307,7 +307,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 import LinearGradient from 'react-native-linear-gradient';
-import api from '../services/api';
+import { exportBackup } from '../services/teeSevice';
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -317,10 +318,10 @@ const BackupScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [exporting, setExporting] = useState(false);
 
-  const exportBackup = async () => {
+  const handleExportBackup = async () => {
     setExporting(true);
     try {
-      const backupData = await api.exportBackup();
+      const backupData = await exportBackup();
       const jsonString = JSON.stringify(backupData, null, 2);
 
       await Share.share({
@@ -431,7 +432,7 @@ const BackupScreen = () => {
 
             <TouchableOpacity
               style={[styles.exportButton, exporting && styles.buttonDisabled]}
-              onPress={exportBackup}
+              onPress={handleExportBackup}
               disabled={exporting}
               activeOpacity={0.8}
             >

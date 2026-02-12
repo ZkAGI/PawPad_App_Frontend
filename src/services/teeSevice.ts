@@ -114,6 +114,9 @@ export interface RecoveryRotateResponse {
 const SESSION_STORAGE_KEY = 'tee_session';
 const SESSION_EXPIRY_MS = 55 * 60 * 1000; // 55 minutes (token expires in 60)
 
+const TEE_BACKUP_STORAGE_KEY = 'tee_backup_file';
+
+
 interface StoredSession {
   token: string;
   uid: string;
@@ -281,6 +284,14 @@ export const createWallet = async (): Promise<CreateWalletResponse> => {
 
   const data: CreateWalletResponse = await response.json();
   console.log('[TEE] Wallet created:', data.uid);
+  
+  try {
+    await AsyncStorage.setItem(TEE_BACKUP_STORAGE_KEY, JSON.stringify(data.backup_file));
+    console.log('[TEE] Backup file saved to local storage');
+  } catch (e) {
+    console.log('[TEE] Failed to save backup:', e);
+  }
+  
   return data;
 };
 
@@ -583,6 +594,14 @@ export const recoverAndRotate = async (backupFile: TEEBackupFile): Promise<Recov
   console.log('[TEE] data.new_totp:', data.new_totp);
   console.log('[TEE] data.new_backup_file:', data.new_backup_file);
   console.log('[TEE] Full data:', JSON.stringify(data, null, 2));
+  
+  try {
+    await AsyncStorage.setItem(TEE_BACKUP_STORAGE_KEY, JSON.stringify(data.new_backup_file));
+    console.log('[TEE] New backup file saved to local storage');
+  } catch (e) {
+    console.log('[TEE] Failed to save new backup:', e);
+  }
+  
   return data;
 };
 
@@ -960,6 +979,17 @@ export const formatAmount = (amount: string | number, decimals: number = 2): str
   return num.toFixed(decimals);
 };
 
+/**
+ * Export backup from local storage
+ */
+export const exportBackup = async (): Promise<TEEBackupFile> => {
+  const stored = await AsyncStorage.getItem(TEE_BACKUP_STORAGE_KEY);
+  if (!stored) {
+    throw new Error('No backup file found. Backup is created during wallet setup.');
+  }
+  return JSON.parse(stored);
+};
+
 // ════════════════════════════════════════════════════════════════════════════
 // DEFAULT EXPORT
 // ════════════════════════════════════════════════════════════════════════════
@@ -993,6 +1023,7 @@ export default {
   // Recovery
   decryptBackup,
   recoverAndRotate,
+  exportBackup,
   
   // Balances (Public RPCs)
   getSolanaBalance,
