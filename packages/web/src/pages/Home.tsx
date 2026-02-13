@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredWallet, isLoggedIn, getAllBalances, getWallets, formatAddress, loadSession } from '../services/teeService';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface Balances {
   solana: { sol: number; usdc: number };
@@ -162,14 +163,14 @@ export default function Home() {
       {/* Wallet Addresses */}
       <h3 style={{ color: '#FFF', fontSize: 18, fontWeight: 600, marginTop: 32, marginBottom: 16 }}>Wallets</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div onClick={() => { navigator.clipboard.writeText(solAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
+        <div onClick={() => { copyToClipboard(solAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
           <div>
             <span style={{ color: '#9945FF', fontSize: 13, fontWeight: 600 }}>Solana</span>
             <p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(solAddr)}</p>
           </div>
           <span style={{ color: '#6B7280', fontSize: 12 }}>📋 Copy</span>
         </div>
-        <div onClick={() => { navigator.clipboard.writeText(evmAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
+        <div onClick={() => { copyToClipboard(evmAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
           <div>
             <span style={{ color: '#627EEA', fontSize: 13, fontWeight: 600 }}>EVM (Ethereum)</span>
             <p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(evmAddr)}</p>

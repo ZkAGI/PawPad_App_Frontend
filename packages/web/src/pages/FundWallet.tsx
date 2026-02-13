@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredWallet, formatAddress } from '../services/teeService';
+import { copyToClipboard } from '../utils/clipboard';
 
 type Chain = 'solana' | 'ethereum';
 
@@ -12,9 +13,9 @@ export default function FundWallet() {
 
   const address = chain === 'solana' ? wallet?.wallets.solana.address : wallet?.wallets.evm.address;
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (address) {
-      navigator.clipboard.writeText(address);
+      await copyToClipboard(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
