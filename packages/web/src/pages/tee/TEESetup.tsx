@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { copyToClipboard } from '../../utils/clipboard';
+import { IoIosCopy } from 'react-icons/io';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { formatAddress, parseTOTPUri, type TEEWallets, type TOTPConfig, type TEEBackupFile } from '../../services/teeService';
 

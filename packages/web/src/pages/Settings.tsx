@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredWallet, clearSession, clearWalletData, formatAddress, getSessionToken } from '../services/teeService';
 import { copyToClipboard } from '../utils/clipboard';
+import { IoIosCopy } from 'react-icons/io';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -76,14 +77,14 @@ export default function Settings() {
                   <span style={{ color: '#9945FF', fontSize: 12, fontWeight: 600 }}>Solana</span>
                   <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(wallet.wallets.solana.address)}</p>
                 </div>
-                <span style={{ color: copied === 'sol' ? '#33E6BF' : 'var(--text-muted)', fontSize: 12 }}>{copied === 'sol' ? 'Copied!' : 'Copy'}</span>
+                <span style={{ color: copied === 'sol' ? '#33E6BF' : 'var(--text-muted)', fontSize: 12 }}>{copied === 'sol' ? 'Copied!' : <><IoIosCopy /> Copy</>}</span>
               </div>
               <div onClick={() => copyAddress(wallet.wallets.evm.address, 'evm')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: 'var(--bg-primary)', borderRadius: 8, cursor: 'pointer' }}>
                 <div>
                   <span style={{ color: '#627EEA', fontSize: 12, fontWeight: 600 }}>EVM (Ethereum)</span>
                   <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(wallet.wallets.evm.address)}</p>
                 </div>
-                <span style={{ color: copied === 'evm' ? '#33E6BF' : 'var(--text-muted)', fontSize: 12 }}>{copied === 'evm' ? 'Copied!' : 'Copy'}</span>
+                <span style={{ color: copied === 'evm' ? '#33E6BF' : 'var(--text-muted)', fontSize: 12 }}>{copied === 'evm' ? 'Copied!' : <><IoIosCopy /> Copy</>}</span>
               </div>
               <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-primary)', borderRadius: 8 }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>UID: {wallet.uid?.slice(0, 16)}...</span>

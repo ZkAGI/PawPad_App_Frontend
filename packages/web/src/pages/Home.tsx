@@ -1,3 +1,4 @@
+import { IoIosCopy } from 'react-icons/io';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredWallet, isLoggedIn, getAllBalances, getWallets, formatAddress, loadSession } from '../services/teeService';
