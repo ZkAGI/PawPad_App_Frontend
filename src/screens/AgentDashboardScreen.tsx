@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -26,6 +27,7 @@ import {
   getSessionToken,
   ensureSessionLoaded,
 } from '../services/teeSevice';
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -116,6 +118,8 @@ const AgentDashboardScreen = () => {
     winRate: 0,
     secured: 0,
   });
+
+  const [tradeHistory, setTradeHistory] = useState<any[]>([]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // FETCH TEE TRADE CONFIG FROM BACKEND
@@ -264,6 +268,68 @@ const AgentDashboardScreen = () => {
         }
       }
 
+      // Fetch trade history from TEE API
+      if (isTEE && !dataLoaded) {
+        try {
+          await ensureSessionLoaded();
+          const token = getSessionToken();
+          if (token) {
+            const historyResponse = await getTradeHistory();
+            if (historyResponse.ok && historyResponse.history) {
+              const trades = historyResponse.history;
+              setTradeHistory(trades);
+              
+              const successTrades = trades.filter((t: any) => t.status === 'success');
+              
+              // Calculate P&L from successful BUY/SELL pairs
+              let totalPnl = 0;
+              const buyTrades = trades.filter((t: any) => t.action === 'BUY' && t.status === 'success');
+              const sellTrades = trades.filter((t: any) => t.action === 'SELL' && t.status === 'success');
+              
+              // Match buy/sell pairs by asset chronologically
+              const buysByAsset: { [key: string]: any[] } = {};
+              buyTrades.forEach((t: any) => {
+                if (!buysByAsset[t.asset]) buysByAsset[t.asset] = [];
+                buysByAsset[t.asset].push({ ...t });
+              });
+              
+              sellTrades.forEach((sell: any) => {
+                const buys = buysByAsset[sell.asset];
+                if (buys && buys.length > 0) {
+                  const buy = buys.shift(); // FIFO matching
+                  const buyAmount = parseFloat(buy.amountIn) || 0;
+                  const sellAmount = parseFloat(sell.amountIn) || 0;
+                  const amount = Math.min(buyAmount, sellAmount);
+                  
+                  if (buy.signalPrice && sell.signalPrice) {
+                    // P&L = (sell price - buy price) * (USDC amount / buy price)
+                    const tokens = amount / buy.signalPrice;
+                    const pnl = tokens * (sell.signalPrice - buy.signalPrice);
+                    totalPnl += pnl;
+                  }
+                }
+              });
+              
+              // Only count BUY/SELL trades for win rate (exclude WITHDRAW)
+              const tradingTrades = trades.filter((t: any) => t.action === 'BUY' || t.action === 'SELL');
+              const successTradingTrades = tradingTrades.filter((t: any) => t.status === 'success');
+              
+              setStats({
+                trades: successTrades.length,  
+                pnl: Math.round(totalPnl * 100) / 100,
+                winRate: tradingTrades.length > 0 
+                  ? Math.round((successTradingTrades.length / tradingTrades.length) * 100) 
+                  : 0,
+                secured: trades.length, 
+              });
+              console.log('[TradeHistory] Loaded', trades.length, 'trades,', successTrades.length, 'successful');
+            }
+          }
+        } catch (err) {
+          console.log('[TradeHistory] Fetch error:', err);
+        }
+      }
+
       // Fetch signals from Zynapse API directly
       if (!dataLoaded) {
         try {
@@ -325,32 +391,33 @@ const AgentDashboardScreen = () => {
         }
       }
 
-      // Load agent from DB if not passed
-      if (!passedAgent && vault?.vault_id && !dataLoaded) {
-        try {
-          const agentResponse = await api.getAgentForVault(vault.vault_id);
-          if (agentResponse.success && agentResponse.agent) {
-            setAgent(agentResponse.agent);
-            const agentAny = agentResponse.agent as any;
-            setStats({
-              trades: agentAny.stats?.trades_executed || 0,
-              pnl: agentAny.stats?.total_pnl || 0,
-              winRate: agentAny.stats?.win_rate || 0,
-              secured: agentAny.stats?.dark_pool_trades || 0,
-            });
+      // Load agent from DB if not passed (for non-TEE only)
+      if (!isTEE) {
+        if (!passedAgent && vault?.vault_id && !dataLoaded) {
+          try {
+            const agentResponse = await api.getAgentForVault(vault.vault_id);
+            if (agentResponse.success && agentResponse.agent) {
+              setAgent(agentResponse.agent);
+              const agentAny = agentResponse.agent as any;
+              setStats({
+                trades: agentAny.stats?.trades_executed || 0,
+                pnl: agentAny.stats?.total_pnl || 0,
+                winRate: agentAny.stats?.win_rate || 0,
+                secured: agentAny.stats?.dark_pool_trades || 0,
+              });
+            }
+          } catch (err) {
+            console.log('[Agent] Fetch error:', err);
           }
-        } catch (err) {
-          console.log('[Agent] Fetch error:', err);
+        } else if (passedAgent && !dataLoaded) {
+          const agentAny = passedAgent as any;
+          setStats({
+            trades: agentAny.stats?.trades_executed || passedAgent.performance?.totalTrades || 0,
+            pnl: agentAny.stats?.total_pnl || passedAgent.performance?.totalProfit || 0,
+            winRate: agentAny.stats?.win_rate || passedAgent.performance?.successRate || 0,
+            secured: agentAny.stats?.dark_pool_trades || 0,
+          });
         }
-      } else if (passedAgent && !dataLoaded) {
-        // Handle both AgentData type and raw MongoDB agent format
-        const agentAny = passedAgent as any;
-        setStats({
-          trades: agentAny.stats?.trades_executed || passedAgent.performance?.totalTrades || 0,
-          pnl: agentAny.stats?.total_pnl || passedAgent.performance?.totalProfit || 0,
-          winRate: agentAny.stats?.win_rate || passedAgent.performance?.successRate || 0,
-          secured: agentAny.stats?.dark_pool_trades || 0,
-        });
       }
       
       setDataLoaded(true);
@@ -361,11 +428,63 @@ const AgentDashboardScreen = () => {
     }
   };
 
-  // Load data ONCE on mount
+  // Load data on mount + auto-refresh signals every 30s
   useEffect(() => {
     if (!dataLoaded) {
       loadData();
     }
+
+    const interval = setInterval(async () => {
+      try {
+        console.log('[Signals] Auto-refreshing...');
+        const response = await fetch('https://zynapse.zkagi.ai/v1/signals', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': 'zk-123321',
+          },
+        });
+        
+        const data = await response.json();
+        let signalsArray: any[] = [];
+        
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          signalsArray = Object.values(data);
+        } else if (Array.isArray(data)) {
+          signalsArray = data;
+        } else if (data?.signals) {
+          signalsArray = Array.isArray(data.signals) ? data.signals : Object.values(data.signals);
+        }
+        
+        if (signalsArray.length > 0) {
+          const formattedSignals: Signal[] = signalsArray
+            .filter((s: any) => {
+              if (isTEE) {
+                return s.asset === 'SOL' || s.asset === 'ETH';
+              }
+              return true;
+            })
+            .map((s: any) => ({
+              asset: s.asset,
+              signal: (s.signal || 'HOLD') as 'BUY' | 'SELL' | 'HOLD',
+              confidence: s.confidence || Math.round(100 - Math.abs(50 - (s.rsi || 50))),
+              price: s.price || 0,
+              indicators: s.indicators || {
+                rsi: Math.round(s.rsi || 50),
+                macd: s.macd_hist > 0 ? 'bullish' : s.macd_hist < 0 ? 'bearish' : 'neutral',
+                ema_trend: s.price > s.ema20 ? 'up' : s.price < s.ema20 ? 'down' : 'neutral',
+              },
+            }));
+          
+          setSignals(formattedSignals);
+          console.log('[Signals] Auto-refreshed:', formattedSignals.length, 'signals');
+        }
+      } catch (err) {
+        console.log('[Signals] Auto-refresh error:', err);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const onRefresh = async () => {
@@ -545,6 +664,32 @@ const AgentDashboardScreen = () => {
                     <Text style={styles.infoHighlight}>Small ETH</Text> - Gas fees on Ethereum (~0.005 ETH)
                   </Text>
                 </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoBullet}>•</Text>
+                  <Text style={styles.infoText}>
+                    <Text style={styles.infoHighlight}>Small ETH</Text> - Gas fees on Ethereum (~0.005 ETH)
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.infoSection}>
+                <Text style={styles.infoSubtitle}>🔄 Auto Trading Flow</Text>
+                <View style={styles.flowRow}>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>BUY Signal</Text>
+                    <Text style={styles.flowArrow}>USDC → SOL/ETH</Text>
+                  </View>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>SELL Signal</Text>
+                    <Text style={styles.flowArrow}>SOL/ETH → USDC</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.infoDex}>
+                <Text style={styles.infoDexText}>
+                  🔗 SOL trades via <Text style={styles.infoHighlight}>Jupiter</Text> • ETH trades via <Text style={styles.infoHighlight}>Uniswap</Text>
+                </Text>
               </View>
 
               <View style={styles.infoSection}>
@@ -592,11 +737,13 @@ const AgentDashboardScreen = () => {
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.trades}</Text>
-              <Text style={styles.statLabel}>TRADES</Text>
+              <Text style={styles.statLabel}>SUCCESS</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: COLORS.accent }]}>
-                ${stats.pnl.toFixed(2)}
+              <Text style={[styles.statValue, { 
+                color: stats.pnl > 0 ? COLORS.success : stats.pnl < 0 ? COLORS.error : COLORS.accent 
+              }]}>
+                {stats.pnl >= 0 ? '+' : ''}${stats.pnl.toFixed(2)}
               </Text>
               <Text style={styles.statLabel}>P&L</Text>
             </View>
@@ -606,7 +753,7 @@ const AgentDashboardScreen = () => {
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.secured}</Text>
-              <Text style={styles.statLabel}>SECURED</Text>
+              <Text style={styles.statLabel}>EXECUTIONS</Text>
             </View>
           </View>
 
@@ -666,6 +813,74 @@ const AgentDashboardScreen = () => {
               </View>
             </View>
           ))}
+
+          {/* Recent Trades */}
+          {tradeHistory.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Recent Trades ({tradeHistory.length})</Text>
+              {tradeHistory.slice(0, 10).map((trade: any, index: number) => (
+                <TouchableOpacity
+                  key={trade._id || index}
+                  style={[
+                    styles.tradeCard,
+                    { borderLeftColor: trade.status === 'success' ? COLORS.success : trade.status === 'failed' ? COLORS.error : COLORS.warning, borderLeftWidth: 3 }
+                  ]}
+                  onPress={() => {
+                    if (trade.txHash && trade.txHash !== 'failed') {
+                      const explorerUrl = trade.chain === 'solana'
+                        ? `https://solscan.io/tx/${trade.txHash}`
+                        : `https://etherscan.io/tx/${trade.txHash}`;
+                      Linking.openURL(explorerUrl);
+                    } else {
+                      Alert.alert(
+                        `${trade.action} ${trade.asset} — Failed`,
+                        `Signal Price: $${trade.signalPrice || '—'}\n` +
+                        `Amount: ${trade.amountIn || trade.amount || '—'} ${trade.tokenIn || trade.asset}\n` +
+                        `Time: ${new Date(trade.timestamp).toLocaleString()}`
+                      );
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.tradeLeft}>
+                    <View style={[styles.tradeActionBadge, {
+                      backgroundColor: trade.action === 'BUY' ? 'rgba(34, 197, 94, 0.2)' :
+                        trade.action === 'SELL' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'
+                    }]}>
+                      <Text style={[styles.tradeActionText, {
+                        color: trade.action === 'BUY' ? COLORS.success :
+                          trade.action === 'SELL' ? COLORS.error : '#3B82F6'
+                      }]}>
+                        {trade.action}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.tradeAsset}>{trade.asset}</Text>
+                      <Text style={styles.tradeTime}>
+                        {new Date(trade.timestamp).toLocaleDateString()} {new Date(trade.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.tradeRight}>
+                    <Text style={styles.tradeAmount}>
+                      {trade.amountIn} {trade.tokenIn || trade.asset}
+                    </Text>
+                    <View style={[styles.tradeStatusBadge, {
+                      backgroundColor: trade.status === 'success' ? 'rgba(34, 197, 94, 0.15)' :
+                        trade.status === 'failed' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'
+                    }]}>
+                      <Text style={[styles.tradeStatusText, {
+                        color: trade.status === 'success' ? COLORS.success :
+                          trade.status === 'failed' ? COLORS.error : COLORS.warning
+                      }]}>
+                        {trade.status === 'success' ? '✓' : trade.status === 'failed' ? '✗' : '⏳'} {trade.status}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
 
           {/* Trade Config - FETCHED FROM TEE BACKEND */}
           <Text style={styles.sectionTitle}>Trade Config</Text>
@@ -851,7 +1066,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS.accent,
+    borderColor: 'rgba(51, 230, 191, 0.3)',
   },
   walletHeader: {
     flexDirection: 'row',
@@ -864,7 +1079,7 @@ const styles = StyleSheet.create({
   },
   walletTitle: {
     color: COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     flex: 1,
   },
@@ -878,6 +1093,7 @@ const styles = StyleSheet.create({
     color: COLORS.success,
     fontSize: 12,
     fontWeight: '600',
+    marginBottom: 6,
   },
   addressRow: {
     flexDirection: 'row',
@@ -892,13 +1108,15 @@ const styles = StyleSheet.create({
   },
   addressLabel: {
     color: COLORS.textMuted,
-    fontSize: 13,
-    width: 60,
+    fontSize: 12,
+    marginRight: 6,
+    marginTop: 1,
   },
   addressValue: {
     color: COLORS.textSecondary,
-    fontSize: 13,
+    fontSize: 12,
     flex: 1,
+    lineHeight: 18,
   },
 
   // Info Card - How Trading Works
@@ -1265,6 +1483,65 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     color: COLORS.textMuted,
+  },
+
+  //trade
+  // Trade History Cards
+  tradeCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tradeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  tradeActionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 12,
+    minWidth: 56,
+    alignItems: 'center',
+  },
+  tradeActionText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  tradeAsset: {
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  tradeTime: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  tradeRight: {
+    alignItems: 'flex-end',
+  },
+  tradeAmount: {
+    color: COLORS.textPrimary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  tradeStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  tradeStatusText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
 
