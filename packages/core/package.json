@@ -1,0 +1,11 @@
+{
+  "name": "@pawpad/core",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "@coral-xyz/anchor": "^0.32.1",
+    "axios": "^1.13.2"
+  }
+}
