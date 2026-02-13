@@ -98,11 +98,11 @@ export default function RecoverTEEWallet() {
       {error && <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, marginBottom: 16, color: '#EF4444', fontSize: 14 }}>{error}</div>}
 
       <div onClick={() => document.getElementById('file-input')?.click()} style={{ padding: '32px 20px', backgroundColor: '#111B2E', border: `2px dashed ${backupFile ? '#33E6BF' : '#1E3A5F'}`, borderRadius: 16, textAlign: 'center', cursor: 'pointer', marginBottom: 24 }}>
-        <input id="file-input" type="file" accept=".json" hidden onChange={handleFileUpload} />
+        <input id="file-input" type="file" accept=".json,.txt" hidden onChange={handleFileUpload} />
         {backupFile ? (
           <><span style={{ fontSize: 32 }}>📄</span><p style={{ color: '#33E6BF', fontWeight: 600, marginTop: 8 }}>{backupFile.name}</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>Tap to change</p></>
         ) : (
-          <><span style={{ fontSize: 32 }}>📁</span><p style={{ color: '#FFF', fontWeight: 500, marginTop: 8 }}>Upload backup file</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>pawpad-backup-*.json</p></>
+          <><span style={{ fontSize: 32 }}>📁</span><p style={{ color: '#FFF', fontWeight: 500, marginTop: 8 }}>Upload backup file</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>pawpad-backup-*.json or .txt</p></>
         )}
       </div>
 
