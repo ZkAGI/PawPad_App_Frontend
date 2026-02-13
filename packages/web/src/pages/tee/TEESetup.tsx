@@ -99,6 +99,9 @@ export default function TEESetup() {
             <p style={{ color: '#FF6B6B', fontSize: 13, fontWeight: 600 }}>⚠️ Download now — this backup won't be available again.</p>
             <p style={{ color: '#FF6B6B', fontSize: 12, marginTop: 4 }}>Recovery is impossible without your backup file.</p>
           </div>
+          <div style={{ padding: '12px 16px', backgroundColor: 'rgba(78,205,196,0.08)', border: '1px solid rgba(78,205,196,0.2)', borderRadius: 12, marginBottom: 24, maxWidth: 340, width: '100%' }}>
+            <p style={{ color: '#4ECDC4', fontSize: 13 }}>💡 Tip: Store a copy on Google Drive, iCloud, or another cloud service. If your device is lost, you'll need this file to recover your wallet on a new device.</p>
+          </div>
 
           <div style={{ width: '100%', maxWidth: 340, marginBottom: 24 }}>
             <div style={{ padding: '16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', marginBottom: 8, textAlign: 'left' }}>
