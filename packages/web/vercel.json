@@ -1,6 +1,12 @@
 {
   "rewrites": [
-    { "source": "/api/tee/:path*", "destination": "/api/tee/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/tee/:path*",
+      "destination": "https://p8080.m125.opf-mainnet-rofl-35.rofl.app/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }
