@@ -13,6 +13,7 @@ interface SetupState {
 
 export default function TEESetup() {
   const [step, setStep] = useState<'totp' | 'backup'>('totp');
+  const [copied, setCopied] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as SetupState | null;
@@ -75,8 +76,9 @@ export default function TEESetup() {
               />
             </div>
             <p style={{ color: '#6B7280', fontSize: 12, marginBottom: 12 }}>Or enter manually:</p>
-            <div style={{ padding: '10px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all' }}>
+            <div onClick={async () => { await copyToClipboard(totpInfo.secret); setCopied('secret'); setTimeout(() => setCopied(''), 2000); }} style={{ padding: '10px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4ECDC4', fontSize: 14, fontFamily: 'monospace', fontWeight: 600 }}>{totpInfo.secret}</span>
+              <span style={{ color: copied === 'secret' ? '#33E6BF' : '#6B7280', fontSize: 12, flexShrink: 0, marginLeft: 8 }}>{copied === 'secret' ? 'Copied' : 'Copy'}</span>
             </div>
           </div>
 
