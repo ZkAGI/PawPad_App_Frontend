@@ -1,7 +1,69 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { BottomNav } from './components/common/BottomNav';
 import './lib/storage';
 import { getStoredWallet, loadSession } from './services/teeService';
+
+const HIDE_NAV_ROUTES = [
+  '/onboarding', '/mxe-explanation', '/quick-summary', '/chain-selection',
+  '/email-input', '/vault-name', '/tee-login', '/tee-setup', '/recover-tee',
+  '/creating-vault', '/creating-seedless', '/vault-success', '/recover-seedless',
+];
+
+function AppContent() {
+  const location = useLocation();
+  const hideNav = HIDE_NAV_ROUTES.some(r => location.pathname.startsWith(r));
+
+  return (
+    <div className="app-container">
+      <Routes>
+        {/* ONBOARDING */}
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/mxe-explanation" element={<MXEExplanation />} />
+        <Route path="/quick-summary" element={<QuickSummary />} />
+        <Route path="/chain-selection" element={<ChainSelection />} />
+        <Route path="/email-input" element={<EmailInput />} />
+        <Route path="/vault-name" element={<VaultNameInput />} />
+
+        {/* TEE WALLET */}
+        <Route path="/tee-login" element={<TEELogin />} />
+        <Route path="/tee-setup" element={<TEESetup />} />
+        <Route path="/recover-tee" element={<RecoverTEEWallet />} />
+
+        {/* VAULT CREATION */}
+        <Route path="/creating-vault" element={<CreatingVault />} />
+        <Route path="/creating-seedless" element={<CreatingSeedlessVault />} />
+        <Route path="/vault-success" element={<VaultSuccess />} />
+        <Route path="/recover-seedless" element={<RecoverSeedlessVault />} />
+
+        {/* MAIN APP */}
+        <Route path="/home" element={<Home />} />
+        <Route path="/send" element={<Send />} />
+        <Route path="/swap" element={<Swap />} />
+        <Route path="/fund" element={<FundWallet />} />
+        <Route path="/lending" element={<Lending />} />
+        <Route path="/darkpool" element={<DarkPool />} />
+        <Route path="/history" element={<History />} />
+
+        {/* AGENTS */}
+        <Route path="/agents" element={<AgentRouter />} />
+        <Route path="/agents/setup" element={<AgentSetup />} />
+        <Route path="/agents/preferences" element={<AgentPreferences />} />
+        <Route path="/agents/creating" element={<AgentCreating />} />
+        <Route path="/agents/dashboard" element={<AgentDashboard />} />
+
+        {/* SETTINGS / BACKUP / RECOVERY */}
+        <Route path="/backup" element={<Backup />} />
+        <Route path="/recovery" element={<Recovery />} />
+        <Route path="/settings" element={<Settings />} />
+
+        {/* DEFAULT */}
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="*" element={<RootRedirect />} />
+      </Routes>
+      {!hideNav && <BottomNav />}
+    </div>
+  );
+}
 
 // Checks for existing wallet like the real RN app
 function RootRedirect() {
@@ -56,54 +118,7 @@ import Settings from './pages/Settings';
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="app-container">
-        <Routes>
-          {/* ONBOARDING */}
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/mxe-explanation" element={<MXEExplanation />} />
-          <Route path="/quick-summary" element={<QuickSummary />} />
-          <Route path="/chain-selection" element={<ChainSelection />} />
-          <Route path="/email-input" element={<EmailInput />} />
-          <Route path="/vault-name" element={<VaultNameInput />} />
-
-          {/* TEE WALLET */}
-          <Route path="/tee-login" element={<TEELogin />} />
-          <Route path="/tee-setup" element={<TEESetup />} />
-          <Route path="/recover-tee" element={<RecoverTEEWallet />} />
-
-          {/* VAULT CREATION */}
-          <Route path="/creating-vault" element={<CreatingVault />} />
-          <Route path="/creating-seedless" element={<CreatingSeedlessVault />} />
-          <Route path="/vault-success" element={<VaultSuccess />} />
-          <Route path="/recover-seedless" element={<RecoverSeedlessVault />} />
-
-          {/* MAIN APP */}
-          <Route path="/home" element={<Home />} />
-          <Route path="/send" element={<Send />} />
-          <Route path="/swap" element={<Swap />} />
-          <Route path="/fund" element={<FundWallet />} />
-          <Route path="/lending" element={<Lending />} />
-          <Route path="/darkpool" element={<DarkPool />} />
-          <Route path="/history" element={<History />} />
-
-          {/* AGENTS */}
-          <Route path="/agents" element={<AgentRouter />} />
-          <Route path="/agents/setup" element={<AgentSetup />} />
-          <Route path="/agents/preferences" element={<AgentPreferences />} />
-          <Route path="/agents/creating" element={<AgentCreating />} />
-          <Route path="/agents/dashboard" element={<AgentDashboard />} />
-
-          {/* SETTINGS / BACKUP / RECOVERY */}
-          <Route path="/backup" element={<Backup />} />
-          <Route path="/recovery" element={<Recovery />} />
-          <Route path="/settings" element={<Settings />} />
-
-          {/* DEFAULT — check if wallet exists, go to login or onboarding */}
-          <Route path="/" element={<RootRedirect />} />
-          <Route path="*" element={<RootRedirect />} />
-        </Routes>
-        <BottomNav />
-      </div>
+      <AppContent />
     </BrowserRouter>
   );
 }
