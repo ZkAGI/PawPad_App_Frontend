@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredWallet, clearSession, clearWalletData, formatAddress, getSessionToken } from '../services/teeService';
+import { copyToClipboard } from '../utils/clipboard';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -41,8 +42,8 @@ export default function Settings() {
     }
   };
 
-  const copyAddress = (addr: string, label: string) => {
-    navigator.clipboard.writeText(addr);
+  const copyAddress = async (addr: string, label: string) => {
+    await copyToClipboard(addr);
     setCopied(label);
     setTimeout(() => setCopied(''), 2000);
   };
