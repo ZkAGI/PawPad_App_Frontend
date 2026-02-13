@@ -47,10 +47,16 @@ export default function RecoverTEEWallet() {
   };
 
   const handleLoginAfterRecovery = async () => {
-    // Save wallet data and let user login with new TOTP from their authenticator
     if (recoveryResult) {
-      // We don't have wallet addresses from rotate response, but we have uid
-      // User needs to login with new TOTP, then fetch wallets
+      // Save uid so login screen knows which wallet
+      saveWalletData({
+        uid: recoveryResult.uid,
+        wallets: {
+          solana: { address: '' },
+          evm: { address: '' },
+        },
+      });
+      // Go to login — user enters new TOTP code, login returns full wallet addresses
       navigate('/tee-login');
     }
   };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, getStoredWallet, loadSession, formatAddress } from '../../services/teeService';
+import { login, getStoredWallet, loadSession, formatAddress, getWallets, saveWalletData } from '../../services/teeService';
 
 export default function TEELogin() {
   const [totp, setTotp] = useState('');
@@ -33,6 +33,13 @@ export default function TEELogin() {
     setError('');
     try {
       await login(wallet.uid, totp);
+      // Fetch wallet addresses after login and update stored data
+      try {
+        const walletsData = await getWallets();
+        if (walletsData.wallets) {
+          saveWalletData({ uid: wallet.uid, wallets: walletsData.wallets });
+        }
+      } catch (e) { console.log('[TEE] Could not fetch wallets after login:', e); }
       navigate('/home');
     } catch (err: any) {
       setError(err.message || 'Login failed');
