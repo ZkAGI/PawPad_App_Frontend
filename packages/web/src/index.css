@@ -25,7 +25,6 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -40,12 +39,10 @@ body {
 .app-container {
   max-width: 430px;
   margin: 0 auto;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 72px;
   background: var(--bg-primary);
   position: relative;
-  overflow: hidden;
 }
 
 .page {
@@ -137,17 +134,21 @@ input:focus {
 
 /* Bottom navigation */
 .bottom-nav {
-  position: absolute;
+  position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   z-index: 100;
 }
 
@@ -155,14 +156,18 @@ input:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 0;
+  flex: 1;
+  min-width: 0;
   background: none;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 .nav-item.active {
   color: var(--accent-sol);
