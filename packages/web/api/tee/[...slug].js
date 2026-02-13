@@ -1,52 +1,54 @@
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+export const config = {
+  runtime: 'edge',
+};
 
-  // Handle preflight
+export default async function handler(req) {
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
   }
 
-  // Get the path after /api/tee/
-  const { slug } = req.query;
-  const path = Array.isArray(slug) ? slug.join('/') : slug || '';
+  const url = new URL(req.url);
+  const path = url.pathname.replace('/api/tee/', '').replace('/api/tee', '');
   const targetUrl = `https://p8080.m125.opf-mainnet-rofl-35.rofl.app/${path}`;
 
   try {
     const fetchOptions = {
       method: req.method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     };
 
-    // Forward authorization header if present
-    if (req.headers.authorization) {
-      fetchOptions.headers['Authorization'] = req.headers.authorization;
+    if (req.headers.get('authorization')) {
+      fetchOptions.headers['Authorization'] = req.headers.get('authorization');
     }
 
-    // Forward body for POST/PUT
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-      fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      fetchOptions.body = await req.text();
     }
 
     const response = await fetch(targetUrl, fetchOptions);
     const data = await response.text();
 
-    // Forward status and response
-    res.status(response.status);
-    
-    // Try to parse as JSON
-    try {
-      res.json(JSON.parse(data));
-    } catch {
-      res.send(data);
-    }
+    return new Response(data, {
+      status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   } catch (error) {
-    console.error('TEE proxy error:', error);
-    res.status(502).json({ error: 'Proxy error', message: error.message });
+    return new Response(JSON.stringify({ error: 'Proxy error', message: error.message }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
 }
