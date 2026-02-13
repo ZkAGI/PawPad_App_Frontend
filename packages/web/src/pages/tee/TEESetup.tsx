@@ -15,6 +15,7 @@ interface SetupState {
 export default function TEESetup() {
   const [step, setStep] = useState<'totp' | 'backup'>('totp');
   const [downloaded, setDownloaded] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
   const [copied, setCopied] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,6 +96,7 @@ export default function TEESetup() {
 
       {step === 'backup' && (
         <>
+          {toastMsg && <div style={{ position: 'fixed', top: 48, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#1E3A5F', color: '#FF6B6B', padding: '12px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 999, border: '1px solid #FF6B6B', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', maxWidth: 320, textAlign: 'center' }}>{toastMsg}</div>}
           <h2 style={{ color: '#FFF', fontSize: 24, marginBottom: 8 }}>Download Backup</h2>
           <p style={{ color: '#6B7280', marginBottom: 16 }}>Your encrypted backup file is ready</p>
           <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, marginBottom: 24, maxWidth: 340, width: '100%' }}>
@@ -117,7 +119,7 @@ export default function TEESetup() {
             📥 Download Backup File
           </button>
 
-          <button onClick={() => downloaded && navigate('/home')} disabled={!downloaded} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: downloaded ? '#A855F7' : '#1E3A5F', color: downloaded ? '#FFF' : '#4A5568', fontSize: 16, fontWeight: 600, cursor: downloaded ? 'pointer' : 'not-allowed' }}>
+          <button onClick={() => { if (downloaded) navigate('/home'); else { setToastMsg('Please download your backup first. Keep it safe — recovery is impossible without it.'); setTimeout(() => setToastMsg(''), 3000); } }} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: downloaded ? '#A855F7' : '#1E3A5F', color: downloaded ? '#FFF' : '#4A5568', fontSize: 16, fontWeight: 600, cursor: downloaded ? 'pointer' : 'not-allowed' }}>
             {downloaded ? 'Go to Wallet' : 'Download backup first'}
           </button>
         </>
