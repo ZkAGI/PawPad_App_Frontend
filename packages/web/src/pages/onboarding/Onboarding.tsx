@@ -15,9 +15,6 @@ export default function Onboarding() {
         <span style={{ color: '#4ECDC4' }}>seed phrases</span>
       </h1>
 
-      <p style={{ color: '#6B7280', fontSize: 15, textAlign: 'center', marginTop: 16, maxWidth: 300 }}>
-        Privacy-first agentic wallet with AI agents — powered by TEE & FROST MPC
-      </p>
 
       <button
         onClick={() => navigate('/mxe-explanation')}
