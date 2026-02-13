@@ -14,6 +14,7 @@ interface SetupState {
 
 export default function TEESetup() {
   const [step, setStep] = useState<'totp' | 'backup'>('totp');
+  const [downloaded, setDownloaded] = useState(false);
   const [copied, setCopied] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,6 +35,7 @@ export default function TEESetup() {
   const totpInfo = parseTOTPUri(totp.otpauth_uri);
 
   const downloadBackup = () => {
+    setDownloaded(true);
     const blob = new Blob([JSON.stringify(backup_file, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -115,8 +117,8 @@ export default function TEESetup() {
             📥 Download Backup File
           </button>
 
-          <button onClick={() => navigate('/home')} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: '#A855F7', color: '#FFF', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-            Go to Wallet
+          <button onClick={() => downloaded && navigate('/home')} disabled={!downloaded} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: downloaded ? '#A855F7' : '#1E3A5F', color: downloaded ? '#FFF' : '#4A5568', fontSize: 16, fontWeight: 600, cursor: downloaded ? 'pointer' : 'not-allowed' }}>
+            {downloaded ? 'Go to Wallet' : 'Download backup first'}
           </button>
         </>
       )}
