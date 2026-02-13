@@ -5,9 +5,9 @@ import { createWallet, saveWalletData } from '../../services/teeService';
 type WalletType = 'tee' | 'seedless' | 'seed';
 
 const walletTypes: { id: WalletType; name: string; desc: string; features: string[]; badge?: string; color: string }[] = [
-  { id: 'tee', name: 'TEE Wallet', desc: 'Keys generated inside Oasis TEE hardware enclave', badge: 'OASIS TEE', color: '#F59E0B', features: ['Hardware-level isolation', 'Multi-chain (EVM + Solana)', 'TOTP authentication', 'Encrypted backup file'] },
-  { id: 'seedless', name: 'Seedless Wallet', desc: 'FROST threshold signatures — no seed phrase needed', color: '#A855F7', features: ['No seed phrase needed', 'MPC key sharding', 'Recovery via Google Authenticator'] },
-  { id: 'seed', name: 'Traditional Wallet', desc: 'Classic wallet with 12-word seed phrase', color: '#3B82F6', features: ['12-word seed phrase backup', 'Full self-custody', 'Import existing wallets'] },
+  { id: 'tee', name: 'TEE Wallet', desc: 'Agentic wallet with keys generated inside Oasis TEE hardware enclave', badge: 'OASIS TEE', color: '#F59E0B', features: ['Hardware-level isolation', 'Multi-chain (EVM + Solana)', 'TOTP authentication', 'Encrypted backup file'] },
+  // { id: 'seedless', name: 'Seedless Wallet', desc: 'FROST threshold signatures — no seed phrase needed', color: '#A855F7', features: ['No seed phrase needed', 'MPC key sharding', 'Recovery via Google Authenticator'] },
+  // { id: 'seed', name: 'Traditional Wallet', desc: 'Classic wallet with 12-word seed phrase', color: '#3B82F6', features: ['12-word seed phrase backup', 'Full self-custody', 'Import existing wallets'] },
 ];
 
 export default function ChainSelection() {
