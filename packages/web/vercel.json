@@ -1,12 +1,15 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/tee/:path*",
-      "destination": "https://p8080.m125.opf-mainnet-rofl-35.rofl.app/:path*"
+      "src": "/api/tee/(.*)",
+      "dest": "/api/tee/proxy.js"
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
