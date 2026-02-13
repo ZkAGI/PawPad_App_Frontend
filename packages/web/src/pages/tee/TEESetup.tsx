@@ -94,7 +94,11 @@ export default function TEESetup() {
       {step === 'backup' && (
         <>
           <h2 style={{ color: '#FFF', fontSize: 24, marginBottom: 8 }}>Download Backup</h2>
-          <p style={{ color: '#6B7280', marginBottom: 24 }}>Your encrypted backup file is ready</p>
+          <p style={{ color: '#6B7280', marginBottom: 16 }}>Your encrypted backup file is ready</p>
+          <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, marginBottom: 24, maxWidth: 340, width: '100%' }}>
+            <p style={{ color: '#FF6B6B', fontSize: 13, fontWeight: 600 }}>⚠️ Download now — this backup won't be available again.</p>
+            <p style={{ color: '#FF6B6B', fontSize: 12, marginTop: 4 }}>Recovery is impossible without your backup file.</p>
+          </div>
 
           <div style={{ width: '100%', maxWidth: 340, marginBottom: 24 }}>
             <div style={{ padding: '16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', marginBottom: 8, textAlign: 'left' }}>
