@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/tee/:path*", "destination": "/api/tee/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
