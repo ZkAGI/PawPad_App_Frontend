@@ -664,6 +664,32 @@ const AgentDashboardScreen = () => {
                     <Text style={styles.infoHighlight}>Small ETH</Text> - Gas fees on Ethereum (~0.005 ETH)
                   </Text>
                 </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoBullet}>•</Text>
+                  <Text style={styles.infoText}>
+                    <Text style={styles.infoHighlight}>Small ETH</Text> - Gas fees on Ethereum (~0.005 ETH)
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.infoSection}>
+                <Text style={styles.infoSubtitle}>🔄 Auto Trading Flow</Text>
+                <View style={styles.flowRow}>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>BUY Signal</Text>
+                    <Text style={styles.flowArrow}>USDC → SOL/ETH</Text>
+                  </View>
+                  <View style={styles.flowItem}>
+                    <Text style={styles.flowLabel}>SELL Signal</Text>
+                    <Text style={styles.flowArrow}>SOL/ETH → USDC</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.infoDex}>
+                <Text style={styles.infoDexText}>
+                  🔗 SOL trades via <Text style={styles.infoHighlight}>Jupiter</Text> • ETH trades via <Text style={styles.infoHighlight}>Uniswap</Text>
+                </Text>
               </View>
 
               <View style={styles.infoSection}>
@@ -1040,7 +1066,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS.accent,
+    borderColor: 'rgba(51, 230, 191, 0.3)',
   },
   walletHeader: {
     flexDirection: 'row',
@@ -1053,7 +1079,7 @@ const styles = StyleSheet.create({
   },
   walletTitle: {
     color: COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     flex: 1,
   },
@@ -1067,6 +1093,7 @@ const styles = StyleSheet.create({
     color: COLORS.success,
     fontSize: 12,
     fontWeight: '600',
+    marginBottom: 6,
   },
   addressRow: {
     flexDirection: 'row',
@@ -1081,13 +1108,15 @@ const styles = StyleSheet.create({
   },
   addressLabel: {
     color: COLORS.textMuted,
-    fontSize: 13,
-    width: 60,
+    fontSize: 12,
+    marginRight: 6,
+    marginTop: 1,
   },
   addressValue: {
     color: COLORS.textSecondary,
-    fontSize: 13,
+    fontSize: 12,
     flex: 1,
+    lineHeight: 18,
   },
 
   // Info Card - How Trading Works
