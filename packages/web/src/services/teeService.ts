@@ -4,7 +4,7 @@
 // Replaces AsyncStorage with localStorage
 // ════════════════════════════════════════════════════════════════════════════
 
-const TEE_API_BASE = 'https://p8080.m125.opf-mainnet-rofl-35.rofl.app';
+const TEE_API_BASE = import.meta.env.DEV ? '/tee-api' : '/api/tee';
 
 // ═══════ TYPES ═══════
 

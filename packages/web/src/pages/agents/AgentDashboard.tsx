@@ -54,7 +54,7 @@ export default function AgentDashboard() {
       <div style={{ background: 'linear-gradient(180deg, #1E3A5F 0%, #0B1426 100%)', padding: '48px 24px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
-            <h1 style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>🛡️ Agent Dashboard</h1>
+            <h1 style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>Agent Dashboard</h1>
             <p style={{ color: config?.tradingEnabled ? '#33E6BF' : '#EF4444', fontSize: 13, marginTop: 4 }}>
               {config?.tradingEnabled ? '● Trading Active' : '○ Trading Inactive'}
             </p>
