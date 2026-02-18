@@ -159,14 +159,14 @@ export default function AgentDashboard() {
                 {history.map((trade, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F' }}>
                     <div>
-                      <p style={{ color: '#FFF', fontWeight: 600 }}>{trade.signal} {trade.asset}</p>
+                      <p style={{ color: '#FFF', fontWeight: 600 }}>{(trade as any).action || trade.signal || ''} {trade.asset || ''}</p>
                       <p style={{ color: '#6B7280', fontSize: 12 }}>{new Date(trade.timestamp).toLocaleDateString()}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <p style={{ color: trade.signal === 'BUY' ? '#10B981' : '#EF4444', fontWeight: 600 }}>
-                        {trade.signalPrice ? `${(parseFloat(trade.amountIn) / trade.signalPrice).toFixed(4)} ${trade.asset}` : `${trade.amountIn} ${trade.tokenIn}`}
+                        {trade.amountIn && trade.signalPrice ? `${(parseFloat(trade.amountIn) / trade.signalPrice).toFixed(4)} ${trade.asset || ''}` : `${trade.amountIn || (trade as any).amount || '—'} ${trade.tokenIn || trade.asset || ''}`}
                       </p>
-                      <p style={{ color: '#6B7280', fontSize: 11 }}>${parseFloat(trade.amountIn).toFixed(2)} {trade.tokenIn}</p>
+                      <p style={{ color: '#6B7280', fontSize: 11 }}>{(trade.amountIn || (trade as any).amount) ? `$${parseFloat(trade.amountIn || (trade as any).amount).toFixed(2)} ${trade.tokenIn || trade.asset || ''}` : ''}</p>
                       <p style={{ color: trade.status === 'success' ? '#33E6BF' : '#F59E0B', fontSize: 12 }}>{trade.status}</p>
                     </div>
                   </div>
