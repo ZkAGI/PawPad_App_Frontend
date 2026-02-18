@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { BottomNav } from './components/common/BottomNav';
 import './lib/storage';
 import { getStoredWallet, loadSession } from './services/teeService';
+import AgentArena from './pages/AgentArena';
+
 
 const HIDE_NAV_ROUTES = [
   '/onboarding', '/mxe-explanation', '/quick-summary', '/chain-selection',
@@ -23,6 +25,8 @@ function AppContent() {
         <Route path="/chain-selection" element={<ChainSelection />} />
         <Route path="/email-input" element={<EmailInput />} />
         <Route path="/vault-name" element={<VaultNameInput />} />
+        <Route path="/arena" element={<AgentArena />} />
+
 
         {/* TEE WALLET */}
         <Route path="/tee-login" element={<TEELogin />} />
