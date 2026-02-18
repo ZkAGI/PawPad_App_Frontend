@@ -1,80 +1,76 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStoredWallet, isLoggedIn, getAllBalances, getWallets, formatAddress, loadSession } from '../services/teeService';
+import { getStoredWallet, getAllBalances, formatAddress, loadSession } from '../services/teeService';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface Balances {
   solana: { sol: number; usdc: number };
   evm: { eth: number; usdc: number };
 }
 
+const CACHE_KEY = 'pawpad_balances';
+
+function getCached(): Balances | null {
+  try { const r = localStorage.getItem(CACHE_KEY); if (!r) return null; return JSON.parse(r).data; } catch { return null; }
+}
+function setCache(b: Balances) { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: b, ts: Date.now() })); }
+
 export default function Home() {
   const navigate = useNavigate();
-  const [balances, setBalances] = useState<Balances | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [balances, setBalances] = useState<Balances | null>(getCached());
+  const [loading, setLoading] = useState(!getCached());
   const [solAddr, setSolAddr] = useState('');
   const [evmAddr, setEvmAddr] = useState('');
+  const [toast, setToast] = useState('');
 
-  useEffect(() => {
-    init();
-  }, []);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2000); };
+
+  const handleCopy = async (addr: string, label: string) => {
+    const ok = await copyToClipboard(addr);
+    showToast(ok ? `${label} address copied` : 'Copy failed');
+  };
+
+  useEffect(() => { init(); }, []);
 
   const init = async () => {
-    // Load session
     loadSession();
-
     const wallet = getStoredWallet();
-    if (!wallet) {
-      navigate('/onboarding', { replace: true });
-      return;
-    }
-
+    if (!wallet) { navigate('/onboarding', { replace: true }); return; }
     setSolAddr(wallet.wallets.solana.address);
     setEvmAddr(wallet.wallets.evm.address);
-
-    // Fetch real balances from public RPCs
     try {
       const b = await getAllBalances(wallet.wallets.solana.address, wallet.wallets.evm.address);
-      setBalances(b);
-    } catch (err) {
-      console.error('Balance fetch failed:', err);
-      setBalances({ solana: { sol: 0, usdc: 0 }, evm: { eth: 0, usdc: 0 } });
-    }
+      setBalances(b); setCache(b);
+    } catch { if (!balances) setBalances({ solana: { sol: 0, usdc: 0 }, evm: { eth: 0, usdc: 0 } }); }
     setLoading(false);
   };
 
   const refreshBalances = async () => {
     if (!solAddr && !evmAddr) return;
     setLoading(true);
-    const b = await getAllBalances(solAddr || null, evmAddr || null);
-    setBalances(b);
+    try { const b = await getAllBalances(solAddr || null, evmAddr || null); setBalances(b); setCache(b); showToast('Balances updated'); }
+    catch { showToast('Refresh failed'); }
     setLoading(false);
   };
 
-  // Price estimates (TODO: fetch from coingecko/jupiter)
-  const solPrice = 180;
-  const ethPrice = 3200;
-  const totalUsd = balances
-    ? (balances.solana.sol * solPrice) + (balances.evm.eth * ethPrice) + balances.solana.usdc + balances.evm.usdc
-    : 0;
+  const solPrice = 180, ethPrice = 3200;
+  const totalUsd = balances ? (balances.solana.sol * solPrice) + (balances.evm.eth * ethPrice) + balances.solana.usdc + balances.evm.usdc : 0;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0B1426', padding: '40px 24px 100px' }}>
-      {/* Header */}
+      {toast && <div style={{ position: 'fixed', top: 48, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#1E3A5F', color: '#4ECDC4', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 600, zIndex: 999, border: '1px solid #4ECDC4', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>{toast}</div>}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ color: '#FFF', fontSize: 20, fontWeight: 700 }}>🐾 PawPad</h1>
         <button onClick={() => navigate('/settings')} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 20, cursor: 'pointer' }}>⚙️</button>
       </div>
 
-      {/* Total Balance */}
       <div style={{ backgroundColor: '#111B2E', borderRadius: 20, padding: '28px 24px', border: '1px solid #1E3A5F', marginBottom: 24, textAlign: 'center' }}>
         <p style={{ color: '#8B95A5', fontSize: 14, marginBottom: 8 }}>Total Balance</p>
-        <h2 style={{ color: '#FFF', fontSize: 36, fontWeight: 700 }}>
-          {loading ? '...' : `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-        </h2>
-        <button onClick={refreshBalances} style={{ background: 'none', border: 'none', color: '#4ECDC4', fontSize: 12, marginTop: 8, cursor: 'pointer' }}>↻ Refresh</button>
+        <h2 style={{ color: '#FFF', fontSize: 36, fontWeight: 700 }}>{balances ? `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00'}</h2>
+        <button onClick={refreshBalances} disabled={loading} style={{ background: 'none', border: 'none', color: '#4ECDC4', fontSize: 12, marginTop: 8, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>{loading ? '↻ Loading...' : '↻ Refresh'}</button>
       </div>
 
-      {/* Quick Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 32 }}>
         {[
           { label: 'Send', icon: '↑', route: '/send', active: true },
@@ -90,95 +86,52 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Agent Dashboard Card */}
-      <button onClick={() => navigate('/agents')} style={{
-        width: '100%', padding: '16px 20px', backgroundColor: 'rgba(78,205,196,0.08)', border: '1px solid rgba(78,205,196,0.2)',
-        borderRadius: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, textAlign: 'left',
-      }}>
+      <button onClick={() => navigate('/agents')} style={{ width: '100%', padding: '16px 20px', backgroundColor: 'rgba(78,205,196,0.08)', border: '1px solid rgba(78,205,196,0.2)', borderRadius: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, textAlign: 'left' }}>
         <span style={{ fontSize: 28 }}>🐾</span>
-        <div style={{ flex: 1 }}>
-          <p style={{ color: '#FFF', fontWeight: 600, fontSize: 15 }}>Agent Dashboard</p>
-          <p style={{ color: '#6B7280', fontSize: 13 }}>View your AI agent's activity</p>
-        </div>
+        <div style={{ flex: 1 }}><p style={{ color: '#FFF', fontWeight: 600, fontSize: 15 }}>Agent Dashboard</p><p style={{ color: '#6B7280', fontSize: 13 }}>View your AI agent's activity</p></div>
         <span style={{ color: '#4ECDC4', fontSize: 18 }}>→</span>
       </button>
 
-      {/* Assets */}
       <h3 style={{ color: '#FFF', fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Assets</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* SOL */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px', backgroundColor: '#111B2E', borderRadius: 16, border: '1px solid #1E3A5F' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #9945FF, #7B3FE4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#FFF', flexShrink: 0 }}>SOL</div>
-          <div style={{ flex: 1 }}>
-            <p style={{ color: '#FFF', fontWeight: 600 }}>Solana</p>
-            <p style={{ color: '#6B7280', fontSize: 13 }}>{loading ? '...' : `${balances?.solana.sol.toFixed(4)} SOL`}</p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ color: '#FFF', fontWeight: 600 }}>${loading ? '...' : ((balances?.solana.sol || 0) * solPrice).toFixed(2)}</p>
-          </div>
+          <div style={{ flex: 1 }}><p style={{ color: '#FFF', fontWeight: 600 }}>Solana</p><p style={{ color: '#6B7280', fontSize: 13 }}>{balances ? `${balances.solana.sol.toFixed(4)} SOL` : '0.0000 SOL'}</p></div>
+          <p style={{ color: '#FFF', fontWeight: 600 }}>${balances ? ((balances.solana.sol || 0) * solPrice).toFixed(2) : '0.00'}</p>
         </div>
-
-        {/* ETH */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px', backgroundColor: '#111B2E', borderRadius: 16, border: '1px solid #1E3A5F' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #627EEA, #4A6FD6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#FFF', flexShrink: 0 }}>ETH</div>
-          <div style={{ flex: 1 }}>
-            <p style={{ color: '#FFF', fontWeight: 600 }}>Ethereum</p>
-            <p style={{ color: '#6B7280', fontSize: 13 }}>{loading ? '...' : `${balances?.evm.eth.toFixed(6)} ETH`}</p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ color: '#FFF', fontWeight: 600 }}>${loading ? '...' : ((balances?.evm.eth || 0) * ethPrice).toFixed(2)}</p>
-          </div>
+          <div style={{ flex: 1 }}><p style={{ color: '#FFF', fontWeight: 600 }}>Ethereum</p><p style={{ color: '#6B7280', fontSize: 13 }}>{balances ? `${balances.evm.eth.toFixed(6)} ETH` : '0.000000 ETH'}</p></div>
+          <p style={{ color: '#FFF', fontWeight: 600 }}>${balances ? ((balances.evm.eth || 0) * ethPrice).toFixed(2) : '0.00'}</p>
         </div>
-
-        {/* USDC (Solana) */}
         {(balances?.solana.usdc || 0) > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px', backgroundColor: '#111B2E', borderRadius: 16, border: '1px solid #1E3A5F' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#2775CA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFF', flexShrink: 0 }}>USDC</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#FFF', fontWeight: 600 }}>USDC <span style={{ color: '#9945FF', fontSize: 11 }}>(Solana)</span></p>
-              <p style={{ color: '#6B7280', fontSize: 13 }}>{balances?.solana.usdc.toFixed(2)} USDC</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ color: '#FFF', fontWeight: 600 }}>${balances?.solana.usdc.toFixed(2)}</p>
-            </div>
+            <div style={{ flex: 1 }}><p style={{ color: '#FFF', fontWeight: 600 }}>USDC <span style={{ color: '#9945FF', fontSize: 11 }}>(Solana)</span></p><p style={{ color: '#6B7280', fontSize: 13 }}>{balances?.solana.usdc.toFixed(2)} USDC</p></div>
+            <p style={{ color: '#FFF', fontWeight: 600 }}>${balances?.solana.usdc.toFixed(2)}</p>
           </div>
         )}
-
-        {/* USDC (ETH) */}
         {(balances?.evm.usdc || 0) > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px', backgroundColor: '#111B2E', borderRadius: 16, border: '1px solid #1E3A5F' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#2775CA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFF', flexShrink: 0 }}>USDC</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#FFF', fontWeight: 600 }}>USDC <span style={{ color: '#627EEA', fontSize: 11 }}>(Ethereum)</span></p>
-              <p style={{ color: '#6B7280', fontSize: 13 }}>{balances?.evm.usdc.toFixed(2)} USDC</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ color: '#FFF', fontWeight: 600 }}>${balances?.evm.usdc.toFixed(2)}</p>
-            </div>
+            <div style={{ flex: 1 }}><p style={{ color: '#FFF', fontWeight: 600 }}>USDC <span style={{ color: '#627EEA', fontSize: 11 }}>(Ethereum)</span></p><p style={{ color: '#6B7280', fontSize: 13 }}>{balances?.evm.usdc.toFixed(2)} USDC</p></div>
+            <p style={{ color: '#FFF', fontWeight: 600 }}>${balances?.evm.usdc.toFixed(2)}</p>
           </div>
         )}
       </div>
 
-      {/* Wallet Addresses */}
       <h3 style={{ color: '#FFF', fontSize: 18, fontWeight: 600, marginTop: 32, marginBottom: 16 }}>Wallets</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div onClick={() => { navigator.clipboard.writeText(solAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
-          <div>
-            <span style={{ color: '#9945FF', fontSize: 13, fontWeight: 600 }}>Solana</span>
-            <p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(solAddr)}</p>
-          </div>
-          <span style={{ color: '#6B7280', fontSize: 12 }}>📋 Copy</span>
+        <div onClick={() => handleCopy(solAddr, 'Solana')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
+          <div><span style={{ color: '#9945FF', fontSize: 13, fontWeight: 600 }}>Solana</span><p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(solAddr)}</p></div>
+          <span style={{ color: '#6B7280', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>📋 Copy</span>
         </div>
-        <div onClick={() => { navigator.clipboard.writeText(evmAddr); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
-          <div>
-            <span style={{ color: '#627EEA', fontSize: 13, fontWeight: 600 }}>EVM (Ethereum)</span>
-            <p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(evmAddr)}</p>
-          </div>
-          <span style={{ color: '#6B7280', fontSize: 12 }}>📋 Copy</span>
+        <div onClick={() => handleCopy(evmAddr, 'EVM')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', cursor: 'pointer' }}>
+          <div><span style={{ color: '#627EEA', fontSize: 13, fontWeight: 600 }}>EVM (Ethereum)</span><p style={{ color: '#8B95A5', fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{formatAddress(evmAddr)}</p></div>
+          <span style={{ color: '#6B7280', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>📋 Copy</span>
         </div>
       </div>
 
-      {/* Recent Activity placeholder */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, marginBottom: 12 }}>
         <h3 style={{ color: '#FFF', fontSize: 18, fontWeight: 600 }}>Recent Activity</h3>
         <button onClick={() => navigate('/history')} style={{ background: 'none', border: 'none', color: '#4ECDC4', fontSize: 13, cursor: 'pointer' }}>See all →</button>

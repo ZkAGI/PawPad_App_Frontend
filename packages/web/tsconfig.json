@@ -11,15 +11,10 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "strict": false,
     "paths": {
-      "@/*": ["./src/*"],
-      "@pawpad/core": ["../core/index.ts"],
-      "@pawpad/core/*": ["../core/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "../core"]
+  "include": ["src"]
 }

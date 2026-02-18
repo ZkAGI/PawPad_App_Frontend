@@ -1,0 +1,15 @@
+{
+  "routes": [
+    {
+      "src": "/api/tee/(.*)",
+      "dest": "/api/tee/proxy.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

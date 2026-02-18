@@ -10,31 +10,15 @@ const COLORS = {
 };
 
 const steps = [
-  {
-    title: 'Say hello to vault shares, your new recovery method',
-    highlights: ['vault shares,'],
-  },
-  {
-    title: "They're split into different parts for increased security, removing single-point of failure",
-    highlights: ['different', 'parts for increased', 'security,'],
-  },
-  {
-    title: 'Each device in your vault holds one vault share',
-    highlights: ['Each device', 'one vault share'],
-  },
-  {
-    title: 'Always back up your vault shares individually, each in a different location',
-    highlights: ['Always back up', 'different location'],
-  },
-  {
-    title: 'These shares collaborate to unlock your vault.',
-    highlights: ['collaborate', 'unlock your vault.'],
-  },
+  { title: 'Say hello to vault shares, your new recovery method', highlights: ['vault shares,'], image: '/images/mxe/1.png' },
+  { title: "They're split into different parts for increased security, removing single-point of failure", highlights: ['different', 'parts for increased', 'security,'], image: '/images/mxe/2.png' },
+  { title: 'Each device in your vault holds one vault share', highlights: ['Each device', 'one vault share'], image: '/images/mxe/3.png' },
+  { title: 'Always back up your vault shares individually, each in a different location', highlights: ['Always back up', 'different location'], image: '/images/mxe/4.png' },
+  { title: 'These shares collaborate to unlock your vault.', highlights: ['collaborate', 'unlock your vault.'], image: '/images/mxe/5.png' },
 ];
 
 function HighlightedText({ text, highlights }: { text: string; highlights: string[] }) {
   let parts: { text: string; highlight: boolean }[] = [{ text, highlight: false }];
-
   highlights.forEach((hl) => {
     const next: typeof parts = [];
     parts.forEach((part) => {
@@ -47,13 +31,10 @@ function HighlightedText({ text, highlights }: { text: string; highlights: strin
     });
     parts = next;
   });
-
   return (
     <span>
       {parts.map((p, i) => (
-        <span key={i} style={{ color: p.highlight ? COLORS.accent : COLORS.textPrimary }}>
-          {p.text}
-        </span>
+        <span key={i} style={{ color: p.highlight ? COLORS.accent : COLORS.textPrimary }}>{p.text}</span>
       ))}
     </span>
   );
@@ -79,18 +60,17 @@ export default function MXEExplanation() {
       minHeight: '100vh', backgroundColor: COLORS.bgPrimary,
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px' }}>
-        <button onClick={handleBack} style={{ background: 'none', border: 'none', color: COLORS.textPrimary, fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 20, fontWeight: 300 }}>{'<'}</span>
-          <span style={{ fontWeight: 500 }}>Back</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexShrink: 0 }}>
+        <button onClick={handleBack} style={{ background: 'none', border: 'none', color: COLORS.textPrimary, fontSize: 17, cursor: 'pointer' }}>
+          {'<'} Back
         </button>
-        <button onClick={() => navigate('/quick-summary')} style={{ background: 'none', border: 'none', color: COLORS.textMuted, fontSize: 17, fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={() => navigate('/quick-summary')} style={{ background: 'none', border: 'none', color: COLORS.textMuted, fontSize: 17, cursor: 'pointer' }}>
           Skip
         </button>
       </div>
 
       {/* Progress bar */}
-      <div style={{ display: 'flex', padding: '0 24px', gap: 10, marginTop: 4 }}>
+      <div style={{ display: 'flex', padding: '0 24px', gap: 10, marginTop: 4, flexShrink: 0 }}>
         {steps.map((_, i) => (
           <div key={i} style={{
             flex: 1, height: 3, borderRadius: 1.5,
@@ -100,27 +80,28 @@ export default function MXEExplanation() {
         ))}
       </div>
 
-      {/* Image placeholder */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-        <div style={{
-          width: '70vw', maxWidth: 300, height: '70vw', maxHeight: 300,
-          borderRadius: 16, background: 'rgba(78,205,196,0.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 64,
-        }}>
-          {['🔑', '🧩', '📱', '💾', '🔓'][step]}
-        </div>
+      {/* Image - real vault images */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', overflow: 'hidden' }}>
+        <img
+          src={steps[step].image}
+          alt={`Step ${step + 1}`}
+          style={{
+            maxWidth: '80%', maxHeight: '45vh', objectFit: 'contain',
+            borderRadius: 16,
+            transition: 'opacity 0.3s',
+          }}
+        />
       </div>
 
       {/* Content */}
-      <div style={{ padding: '0 28px 20px', textAlign: 'center' }}>
-        <p style={{ fontSize: 24, lineHeight: 1.5 }}>
+      <div style={{ padding: '0 28px 20px', textAlign: 'center', flexShrink: 0 }}>
+        <p style={{ fontSize: 22, lineHeight: 1.5 }}>
           <HighlightedText text={steps[step].title} highlights={steps[step].highlights} />
         </p>
       </div>
 
       {/* Next button */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 40 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 40, flexShrink: 0 }}>
         <button onClick={handleNext} style={{
           backgroundColor: COLORS.accent, width: 72, height: 44, borderRadius: 22,
           border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

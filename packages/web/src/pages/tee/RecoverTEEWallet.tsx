@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recoverAndRotate, saveWalletData, login, type TEEBackupFile } from '../../services/teeService';
+import { copyToClipboard } from '../../utils/clipboard';
 
 export default function RecoverTEEWallet() {
   const [backupFile, setBackupFile] = useState<File | null>(null);
@@ -8,6 +9,7 @@ export default function RecoverTEEWallet() {
   const [error, setError] = useState('');
   const [step, setStep] = useState<'upload' | 'recovered'>('upload');
   const [recoveryResult, setRecoveryResult] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,10 +49,16 @@ export default function RecoverTEEWallet() {
   };
 
   const handleLoginAfterRecovery = async () => {
-    // Save wallet data and let user login with new TOTP from their authenticator
     if (recoveryResult) {
-      // We don't have wallet addresses from rotate response, but we have uid
-      // User needs to login with new TOTP, then fetch wallets
+      // Save uid so login screen knows which wallet
+      saveWalletData({
+        uid: recoveryResult.uid,
+        wallets: {
+          solana: { address: '' },
+          evm: { address: '' },
+        },
+      });
+      // Go to login — user enters new TOTP code, login returns full wallet addresses
       navigate('/tee-login');
     }
   };
@@ -66,8 +74,9 @@ export default function RecoverTEEWallet() {
         <div style={{ width: '100%', maxWidth: 340, padding: 20, backgroundColor: '#111B2E', borderRadius: 16, border: '1px solid #1E3A5F', marginBottom: 16 }}>
           <p style={{ color: '#FFF', fontWeight: 600, marginBottom: 12 }}>New TOTP Secret</p>
           <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(recoveryResult.new_totp.otpauth_uri)}`} alt="QR" style={{ width: 160, height: 160, borderRadius: 8, margin: '0 auto 12px', display: 'block', backgroundColor: '#FFF' }} />
-          <div style={{ padding: '8px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all' }}>
+          <div style={{ padding: '8px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => copyToClipboard(recoveryResult.new_totp.secret).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}>
             <span style={{ color: '#4ECDC4', fontSize: 13, fontFamily: 'monospace' }}>{recoveryResult.new_totp.secret}</span>
+            <span style={{ color: copied ? '#33E6BF' : '#6B7280', fontSize: 12, flexShrink: 0, marginLeft: 8 }}>{copied ? 'Copied' : 'Tap to copy'}</span>
           </div>
         </div>
 
@@ -92,11 +101,11 @@ export default function RecoverTEEWallet() {
       {error && <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, marginBottom: 16, color: '#EF4444', fontSize: 14 }}>{error}</div>}
 
       <div onClick={() => document.getElementById('file-input')?.click()} style={{ padding: '32px 20px', backgroundColor: '#111B2E', border: `2px dashed ${backupFile ? '#33E6BF' : '#1E3A5F'}`, borderRadius: 16, textAlign: 'center', cursor: 'pointer', marginBottom: 24 }}>
-        <input id="file-input" type="file" accept=".json" hidden onChange={handleFileUpload} />
+        <input id="file-input" type="file" accept=".json,.txt" hidden onChange={handleFileUpload} />
         {backupFile ? (
           <><span style={{ fontSize: 32 }}>📄</span><p style={{ color: '#33E6BF', fontWeight: 600, marginTop: 8 }}>{backupFile.name}</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>Tap to change</p></>
         ) : (
-          <><span style={{ fontSize: 32 }}>📁</span><p style={{ color: '#FFF', fontWeight: 500, marginTop: 8 }}>Upload backup file</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>pawpad-backup-*.json</p></>
+          <><span style={{ fontSize: 32 }}>📁</span><p style={{ color: '#FFF', fontWeight: 500, marginTop: 8 }}>Upload backup file</p><p style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>pawpad-backup-*.json or .txt</p></>
         )}
       </div>
 
