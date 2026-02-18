@@ -7,6 +7,8 @@ interface TradeHistoryItem {
   asset: string; signal: 'BUY' | 'SELL'; signalPrice: number;
   chain: string; txHash: string; amountIn: string; tokenIn: string;
   status: string; timestamp: string;
+  // Withdraw-type fields
+  action?: string; amount?: string; toAddress?: string;
 }
 
 export default function AgentDashboard() {
@@ -31,22 +33,59 @@ export default function AgentDashboard() {
         getTradeHistory(),
       ]);
       if (configRes.status === 'fulfilled') setConfig(configRes.value.config);
-     if (historyRes.status === 'fulfilled' && historyRes.value.history) {
+      if (historyRes.status === 'fulfilled' && historyRes.value.history) {
         setHistory(historyRes.value.history);
         localStorage.setItem('pawpad_trade_history', JSON.stringify(historyRes.value.history));
       } else {
-        // Load cached history if API fails
         try { const cached = localStorage.getItem('pawpad_trade_history'); if (cached) setHistory(JSON.parse(cached)); } catch {}
       }
     } catch (err) { console.error('Dashboard load error:', err); }
     setLoading(false);
   };
 
-  const stats = {
-    trades: history.length,
-    winRate: history.length ? Math.round(history.filter(t => ['success', 'completed', 'executed'].includes(t.status?.toLowerCase())).length / history.length * 100) : 0,
-    pnl: 0, // Would need price data to calculate
-  };
+  // ── Stats calculation ──
+  const stats = (() => {
+    // Separate trades from withdrawals
+    const trades = history.filter(t => t.signal && !t.action?.includes('WITHDRAW'));
+    const withdrawals = history.filter(t => t.action === 'WITHDRAW' || (!t.signal));
+    const successTrades = trades.filter(t => t.status === 'success');
+    const failedTrades = trades.filter(t => t.status === 'failed');
+
+    // Pair BUY/SELL by asset to calculate PnL
+    let totalPnl = 0;
+    let wins = 0;
+    let pairs = 0;
+    const buys: Record<string, { price: number; amount: number }[]> = {};
+
+    for (const t of successTrades) {
+      const amt = parseFloat(t.amountIn || t.amount || '0');
+      const price = t.signalPrice || 0;
+      if (!price || !amt) continue;
+
+      if (t.signal === 'BUY') {
+        if (!buys[t.asset]) buys[t.asset] = [];
+        buys[t.asset].push({ price, amount: amt / price });
+      } else if (t.signal === 'SELL' && buys[t.asset]?.length) {
+        const buy = buys[t.asset].shift()!;
+        const sellValue = amt;
+        const buyValue = buy.amount * buy.price;
+        const pnl = sellValue - buyValue;
+        totalPnl += pnl;
+        pairs++;
+        if (pnl > 0) wins++;
+      }
+    }
+
+    return {
+      trades: history.length,
+      activeTrades: trades.length,
+      successTrades: successTrades.length,
+      failedTrades: failedTrades.length,
+      withdrawals: withdrawals.length,
+      winRate: pairs > 0 ? Math.round((wins / pairs) * 100) : 0,
+      pnl: totalPnl,
+    };
+  })();
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0B1426', padding: '0 0 100px' }}>
@@ -62,21 +101,21 @@ export default function AgentDashboard() {
           <button onClick={() => navigate('/agents/setup')} style={{ backgroundColor: '#111B2E', border: '1px solid #1E3A5F', borderRadius: 10, padding: '8px 16px', color: '#4ECDC4', fontSize: 13, cursor: 'pointer' }}>
             ⚙️ Configure
           </button>
-          <button 
-  onClick={() => navigate('/arena')} 
-  style={{ 
-    backgroundColor: '#111B2E', 
-    border: '1px solid #00f0ff', 
-    borderRadius: 10, 
-    padding: '8px 16px', 
-    color: '#00f0ff', 
-    fontSize: 13, 
-    cursor: 'pointer',
-    marginLeft: 8,
-  }}
->
-  ⬡ Arena
-</button>
+          <button
+            onClick={() => navigate('/arena')}
+            style={{
+              backgroundColor: '#111B2E',
+              border: '1px solid #00f0ff',
+              borderRadius: 10,
+              padding: '8px 16px',
+              color: '#00f0ff',
+              fontSize: 13,
+              cursor: 'pointer',
+              marginLeft: 8,
+            }}
+          >
+            ⬡ Arena
+          </button>
         </div>
 
         {justCreated && (
@@ -86,7 +125,7 @@ export default function AgentDashboard() {
         )}
 
         {/* Stats cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
           <div style={{ backgroundColor: '#111B2E', borderRadius: 12, padding: '16px 12px', textAlign: 'center', border: '1px solid #1E3A5F' }}>
             <p style={{ color: '#6B7280', fontSize: 11, marginBottom: 4 }}>Trades</p>
             <p style={{ color: '#FFF', fontSize: 20, fontWeight: 700 }}>{loading ? '...' : stats.trades}</p>
@@ -94,6 +133,10 @@ export default function AgentDashboard() {
           <div style={{ backgroundColor: '#111B2E', borderRadius: 12, padding: '16px 12px', textAlign: 'center', border: '1px solid #1E3A5F' }}>
             <p style={{ color: '#6B7280', fontSize: 11, marginBottom: 4 }}>Win Rate</p>
             <p style={{ color: '#4ECDC4', fontSize: 20, fontWeight: 700 }}>{loading ? '...' : `${stats.winRate}%`}</p>
+          </div>
+          <div style={{ backgroundColor: '#111B2E', borderRadius: 12, padding: '16px 12px', textAlign: 'center', border: '1px solid #1E3A5F' }}>
+            <p style={{ color: '#6B7280', fontSize: 11, marginBottom: 4 }}>P&L</p>
+            <p style={{ color: stats.pnl > 0 ? '#10B981' : stats.pnl < 0 ? '#EF4444' : '#FFF', fontSize: 18, fontWeight: 700 }}>{loading ? '...' : `${stats.pnl >= 0 ? '+' : ''}$${stats.pnl.toFixed(2)}`}</p>
           </div>
           <div style={{ backgroundColor: '#111B2E', borderRadius: 12, padding: '16px 12px', textAlign: 'center', border: '1px solid #1E3A5F' }}>
             <p style={{ color: '#6B7280', fontSize: 11, marginBottom: 4 }}>Status</p>
@@ -156,21 +199,46 @@ export default function AgentDashboard() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {history.map((trade, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F' }}>
-                    <div>
-                      <p style={{ color: '#FFF', fontWeight: 600 }}>{(trade as any).action || trade.signal || ''} {trade.asset || ''}</p>
-                      <p style={{ color: '#6B7280', fontSize: 12 }}>{new Date(trade.timestamp).toLocaleDateString()}</p>
+                {history.map((trade, i) => {
+                  const isWithdraw = trade.action === 'WITHDRAW' || !trade.signal;
+                  const amt = trade.amountIn || trade.amount || '';
+                  const token = trade.tokenIn || trade.asset || '';
+                  const assetAmount = amt && trade.signalPrice
+                    ? `${(parseFloat(amt) / trade.signalPrice).toFixed(4)} ${trade.asset || ''}`
+                    : amt ? `${amt} ${token}` : '—';
+                  const usdDisplay = amt ? `$${parseFloat(amt).toFixed(2)} ${token}` : '';
+
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '14px 16px', backgroundColor: '#111B2E', borderRadius: 12,
+                      border: '1px solid #1E3A5F',
+                      borderLeftWidth: 3,
+                      borderLeftColor: isWithdraw ? '#F59E0B' : trade.signal === 'BUY' ? '#10B981' : '#EF4444',
+                    }}>
+                      <div>
+                        <p style={{ color: '#FFF', fontWeight: 600 }}>
+                          {isWithdraw ? `WITHDRAW ${trade.asset || ''}` : `${trade.signal} ${trade.asset || ''}`}
+                        </p>
+                        <p style={{ color: '#6B7280', fontSize: 12 }}>{new Date(trade.timestamp).toLocaleDateString()}</p>
+                        {trade.chain && <p style={{ color: '#4A5568', fontSize: 11 }}>{trade.chain}</p>}
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{
+                          color: isWithdraw ? '#F59E0B' : trade.signal === 'BUY' ? '#10B981' : '#EF4444',
+                          fontWeight: 600,
+                        }}>
+                          {assetAmount}
+                        </p>
+                        {usdDisplay && <p style={{ color: '#6B7280', fontSize: 11 }}>{usdDisplay}</p>}
+                        <p style={{
+                          color: trade.status === 'success' ? '#33E6BF' : trade.status === 'failed' ? '#EF4444' : '#F59E0B',
+                          fontSize: 12,
+                        }}>{trade.status}</p>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ color: trade.signal === 'BUY' ? '#10B981' : '#EF4444', fontWeight: 600 }}>
-                        {trade.amountIn && trade.signalPrice ? `${(parseFloat(trade.amountIn) / trade.signalPrice).toFixed(4)} ${trade.asset || ''}` : `${trade.amountIn || (trade as any).amount || '—'} ${trade.tokenIn || trade.asset || ''}`}
-                      </p>
-                      <p style={{ color: '#6B7280', fontSize: 11 }}>{(trade.amountIn || (trade as any).amount) ? `$${parseFloat(trade.amountIn || (trade as any).amount).toFixed(2)} ${trade.tokenIn || trade.asset || ''}` : ''}</p>
-                      <p style={{ color: trade.status === 'success' ? '#33E6BF' : '#F59E0B', fontSize: 12 }}>{trade.status}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
