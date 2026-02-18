@@ -22,6 +22,8 @@ export default function Home() {
   const [solAddr, setSolAddr] = useState('');
   const [evmAddr, setEvmAddr] = useState('');
   const [toast, setToast] = useState('');
+  const [solPrice, setSolPrice] = useState(() => { try { return JSON.parse(localStorage.getItem('pawpad_prices') || '{}').sol || 0; } catch { return 0; } });
+  const [ethPrice, setEthPrice] = useState(() => { try { return JSON.parse(localStorage.getItem('pawpad_prices') || '{}').eth || 0; } catch { return 0; } });
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2000); };
 
@@ -38,6 +40,19 @@ export default function Home() {
     if (!wallet) { navigate('/onboarding', { replace: true }); return; }
     setSolAddr(wallet.wallets.solana.address);
     setEvmAddr(wallet.wallets.evm.address);
+
+    // Fetch live prices
+    try {
+      const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,ethereum&vs_currencies=usd');
+      const prices = await priceRes.json();
+      setSolPrice(prices.solana?.usd || 0);
+      setEthPrice(prices.ethereum?.usd || 0);
+      localStorage.setItem('pawpad_prices', JSON.stringify({ sol: prices.solana?.usd, eth: prices.ethereum?.usd, ts: Date.now() }));
+    } catch {
+      try { const c = JSON.parse(localStorage.getItem('pawpad_prices') || '{}'); setSolPrice(c.sol || 0); setEthPrice(c.eth || 0); } catch {}
+    }
+
+    // Fetch balances
     try {
       const b = await getAllBalances(wallet.wallets.solana.address, wallet.wallets.evm.address);
       setBalances(b); setCache(b);
@@ -48,12 +63,19 @@ export default function Home() {
   const refreshBalances = async () => {
     if (!solAddr && !evmAddr) return;
     setLoading(true);
+    // Refresh prices too
+    try {
+      const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,ethereum&vs_currencies=usd');
+      const prices = await priceRes.json();
+      setSolPrice(prices.solana?.usd || 0);
+      setEthPrice(prices.ethereum?.usd || 0);
+      localStorage.setItem('pawpad_prices', JSON.stringify({ sol: prices.solana?.usd, eth: prices.ethereum?.usd, ts: Date.now() }));
+    } catch {}
     try { const b = await getAllBalances(solAddr || null, evmAddr || null); setBalances(b); setCache(b); showToast('Balances updated'); }
     catch { showToast('Refresh failed'); }
     setLoading(false);
   };
 
-  const solPrice = 180, ethPrice = 3200;
   const totalUsd = balances ? (balances.solana.sol * solPrice) + (balances.evm.eth * ethPrice) + balances.solana.usdc + balances.evm.usdc : 0;
 
   return (

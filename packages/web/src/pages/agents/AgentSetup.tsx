@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { setTradeConfig, isLoggedIn, getStoredWallet } from '../../services/teeService';
 
 const TRADING_ASSETS = ['SOL', 'ETH'];
-const MAX_TRADE_OPTIONS = [10, 50, 100, 250, 500];
+const MAX_TRADE_OPTIONS = [50, 100, 250, 500];
 
 export default function AgentSetup() {
   const navigate = useNavigate();
