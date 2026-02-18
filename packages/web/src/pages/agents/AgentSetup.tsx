@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { setTradeConfig, isLoggedIn, getStoredWallet } from '../../services/teeService';
 
 const TRADING_ASSETS = ['SOL', 'ETH'];
-const MAX_TRADE_OPTIONS = [50, 100, 250, 500];
+const MAX_TRADE_OPTIONS = [10, 50, 100, 250, 500];
 
 export default function AgentSetup() {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function AgentSetup() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#FFF', fontSize: 20, cursor: 'pointer' }}>←</button>
           <div>
-            <h1 style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>🛡️ TEE Agent</h1>
+            <h1 style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>TEE Agent</h1>
             <p style={{ color: '#4ECDC4', fontSize: 14 }}>Configure Trading</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function AgentSetup() {
 
         {/* Trading Assets */}
         <div style={{ marginBottom: 28 }}>
-          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>🔄 Trading Assets</h3>
+          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Trading Assets</h3>
           <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 12 }}>Which assets should the agent trade?</p>
           <div style={{ display: 'flex', gap: 10 }}>
             {TRADING_ASSETS.map(asset => (
@@ -93,7 +93,7 @@ export default function AgentSetup() {
 
         {/* Max Trade Size */}
         <div style={{ marginBottom: 28 }}>
-          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>💰 Max Trade Size (USDC)</h3>
+          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}> Max Trade Size (USDC)</h3>
           <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 12 }}>Maximum amount per trade</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
             {MAX_TRADE_OPTIONS.map(size => (
@@ -112,7 +112,7 @@ export default function AgentSetup() {
 
         {/* Risk Level */}
         <div style={{ marginBottom: 28 }}>
-          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>📊 Risk Level</h3>
+          <h3 style={{ color: '#FFF', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Risk Level</h3>
           <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 12 }}>How aggressive should trading be?</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {(['conservative', 'moderate', 'aggressive'] as const).map(level => (
@@ -131,7 +131,7 @@ export default function AgentSetup() {
 
         {/* TEE Security info */}
         <div style={{ padding: '16px 20px', backgroundColor: 'rgba(51,230,191,0.06)', border: '1px solid rgba(51,230,191,0.15)', borderRadius: 16, marginBottom: 32 }}>
-          <p style={{ color: '#33E6BF', fontWeight: 600, fontSize: 14, marginBottom: 4 }}>🛡️ TEE Security</p>
+          <p style={{ color: '#33E6BF', fontWeight: 600, fontSize: 14, marginBottom: 4 }}>TEE Security</p>
           <p style={{ color: '#6B7280', fontSize: 13 }}>Your trades are executed inside Oasis TEE (Trusted Execution Environment), ensuring your private keys and trading logic remain secure and private.</p>
         </div>
 
