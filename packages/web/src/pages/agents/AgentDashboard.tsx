@@ -31,14 +31,20 @@ export default function AgentDashboard() {
         getTradeHistory(),
       ]);
       if (configRes.status === 'fulfilled') setConfig(configRes.value.config);
-      if (historyRes.status === 'fulfilled') setHistory(historyRes.value.history || []);
+     if (historyRes.status === 'fulfilled' && historyRes.value.history) {
+        setHistory(historyRes.value.history);
+        localStorage.setItem('pawpad_trade_history', JSON.stringify(historyRes.value.history));
+      } else {
+        // Load cached history if API fails
+        try { const cached = localStorage.getItem('pawpad_trade_history'); if (cached) setHistory(JSON.parse(cached)); } catch {}
+      }
     } catch (err) { console.error('Dashboard load error:', err); }
     setLoading(false);
   };
 
   const stats = {
     trades: history.length,
-    winRate: history.length ? Math.round(history.filter(t => t.status === 'success').length / history.length * 100) : 0,
+    winRate: history.length ? Math.round(history.filter(t => ['success', 'completed', 'executed'].includes(t.status?.toLowerCase())).length / history.length * 100) : 0,
     pnl: 0, // Would need price data to calculate
   };
 
@@ -157,7 +163,10 @@ export default function AgentDashboard() {
                       <p style={{ color: '#6B7280', fontSize: 12 }}>{new Date(trade.timestamp).toLocaleDateString()}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <p style={{ color: trade.signal === 'BUY' ? '#10B981' : '#EF4444', fontWeight: 600 }}>{trade.amountIn} {trade.tokenIn}</p>
+                      <p style={{ color: trade.signal === 'BUY' ? '#10B981' : '#EF4444', fontWeight: 600 }}>
+                        {trade.signalPrice ? `${(parseFloat(trade.amountIn) / trade.signalPrice).toFixed(4)} ${trade.asset}` : `${trade.amountIn} ${trade.tokenIn}`}
+                      </p>
+                      <p style={{ color: '#6B7280', fontSize: 11 }}>${parseFloat(trade.amountIn).toFixed(2)} {trade.tokenIn}</p>
                       <p style={{ color: trade.status === 'success' ? '#33E6BF' : '#F59E0B', fontSize: 12 }}>{trade.status}</p>
                     </div>
                   </div>
