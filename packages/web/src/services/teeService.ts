@@ -4,7 +4,7 @@
 // Replaces AsyncStorage with localStorage
 // ════════════════════════════════════════════════════════════════════════════
 
-const TEE_API_BASE = import.meta.env.DEV ? '/tee-api' : '/api/tee';
+const TEE_API_BASE = 'https://p8080.m125.opf-mainnet-rofl-35.rofl.app';
 
 // ═══════ TYPES ═══════
 
@@ -255,7 +255,7 @@ const fetchWithTimeout = (url: string, opts: RequestInit, ms = 5000) => {
 
 // ═══════ BALANCES (Public RPCs — no auth) ═══════
 
-const SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+const SOLANA_RPCS = ['https://mainnet.helius-rpc.com/?api-key=daee1b98-f564-4352-b8aa-d41654bc0e02', 'https://solana-rpc.publicnode.com', 'https://api.mainnet-beta.solana.com'];
 const ETH_RPCS = ['https://cloudflare-eth.com', 'https://rpc.ankr.com/eth', 'https://ethereum-rpc.publicnode.com'];
 
 const ethRpcCall = async (body: object) => {
@@ -266,12 +266,14 @@ const ethRpcCall = async (body: object) => {
 };
 
 export const getSolanaBalance = async (address: string) => {
-  try {
-    const r = await fetchWithTimeout(SOLANA_RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [address] }) });
-    const d = await r.json();
-    const lamports = d.result?.value || 0;
-    return { sol: lamports / 1e9, lamports };
-  } catch { return { sol: 0, lamports: 0 }; }
+  for (const rpc of SOLANA_RPCS) {
+    try {
+      const r = await fetchWithTimeout(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getBalance', params: [address] }) });
+      const d = await r.json();
+      if (d.result?.value !== undefined) return { sol: d.result.value / 1e9, lamports: d.result.value };
+    } catch { console.warn(`[Balance] ${rpc} failed, trying next...`); }
+  }
+  return { sol: 0, lamports: 0 };
 };
 
 export const getEvmBalance = async (address: string) => {
@@ -284,11 +286,14 @@ export const getEvmBalance = async (address: string) => {
 };
 
 export const getSolanaUsdcBalance = async (address: string) => {
-  try {
-    const r = await fetchWithTimeout(SOLANA_RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner', params: [address, { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' }, { encoding: 'jsonParsed' }] }) });
-    const d = await r.json();
-    return d.result?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount || 0;
-  } catch { return 0; }
+  for (const rpc of SOLANA_RPCS) {
+    try {
+      const r = await fetchWithTimeout(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner', params: [address, { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' }, { encoding: 'jsonParsed' }] }) });
+      const d = await r.json();
+      if (d.result?.value !== undefined) return d.result.value?.[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount || 0;
+    } catch { continue; }
+  }
+  return 0;
 };
 
 export const getEvmUsdcBalance = async (address: string) => {

@@ -15,16 +15,13 @@ export function BottomNav() {
       </NavLink>
 
       <NavLink
-        to="/swap"
+        to="/arena"
         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="17,1 21,5 17,9" />
-          <path d="M3 11V9a4 4 0 014-4h14" />
-          <polyline points="7,23 3,19 7,15" />
-          <path d="M21 13v2a4 4 0 01-4 4H3" />
+          <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
         </svg>
-        <span>Swap</span>
+        <span>Arena</span>
       </NavLink>
 
       <NavLink

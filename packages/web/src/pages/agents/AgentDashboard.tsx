@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getTradeConfig, getTradeHistory, isLoggedIn, type TradeConfig } from '../../services/teeService';
 
+
 interface TradeHistoryItem {
   asset: string; signal: 'BUY' | 'SELL'; signalPrice: number;
   chain: string; txHash: string; amountIn: string; tokenIn: string;
@@ -55,6 +56,21 @@ export default function AgentDashboard() {
           <button onClick={() => navigate('/agents/setup')} style={{ backgroundColor: '#111B2E', border: '1px solid #1E3A5F', borderRadius: 10, padding: '8px 16px', color: '#4ECDC4', fontSize: 13, cursor: 'pointer' }}>
             ⚙️ Configure
           </button>
+          <button 
+  onClick={() => navigate('/arena')} 
+  style={{ 
+    backgroundColor: '#111B2E', 
+    border: '1px solid #00f0ff', 
+    borderRadius: 10, 
+    padding: '8px 16px', 
+    color: '#00f0ff', 
+    fontSize: 13, 
+    cursor: 'pointer',
+    marginLeft: 8,
+  }}
+>
+  ⬡ Arena
+</button>
         </div>
 
         {justCreated && (
