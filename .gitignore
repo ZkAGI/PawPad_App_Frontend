@@ -3,3 +3,12 @@ dist/
 .env
 .env.local
 *.tsbuildinfo
+.env.*
+!.env.example
+!.env.sample
+*.pem
+oauth_credentials.json
+management-session.json
+logs/
+__pycache__/
+*.pyc
