@@ -10,5 +10,9 @@
     "web:build": "cd packages/web && npm run build",
     "mobile:android": "cd mobile && npx react-native run-android",
     "mobile:ios": "cd mobile && npx react-native run-ios"
+  },
+  "dependencies": {
+    "@types/three": "^0.182.0",
+    "three": "^0.182.0"
   }
 }

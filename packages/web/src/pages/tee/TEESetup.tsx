@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { copyToClipboard } from '../../utils/clipboard';
+import { IoIosCopy } from 'react-icons/io';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { formatAddress, parseTOTPUri, type TEEWallets, type TOTPConfig, type TEEBackupFile } from '../../services/teeService';
 
@@ -12,6 +14,9 @@ interface SetupState {
 
 export default function TEESetup() {
   const [step, setStep] = useState<'totp' | 'backup'>('totp');
+  const [downloaded, setDownloaded] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  const [copied, setCopied] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as SetupState | null;
@@ -31,6 +36,7 @@ export default function TEESetup() {
   const totpInfo = parseTOTPUri(totp.otpauth_uri);
 
   const downloadBackup = () => {
+    setDownloaded(true);
     const blob = new Blob([JSON.stringify(backup_file, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -74,8 +80,9 @@ export default function TEESetup() {
               />
             </div>
             <p style={{ color: '#6B7280', fontSize: 12, marginBottom: 12 }}>Or enter manually:</p>
-            <div style={{ padding: '10px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all' }}>
+            <div onClick={async () => { await copyToClipboard(totpInfo.secret); setCopied('secret'); setTimeout(() => setCopied(''), 2000); }} style={{ padding: '10px 12px', backgroundColor: '#0B1426', borderRadius: 8, wordBreak: 'break-all', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4ECDC4', fontSize: 14, fontFamily: 'monospace', fontWeight: 600 }}>{totpInfo.secret}</span>
+              <span style={{ color: copied === 'secret' ? '#33E6BF' : '#6B7280', fontSize: 12, flexShrink: 0, marginLeft: 8 }}>{copied === 'secret' ? 'Copied' : 'Copy'}</span>
             </div>
           </div>
 
@@ -89,8 +96,16 @@ export default function TEESetup() {
 
       {step === 'backup' && (
         <>
+          {toastMsg && <div style={{ position: 'fixed', top: 48, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#1E3A5F', color: '#FF6B6B', padding: '12px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 999, border: '1px solid #FF6B6B', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', maxWidth: 320, textAlign: 'center' }}>{toastMsg}</div>}
           <h2 style={{ color: '#FFF', fontSize: 24, marginBottom: 8 }}>Download Backup</h2>
-          <p style={{ color: '#6B7280', marginBottom: 24 }}>Your encrypted backup file is ready</p>
+          <p style={{ color: '#6B7280', marginBottom: 16 }}>Your encrypted backup file is ready</p>
+          <div style={{ padding: '12px 16px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, marginBottom: 24, maxWidth: 340, width: '100%' }}>
+            <p style={{ color: '#FF6B6B', fontSize: 13, fontWeight: 600 }}>⚠️ Download now — this backup won't be available again.</p>
+            <p style={{ color: '#FF6B6B', fontSize: 12, marginTop: 4 }}>Recovery is impossible without your backup file.</p>
+          </div>
+          <div style={{ padding: '12px 16px', backgroundColor: 'rgba(78,205,196,0.08)', border: '1px solid rgba(78,205,196,0.2)', borderRadius: 12, marginBottom: 24, maxWidth: 340, width: '100%' }}>
+            <p style={{ color: '#4ECDC4', fontSize: 13 }}>💡 Tip: Store a copy on Google Drive, iCloud, or another cloud service. If your device is lost, you'll need this file to recover your wallet on a new device.</p>
+          </div>
 
           <div style={{ width: '100%', maxWidth: 340, marginBottom: 24 }}>
             <div style={{ padding: '16px', backgroundColor: '#111B2E', borderRadius: 12, border: '1px solid #1E3A5F', marginBottom: 8, textAlign: 'left' }}>
@@ -104,8 +119,8 @@ export default function TEESetup() {
             📥 Download Backup File
           </button>
 
-          <button onClick={() => navigate('/home')} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: '#A855F7', color: '#FFF', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-            Go to Wallet
+          <button onClick={() => { if (downloaded) navigate('/home'); else { setToastMsg('Please download your backup first. Keep it safe — recovery is impossible without it.'); setTimeout(() => setToastMsg(''), 3000); } }} style={{ width: '100%', maxWidth: 340, padding: 16, borderRadius: 12, border: 'none', backgroundColor: downloaded ? '#A855F7' : '#1E3A5F', color: downloaded ? '#FFF' : '#4A5568', fontSize: 16, fontWeight: 600, cursor: downloaded ? 'pointer' : 'not-allowed' }}>
+            {downloaded ? 'Go to Wallet' : 'Download backup first'}
           </button>
         </>
       )}
